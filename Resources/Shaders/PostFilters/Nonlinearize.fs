@@ -23,12 +23,10 @@ uniform sampler2D texture;
 
 varying vec2 texCoord;
 
-uniform float gamma;
-
 void main() {
 	vec3 color;
 	color = texture2D(texture, texCoord).xyz;
-	color = pow(color, vec3(gamma));
+	color = sqrt(color);
 	gl_FragColor = vec4(color, 1.);
 }
 

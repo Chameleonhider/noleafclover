@@ -47,7 +47,7 @@ namespace spades {
 			renderer->RegisterProgram("Shaders/BasicBlockDynamicLit.program");
 			renderer->RegisterProgram("Shaders/BackFaceBlock.program");
 			renderer->RegisterImage("Gfx/AmbientOcclusion.tga");
-			renderer->RegisterImage("Textures/detail.jpg");
+			//renderer->RegisterImage("Textures/detail.jpg");
 		}
 		
 		GLMapRenderer::GLMapRenderer(client::GameMap *m, GLRenderer *r):
@@ -79,7 +79,7 @@ namespace spades {
 			dlightProgram = renderer->RegisterProgram("Shaders/BasicBlockDynamicLit.program");
 			backfaceProgram = renderer->RegisterProgram("Shaders/BackFaceBlock.program");
 			aoImage = (GLImage *)renderer->RegisterImage("Gfx/AmbientOcclusion.tga");
-			detailImage = (GLImage *)renderer->RegisterImage("Textures/detail.jpg");
+			//detailImage = (GLImage *)renderer->RegisterImage("Textures/detail.jpg");
 			
 			static const uint8_t squareVertices[] = {
 				0,0, 1,0, 0,1,
@@ -138,7 +138,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			float cullDistance = 128.f;
-			float releaseDistance = 160.f;
+			float releaseDistance = 150.f;
 			for(int i = 0; i < numChunks; i++){
 				float dist = chunks[i]->DistanceFromEye(eye);
 				chunkInfos[i].distance = dist;
@@ -173,7 +173,7 @@ namespace spades {
 								 IGLDevice::Linear);
 			
 			device->ActiveTexture(1);
-			detailImage->Bind(IGLDevice::Texture2D);
+			//detailImage->Bind(IGLDevice::Texture2D);
 			
 			
 			device->Enable(IGLDevice::CullFace, true);
@@ -284,7 +284,7 @@ namespace spades {
 			Vector3 eye = renderer->GetSceneDef().viewOrigin;
 			
 			device->ActiveTexture(0);
-			detailImage->Bind(IGLDevice::Texture2D);
+			//detailImage->Bind(IGLDevice::Texture2D);
 			
 			device->Enable(IGLDevice::CullFace, true);
 			device->Enable(IGLDevice::DepthTest, true);

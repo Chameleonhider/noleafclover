@@ -40,7 +40,8 @@ namespace spades{
 			ctx.ExecuteChecked();
 		}
 		
-		void ScriptIBlockSkin::SetBlockColor(Vector3 v) {
+		void ScriptIBlockSkin::SetBlockColor(Vector3 v)
+		{
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IBlockSkin",
 									   "void set_BlockColor(Vector3)");
@@ -49,6 +50,20 @@ namespace spades{
 			r = ctx->SetObject((void *)obj);
 			ScriptManager::CheckError(r);
 			r = ctx->SetArgObject(0, &v);
+			ScriptManager::CheckError(r);
+			ctx.ExecuteChecked();
+		}
+		//Chameleon
+		void ScriptIBlockSkin::SetIsDragging(bool b)
+		{
+			SPADES_MARK_FUNCTION_DEBUG();
+			static ScriptFunction func("IBlockSkin",
+										"void set_IsDragging(bool)");
+			ScriptContextHandle ctx = func.Prepare();
+			int r;
+			r = ctx->SetObject((void *)obj);
+			ScriptManager::CheckError(r);
+			r = ctx->SetArgByte(0, b);
 			ScriptManager::CheckError(r);
 			ctx.ExecuteChecked();
 		}
@@ -74,6 +89,9 @@ namespace spades{
 						manager->CheckError(r);
 						r = eng->RegisterInterfaceMethod("IBlockSkin",
 														 "void set_BlockColor(Vector3)");
+						//Chameleon
+						r = eng->RegisterInterfaceMethod("IBlockSkin",
+														 "void set_IsDragging(bool)");
 						manager->CheckError(r);
 						break;
 					default:

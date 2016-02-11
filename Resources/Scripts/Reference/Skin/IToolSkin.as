@@ -32,7 +32,7 @@ namespace spades {
 		float RaiseState { set; }
 		
 		/** Receives the team color. */
-		Vector3 TeamColor { set; }
+		IntVector3 TeamColor { set; }
 		
 		/** Receives whether this skin should play a sound. */
 		bool IsMuted { set; }

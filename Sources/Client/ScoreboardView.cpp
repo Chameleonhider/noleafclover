@@ -37,7 +37,7 @@
 #include <Core/Strings.h>
 #include "../Core/Settings.h"
 
-SPADES_SETTING(cg_Minimap_Player_Color,"1");
+//SPADES_SETTING(cg_Minimap_Player_Color,"1"); NOT CURRENTLY WORKING
 
 namespace spades {
 	namespace client {
@@ -258,7 +258,8 @@ namespace spades {
 			int row = 0, col = 0;
 			float colWidth = (float)width / (float)cols;
 			extern int palette[32][3];
-			std::string colormode = cg_Minimap_Player_Color;
+			//std::string colormode = cg_Minimap_Player_Color;
+
 			for(int i = 0; i < numPlayers; i++){
 				ScoreboardEntry& ent = entries[i];
 				
@@ -269,26 +270,25 @@ namespace spades {
 					color = GetTeamColor(team);
 				
 				sprintf(buf, "#%d", ent.id); // FIXME: 1-base?
-				size = font->Measure(buf);				
-				if ( colormode=="1"){
-					IntVector3 Colorplayer=IntVector3::Make(palette[ent.id][0],palette[ent.id][1],palette[ent.id][2]);
-					Vector4 ColorplayerF = ModifyColor(Colorplayer);
-					ColorplayerF *=1.0f;
-					font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, ColorplayerF);
-				}	
-				else {
-						font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, color);
-				}
+				size = font->Measure(buf);	
+				//NOT WORKING - "1 unresolved externals"
+				//if ( colormode=="1")
+				//{
+					//int i = palette[0][ent.id];
+					//IntVector3 Colorplayer = IntVector3::Make(palette[ent.id][0], palette[ent.id][1], palette[ent.id][2]);
+					// Vector4 ColorplayerF = ModifyColor(Colorplayer);
+					// ColorplayerF *=1.0f;
+					// font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, ColorplayerF);
+				//}	
+				//else {
+				font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, color);
+				//}
 				
-				font->Draw(ent.name, MakeVector2(colX + 45.f,
-											rowY),
-						   1.f, color);
+				font->Draw(ent.name, MakeVector2(colX + 45.f, rowY), 1.f, color);
 				
 				sprintf(buf, "%d", ent.score);
 				size = font->Measure(buf);
-				font->Draw(buf, MakeVector2(colX + colWidth - 10.f - size.x,
-											rowY),
-						   1.f, color);
+				font->Draw(buf, MakeVector2(colX + colWidth - 10.f - size.x, rowY), 1.f, color);
 				
 				row++;
 				if(row >= maxRows){

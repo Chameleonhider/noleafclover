@@ -48,6 +48,7 @@ namespace spades {
 			Vector3 GetCenter() { return center; }
 			VoxelModel *GetRawModel() { return rawModel; }
 			
+			IntVector3 GetDimensions();
 			AABB3 GetBoundingBox();
 		};
 		

@@ -564,14 +564,16 @@ namespace spades {
 							case Face::PosX:
 							case Face::PosY:
 							case Face::NegX:
-								m = _mm_adds_epi16
-								(_mm_srli_epi16(m, 1), _mm_srli_epi16(m, 2));
+								m = _mm_adds_epi16(_mm_srli_epi16(m, 1), _mm_srli_epi16(m, 2));
 								break;
 							default:
 								break;
 						}
-						if((col>>24)<100) {
+						if((col>>24)<100)
+						{
 							m = _mm_srli_epi16(m, 1);
+							if ((col >> 16) == 0 || (col >> 8) == 0 || (col) == 0)
+								m = _mm_slli_epi16(m, 1);
 						}
 						m = _mm_packus_epi16(m, m);
 						_mm_store_ss(reinterpret_cast<float *>(&px.combined),

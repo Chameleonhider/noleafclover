@@ -34,8 +34,8 @@
 #include <stdlib.h>
 #include <cstring>
 
-SPADES_SETTING(s_maxPolyphonics, "96");
-SPADES_SETTING(s_eax, "1");
+SPADES_SETTING(s_maxPolyphonics, "64");
+SPADES_SETTING(s_eax, "0");
 SPADES_SETTING(s_alPreciseErrorCheck, "1");
 
 //lm: seems to be missing for me..
@@ -300,7 +300,8 @@ namespace spades {
 					
 					// raytrace
 					client::GameMap *map = internal->map;
-					if(map && enableObstruction){
+					if(map && enableObstruction)
+					{
 						ALfloat v3[3];
 						al::qalGetListenerfv(AL_POSITION, v3);
 						Vector3 eye = {v3[0], v3[1], v3[2]};
@@ -814,14 +815,15 @@ namespace spades {
 			return it->second;
 		}
 		
-		void ALDevice::Play(client::IAudioChunk *chunk, const spades::Vector3 &origin, const client::AudioParam &param){
+		void ALDevice::Play(client::IAudioChunk *chunk, const spades::Vector3 &origin, const client::AudioParam &param)
+		{
 			SPADES_MARK_FUNCTION();
-			
+
 			d->Play(static_cast<ALAudioChunk *>(chunk), TransformVectorToAL(origin), param);
 		}
 		void ALDevice::PlayLocal(client::IAudioChunk *chunk, const spades::Vector3 &origin, const client::AudioParam &param){
 			SPADES_MARK_FUNCTION();
-			
+
 			d->PlayLocal(static_cast<ALAudioChunk *>(chunk), MakeVector3(origin.x, origin.y, -origin.z), param);
 		}
 		

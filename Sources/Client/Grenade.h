@@ -32,6 +32,7 @@ namespace spades {
 			float fuse;
 			Vector3 position;
 			Vector3 velocity;
+			int teamId;
 			
 			void Explode();
 			
@@ -41,7 +42,8 @@ namespace spades {
 			Grenade(World *,
 					Vector3 pos,
 					Vector3 vel,
-					float fuse);
+					float fuse,
+					int tId);
 			~Grenade();
 			
 			/** @return true when exploded. */
@@ -50,6 +52,7 @@ namespace spades {
 			Vector3 GetPosition() { return position; }
 			Vector3 GetVelocity() { return velocity; }
 			float GetFuse() { return fuse; }
+			int GetTeamId() { return teamId; }
 		};
 	}
 }

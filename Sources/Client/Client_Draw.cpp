@@ -44,7 +44,7 @@
 #include "FallingBlock.h"
 #include "HurtRingView.h"
 #include "ParticleSpriteEntity.h"
-#include "SmokeSpriteEntity.h"
+//#include "SmokeSpriteEntity.h"
 #include "IFont.h"
 #include "ScoreboardView.h"
 #include "TCProgressView.h"
@@ -56,12 +56,16 @@
 
 #include "NetClient.h"
 
-SPADES_SETTING(cg_hitIndicator, "1");
+SPADES_SETTING(cg_hitIndicator, "0");
 SPADES_SETTING(cg_debugAim, "0");
 SPADES_SETTING(cg_keyReloadWeapon, "");
 SPADES_SETTING(cg_screenshotFormat, "jpeg");
 SPADES_SETTING(cg_stats, "0");
 SPADES_SETTING(cg_hideHud, "0");
+//Chameleon
+SPADES_SETTING(v_playerNames, "2");
+SPADES_SETTING(v_playerNameX, "0");
+SPADES_SETTING(v_playerNameY, "0");
 
 namespace spades {
 	namespace client {
@@ -213,6 +217,28 @@ namespace spades {
 			renderer->Flip();
 		}
 		
+		void Client::DrawDisconnectScreen()
+		{
+			Handle<client::IImage> img;
+			Vector2 scrSize = { renderer->ScreenWidth(), renderer->ScreenHeight() };
+			
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 1.));
+			img = renderer->RegisterImage("Gfx/White.tga");
+			renderer->DrawImage(img, AABB2(0, 0, scrSize.x, scrSize.y));
+			
+			DrawSplash();
+			
+			IFont *font = textFont;
+			std::string str = _Tr("Client", "Disconnecting...");
+			Vector2 size = font->Measure(str);
+			Vector2 pos = MakeVector2(scrSize.x - 16.f, scrSize.y - 16.f);
+			pos -= size;
+			font->DrawShadow(str, pos, 1.f, MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.5));
+			
+			renderer->FrameDone();
+			renderer->Flip();
+		}
+
 		void Client::DrawHurtSprites() {
 			float per = (world->GetTime() - lastHurtTime) / 1.5f;
 			if(per > 1.f) return;
@@ -268,27 +294,42 @@ namespace spades {
 				per = 1.f - per;
 				Vector3 color = {1.f, per, per};
 				renderer->MultiplyScreenColor(color);
-				renderer->SetColorAlphaPremultiplied(MakeVector4((1.f - per) * .1f,0,0,(1.f - per) * .1f));
+				renderer->SetColorAlphaPremultiplied(MakeVector4((1.f - per) * .1f,0,0,(1.f - per) * .2f));
 				renderer->DrawImage(renderer->RegisterImage("Gfx/White.tga"),
 									AABB2(0, 0, scrWidth, scrHeight));
 			}
 		}
 		
-		void Client::DrawHottrackedPlayerName() {
+		void Client::DrawHottrackedPlayerName()
+		{
 			SPADES_MARK_FUNCTION();
 			
-			Player *p = GetWorld()->GetLocalPlayer();
-			
+			//Chameleon
+			if ((int)v_playerNames == 0)
+				return;
+
+			Player *p = GetWorld()->GetLocalPlayer();			
 			hitTag_t tag = hit_None;
 			Player *hottracked = HotTrackedPlayer( &tag );
-			if(hottracked){
+			if(hottracked)
+			{
 				Vector3 posxyz = Project(hottracked->GetEye());
 				Vector2 pos = {posxyz.x, posxyz.y};
-				float dist = (hottracked->GetEye() - p->GetEye()).GetLength();
-				int idist = (int)floorf(dist + .5f);
 				char buf[64];
-				sprintf(buf, "%s [%d%s]", hottracked->GetName().c_str(), idist, (idist == 1) ? "block":"blocks");
-				
+				//Chameleon
+				if ((int)v_playerNames == 1)
+				{
+					float dist = (hottracked->GetEye() - p->GetEye()).GetLength();
+					int idist = (int)floorf(dist + .5f);
+					sprintf(buf, "%s [%d%s]", hottracked->GetName().c_str(), idist, (idist == 1) ? "block" : "blocks");
+				}
+				else
+				{
+					sprintf(buf, "%s", hottracked->GetName().c_str());
+				}				
+				pos.y += (int)v_playerNameY;
+				pos.x += (int)v_playerNameX;
+
 				IFont *font = textFont;
 				Vector2 size = font->Measure(buf);
 				pos.x -= size.x * .5f;
@@ -309,6 +350,20 @@ namespace spades {
 			Weapon *w = p->GetWeapon();
 			float spread = w->GetSpread();
 			
+			//Chameleon: shows the new spread too
+			spread += spread * p->spreadAdd;
+			/*if (!p->IsOnGroundOrWade())
+			{
+				spread += spread * 2;
+			}
+			else if (p->GetVelocity().GetLength() > 0.01f && w->GetWeaponType() != SHOTGUN_WEAPON)
+			{
+				if (p->crouching)
+					spread += spread * p->GetVelocity().GetLength() * 4;
+				else
+					spread += spread * p->GetVelocity().GetLength() * 2;
+			}*/
+
 			AABB2 boundary(0,0,0,0);
 			for(int i = 0; i < 8; i++){
 				Vector3 vec = p->GetFront();
@@ -352,7 +407,7 @@ namespace spades {
 			p2.x += (int)ceilf(boundary.max.x);
 			p2.y += (int)ceilf(boundary.max.y);
 			
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0,0,0,1));
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0,0,0,0.5));
 			renderer->DrawImage(img, AABB2(p1.x - 2, p1.y - 2,
 										   p2.x - p1.x + 4, 1));
 			renderer->DrawImage(img, AABB2(p1.x - 2, p1.y - 2,
@@ -362,7 +417,7 @@ namespace spades {
 			renderer->DrawImage(img, AABB2(p2.x + 1, p1.y - 2,
 										   1, p2.y - p1.y + 4));
 			
-			renderer->SetColorAlphaPremultiplied(MakeVector4(1,1,1,1));
+			renderer->SetColorAlphaPremultiplied(MakeVector4(1,1,1,0.5));
 			renderer->DrawImage(img, AABB2(p1.x - 1, p1.y - 1,
 										   p2.x - p1.x + 2, 1));
 			renderer->DrawImage(img, AABB2(p1.x - 1, p1.y - 1,
@@ -373,7 +428,8 @@ namespace spades {
 										   1, p2.y - p1.y + 2));
 		}
 		
-		void Client::DrawJoinedAlivePlayerHUD() {
+		void Client::DrawJoinedAlivePlayerHUD() 
+		{
 			SPADES_MARK_FUNCTION();
 			
 			float scrWidth = renderer->ScreenWidth();
@@ -389,8 +445,8 @@ namespace spades {
 			if(!cg_hideHud)
 				hurtRingView->Draw();
 			
-			if(cg_hitIndicator && hitFeedbackIconState > 0.f &&
-			   !cg_hideHud) {
+			if(cg_hitIndicator && hitFeedbackIconState > 0.f && !cg_hideHud && false) 
+			{
 				Handle<IImage> img(renderer->RegisterImage("Gfx/HitFeedback.png"), false);
 				Vector2 pos = {scrWidth * .5f, scrHeight * .5f};
 				pos.x -= img->GetWidth() * .5f;
@@ -414,8 +470,8 @@ namespace spades {
 				DrawDebugAim();
 			}
 			
-			if(!cg_hideHud) {
-					
+			if(!cg_hideHud) 
+			{					
 				// draw ammo
 				Weapon *weap = p->GetWeapon();
 				Handle<IImage> ammoIcon;
@@ -424,20 +480,22 @@ namespace spades {
 				int stockNum;
 				int warnLevel;
 				
-				if(p->IsToolWeapon()){
-					switch(weap->GetWeaponType()){
+				if(p->IsToolWeapon())
+				{
+					switch(weap->GetWeaponType())
+					{
 						case RIFLE_WEAPON:
-							ammoIcon = renderer->RegisterImage("Gfx/Bullet/7.62mm.tga");
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/Semi.tga");
 							iconWidth = 6.f;
 							iconHeight = iconWidth * 4.f;
 							break;
 						case SMG_WEAPON:
-							ammoIcon = renderer->RegisterImage("Gfx/Bullet/9mm.tga");
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/SMG.tga");
 							iconWidth = 4.f;
 							iconHeight = iconWidth * 4.f;
 							break;
 						case SHOTGUN_WEAPON:
-							ammoIcon = renderer->RegisterImage("Gfx/Bullet/12gauge.tga");
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/Shotgun.tga");
 							iconWidth = 30.f;
 							iconHeight = iconWidth / 4.f;
 							spacing = -6.f;
@@ -451,15 +509,19 @@ namespace spades {
 					
 					clipSize = std::max(clipSize, clip);
 					
-					for(int i = 0; i < clipSize; i++){
+					for(int i = 0; i < clipSize; i++)
+					{
 						float x = scrWidth - 16.f - (float)(i+1) *
 						(iconWidth + spacing);
 						float y = scrHeight - 16.f - iconHeight;
 						
-						if(clip >= i + 1){
-							renderer->SetColorAlphaPremultiplied(MakeVector4(1,1,1,1));
-						}else{
-							renderer->SetColorAlphaPremultiplied(MakeVector4(0.4,0.4,0.4,1));
+						if(clip >= i + 1)
+						{
+							renderer->SetColorAlphaPremultiplied(MakeVector4(0.8,0.8,0.8,0.5));
+						}
+						else
+						{
+							renderer->SetColorAlphaPremultiplied(MakeVector4(0.2,0.2,0.2,0.25));
 						}
 						
 						renderer->DrawImage(ammoIcon,
@@ -468,11 +530,14 @@ namespace spades {
 					
 					stockNum = weap->GetStock();
 					warnLevel = weap->GetMaxStock() / 3;
-				}else{
+				}
+				else
+				{
 					iconHeight = 0.f;
 					warnLevel = 0;
 					
-					switch(p->GetTool()){
+					switch(p->GetTool())
+					{
 						case Player::ToolSpade:
 						case Player::ToolBlock:
 							stockNum = p->GetNumBlocks();
@@ -486,12 +551,15 @@ namespace spades {
 					
 				}
 				
-				Vector4 numberColor = {1, 1, 1, 1};
+				Vector4 numberColor = {1, 1, 1, 0.5};
 				
-				if(stockNum == 0){
+				if(stockNum == 0)
+				{
 					numberColor.y = 0.3f;
 					numberColor.z = 0.3f;
-				}else if(stockNum <= warnLevel){
+				}
+				else if(stockNum <= warnLevel)
+				{
 					numberColor.z = 0.3f;
 				}
 				
@@ -511,12 +579,14 @@ namespace spades {
 					
 					switch(p->GetTool()){
 						case Player::ToolBlock:
-							if(p->GetNumBlocks() == 0){
+							if(p->GetNumBlocks() == 0)
+							{
 								msg = _Tr("Client", "Out of Block");
 							}
 							break;
 						case Player::ToolGrenade:
-							if(p->GetNumGrenades() == 0){
+							if(p->GetNumGrenades() == 0)
+							{
 								msg = _Tr("Client", "Out of Grenade");
 							}
 							break;
@@ -524,14 +594,36 @@ namespace spades {
 						{
 							Weapon *weap = p->GetWeapon();
 							if(weap->IsReloading() ||
-							   p->IsAwaitingReloadCompletion()){
+							   p->IsAwaitingReloadCompletion())
+							{
 								msg = _Tr("Client", "Reloading");
-							}else if(weap->GetAmmo() == 0 &&
-									 weap->GetStock() == 0){
+							}
+							else if(weap->GetAmmo() == 0 &&
+									 weap->GetStock() == 0)
+							{
 								msg = _Tr("Client", "Out of Ammo");
-							}else if(weap->GetStock() > 0 &&
-									 weap->GetAmmo() < weap->GetClipSize() / 4){
-								msg = _Tr("Client", "Press [{0}] to Reload", (std::string)cg_keyReloadWeapon);
+							}
+							else if(weap->GetStock() > 0 &&
+									 weap->GetAmmo() == 0)
+							{
+								msg = _Tr("Client", "RELOAD [{0}]", (std::string)cg_keyReloadWeapon);
+							}
+							//Chameleon: display fire mode
+							if (weap->GetWeaponType() == SMG_WEAPON)
+							{
+								std::string msg1 = "";
+								if (MaxShots == -1)
+									msg1 = "auto";
+								else if (MaxShots == 1)
+									msg1 = "semi-auto";
+								else
+									msg1 = "burst";
+
+								font = textFont;
+								Vector2 size = font->Measure(msg1);
+								Vector2 pos = MakeVector2((scrWidth - size.x)/2.f,
+									scrHeight - size.y);
+								font->DrawShadow(msg1, pos, 1.f, MakeVector4(1, 1, 1, 0.5), MakeVector4(0, 0, 0, 0.5));
 							}
 						}
 							break;
@@ -539,11 +631,12 @@ namespace spades {
 							// no message
 					}
 					
-					if(!msg.empty()){
+					if(!msg.empty())
+					{
 						font = textFont;
 						Vector2 size = font->Measure(msg);
 						Vector2 pos = MakeVector2((scrWidth - size.x) * .5f,
-												  scrHeight * 2.f / 3.f);
+												  scrHeight * 3.f / 4.f);
 						font->DrawShadow(msg, pos, 1.f, MakeVector4(1,1,1,1), MakeVector4(0,0,0,0.5));
 					}
 				}
@@ -573,13 +666,14 @@ namespace spades {
 			if(!cg_hideHud) {
 				
 				// draw respawn tme
-				if(!p->IsAlive()){
+				if(!p->IsAlive())
+				{
 					std::string msg;
 					
 					float secs = p->GetRespawnTime() - world->GetTime();
 					
 					if(secs > 0.f)
-						msg = _Tr("Client", "You will respawn in: {0}", (int)ceilf(secs));
+						msg = _Tr("Client", "INSERT COIN: {0}", (int)ceilf(secs));
 					else
 						msg = _Tr("Client", "Waiting for respawn");
 					
@@ -710,13 +804,15 @@ namespace spades {
 			
 			std::string str = std::to_string(p->GetHealth());
 			
-			Vector4 numberColor = {1, 1, 1, 1};
+			Vector4 numberColor = {1, 1, 1, 0.5};
 			
 			if(p->GetHealth() == 0){
 				numberColor.y = 0.3f;
 				numberColor.z = 0.3f;
-			}else if(p->GetHealth() <= 50){
-				numberColor.z = 0.3f;
+			}
+			else if(p->GetHealth() <= 50)
+			{
+				numberColor.z = 0.5f;
 			}
 			
 			font = designFont;
@@ -739,7 +835,8 @@ namespace spades {
 			}
 			
 			Player *p = GetWorld()->GetLocalPlayer();
-			if(p){
+			if(p)
+			{
 				DrawHurtSprites();
 				DrawHurtScreenEffect();
 				DrawHottrackedPlayerName();
@@ -747,11 +844,15 @@ namespace spades {
 				if(!cg_hideHud)
 					tcView->Draw();
 				
-				if(p->GetTeamId() < 2) {
+				if(p->GetTeamId() < 2) 
+				{
 					// player is not spectator
-					if(p->IsAlive()){
+					if(p->IsAlive() || p->GetHealth() > 0)
+					{
 						DrawJoinedAlivePlayerHUD();
-					}else{
+					}
+					else
+					{
 						DrawDeadPlayerHUD();
 					}
 				}
@@ -856,7 +957,27 @@ namespace spades {
 						ping, upbps / 1000.0, downbps / 1000.0);
 				str += buf;
 			}
-			
+			//Chameleon: max velocity of player
+			/*if (world)
+			{
+				if (world->GetLocalPlayer())
+				{
+					Player *p = world->GetLocalPlayer();
+					sprintf(buf, ", speed: %.2f", p->GetVelocity().GetLength());
+					str += buf;
+				}
+			}*/
+			//Chameleon: velocity of mouse
+			if (world)
+			{
+				if (world->GetLocalPlayer())
+				{
+					Player *p = world->GetLocalPlayer();
+					sprintf(buf, ", mouseXY: %.2f:%.2f, Inertia: %.2f, Drunk: %.2f", mouseX, mouseY, mouseInertia, mouseRoll);
+					str += buf;
+				}
+			}
+
 			float scrWidth = renderer->ScreenWidth();
 			float scrHeight = renderer->ScreenHeight();
 			IFont *font = textFont;
@@ -869,19 +990,23 @@ namespace spades {
 			auto pos =
 			(Vector2(scrWidth, scrHeight) - size) * Vector2(0.5f, 1.f);
 			
-			r->SetColorAlphaPremultiplied(Vector4(0.f, 0.f, 0.f, 0.5f));
+			r->SetColorAlphaPremultiplied(Vector4(0.f, 0.f, 0.f, 0.25f));
 			r->DrawImage(nullptr, AABB2(pos.x, pos.y, size.x, size.y));
 			font->DrawShadow(str, pos + Vector2(margin, margin), 1.f,
 							 Vector4(1.f, 1.f, 1.f, 1.f),
 							 Vector4(0.f, 0.f, 0.f, 0.5f));
 		}
 		
-		void Client::Draw2D(){
+		void Client::Draw2D()
+		{
 			SPADES_MARK_FUNCTION();
 			
-			if(GetWorld()){
+			if(GetWorld())
+			{
 				Draw2DWithWorld();
-			}else{
+			}
+			else
+			{
 				Draw2DWithoutWorld();
 			}
 			

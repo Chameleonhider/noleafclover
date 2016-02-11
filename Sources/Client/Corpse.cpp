@@ -27,7 +27,7 @@
 #include "../Core/Debug.h"
 #include "../Core/Settings.h"
 
-SPADES_SETTING(r_corpseLineCollision, "1");
+SPADES_SETTING(r_corpseLineCollision, "0");
 
 namespace spades {
 	namespace client {
@@ -733,8 +733,10 @@ namespace spades {
 			
 		}
 		
-		void Corpse::AddToScene() {
-			if(false){
+		void Corpse::AddToScene()
+		{
+			if(false)
+			{
 				// debug line only
 				Vector4 col = {1, 1, 0, 0};
 				renderer->AddDebugLine(nodes[Torso1].pos,
@@ -785,6 +787,7 @@ namespace spades {
 			IModel *model;
 			Matrix4 scaler = Matrix4::Scale(.1f);
 			
+			//Player *p = player;
 			// draw torso
 			Matrix4 torso;
 			Vector3 tX, tY;
@@ -802,8 +805,7 @@ namespace spades {
 				
 				param.matrix = torso * scaler;
 				
-				model = renderer->RegisterModel
-				("Models/Player/Torso.kv6");
+				model = renderer->RegisterModel("Models/PlayerA/Torso.kv6");
 				renderer->RenderModel(model, param);
 			}
 			// draw Head
@@ -811,8 +813,9 @@ namespace spades {
 				Vector3 headBase =
 				(torso * MakeVector3(0.0f, 0.f, 0.f)).GetXYZ();
 				
-				model = renderer->RegisterModel
-				("Models/Player/Head.kv6");
+				/*model = renderer->RegisterModel
+				("Models/Player/Head.kv6");*/
+				model = renderer->RegisterModel("Models/PlayerA/Head.kv6");
 				
 				Vector3 aX, aY, aZ;
 				Vector3 center = (nodes[Torso1].pos + nodes[Torso2].pos) * .5f;
@@ -835,8 +838,7 @@ namespace spades {
 				Vector3 arm2Base =
 				(torso * MakeVector3(-0.4f, 0.f, 0.2f)).GetXYZ();
 				
-				model = renderer->RegisterModel
-				("Models/Player/Arm.kv6");
+				model = renderer->RegisterModel("Models/PlayerA/Arm_Up.kv6");
 				
 				Vector3 aX, aY, aZ;
 				
@@ -866,8 +868,7 @@ namespace spades {
 				Vector3 leg2Base =
 				(torso * MakeVector3(-0.25f, 0.f, 0.9f)).GetXYZ();
 				
-				model = renderer->RegisterModel
-				("Models/Player/Leg.kv6");
+				model = renderer->RegisterModel("Models/PlayerA/Leg.kv6");
 				
 				Vector3 aX, aY, aZ;
 				

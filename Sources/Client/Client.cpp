@@ -44,7 +44,7 @@
 #include "ClientPlayer.h"
 
 #include "ILocalEntity.h"
-#include "SmokeSpriteEntity.h"
+//#include "SmokeSpriteEntity.h"
 #include "Corpse.h"
 
 #include "World.h"
@@ -97,6 +97,26 @@ namespace spades {
 		lastPosSentTime(0.f),
 		worldSubFrame(0.f),
 		grenadeVibration(0.f),
+		stepVibration(0.f),
+
+		weapX(0.f),
+		weapY(0.f),
+		FOV(90),
+		scopeOn(true),
+		scopeZoom(0),
+		mouseInertia(0.f),
+		mouseX(0.f),
+		mouseY(0.f),
+		mouseRoll(0.f),
+		mousePitch(0.f),
+		mouseYaw(0.f),
+		walkProgress(0.f),//Chameleon: needed for walking view movement (up&down + roll)
+		bFootSide(false),//Chameleon: Toggles between left&right roll made by footsteps
+		soundDistance(0.f),//Chameleon: player gets deaf when firing weapon, so limit sound radius; expand it in silence
+		//lastShellShockTime(0.f),
+		ShotsFired(0),
+		MaxShots(-1),
+
 		lastMyCorpse(nullptr),
 		hasLastTool(false),
 		
@@ -173,16 +193,21 @@ namespace spades {
 				map = nullptr;
 			}
 			world.reset(w);
-			if(world){
+			if(world)
+			{
 				SPLog("World set");
 				
 				// initialize player view objects
 				clientPlayers.resize(world->GetNumPlayerSlots());
-				for(size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				for(size_t i = 0; i < world->GetNumPlayerSlots(); i++) 
+				{
 					Player *p = world->GetPlayer(i);
-					if(p){
+					if(p)
+					{
 						clientPlayers[i] = new ClientPlayer(p, this);
-					}else{
+					}
+					else
+					{
 						clientPlayers[i] = nullptr;
 					}
 				}
@@ -192,7 +217,9 @@ namespace spades {
 				renderer->SetGameMap(map);
 				audioDevice->SetGameMap(map);
 				NetLog("------ World Loaded ------");
-			}else{
+			}
+			else
+			{
 				
 				SPLog("World removed");
 				NetLog("------ World Unloaded ------");
@@ -210,6 +237,9 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			NetLog("Disconnecting");
+
+			DrawDisconnectScreen();
+
 			if(logStream) {
 				SPLog("Closing netlog");
 				logStream.reset();
@@ -255,13 +285,30 @@ namespace spades {
 		}
 		
 		/** Initiate an initialization which likely to take some time */
-		void Client::DoInit() {
+		void Client::DoInit() 
+		{
 			renderer->Init();
-			SmokeSpriteEntity::Preload(renderer);
+			//SmokeSpriteEntity::Preload(renderer);
 			
-			renderer->RegisterImage("Textures/Fluid.png");
-			renderer->RegisterImage("Textures/WaterExpl.png");
+			//images
+			//renderer->RegisterImage("Textures/Fluid.png"); //NOT USED
+			renderer->RegisterImage("Gfx/Ball.png");
+			renderer->RegisterImage("Gfx/Glare.tga");	
+			renderer->RegisterImage("Gfx/Spotlight.tga");
 			renderer->RegisterImage("Gfx/White.tga");
+			renderer->RegisterImage("Gfx/WhitePixel.tga");
+			renderer->RegisterImage("Gfx/WhiteDisk.tga");
+			renderer->RegisterImage("Gfx/WhiteSmoke.tga");			
+			renderer->RegisterImage("Textures/WaterExpl.png");		
+			//hud images
+			renderer->RegisterImage("Gfx/Sight.tga");
+			renderer->RegisterImage("Gfx/Bullet/Semi.tga");
+			renderer->RegisterImage("Gfx/Bullet/SMG.tga");
+			renderer->RegisterImage("Gfx/Bullet/Shotgun.tga");
+			renderer->RegisterImage("Gfx/CircleGradient.png");
+			renderer->RegisterImage("Gfx/HurtSprite.png");
+			renderer->RegisterImage("Gfx/HurtRing2.png");
+			//sounds
 			audioDevice->RegisterSound("Sounds/Weapons/Block/Build.wav");
 			audioDevice->RegisterSound("Sounds/Weapons/Impacts/FleshLocal1.wav");
 			audioDevice->RegisterSound("Sounds/Weapons/Impacts/FleshLocal2.wav");
@@ -275,73 +322,52 @@ namespace spades {
 			audioDevice->RegisterSound("Sounds/Player/Footstep2.wav");
 			audioDevice->RegisterSound("Sounds/Player/Footstep3.wav");
 			audioDevice->RegisterSound("Sounds/Player/Footstep4.wav");
-			audioDevice->RegisterSound("Sounds/Player/Footstep5.wav");
-			audioDevice->RegisterSound("Sounds/Player/Footstep6.wav");
-			audioDevice->RegisterSound("Sounds/Player/Footstep7.wav");
-			audioDevice->RegisterSound("Sounds/Player/Footstep8.wav");
 			audioDevice->RegisterSound("Sounds/Player/Wade1.wav");
 			audioDevice->RegisterSound("Sounds/Player/Wade2.wav");
 			audioDevice->RegisterSound("Sounds/Player/Wade3.wav");
 			audioDevice->RegisterSound("Sounds/Player/Wade4.wav");
-			audioDevice->RegisterSound("Sounds/Player/Wade5.wav");
-			audioDevice->RegisterSound("Sounds/Player/Wade6.wav");
-			audioDevice->RegisterSound("Sounds/Player/Wade7.wav");
-			audioDevice->RegisterSound("Sounds/Player/Wade8.wav");
 			audioDevice->RegisterSound("Sounds/Player/Run1.wav");
 			audioDevice->RegisterSound("Sounds/Player/Run2.wav");
 			audioDevice->RegisterSound("Sounds/Player/Run3.wav");
 			audioDevice->RegisterSound("Sounds/Player/Run4.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run5.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run6.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run7.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run8.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run9.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run10.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run11.wav");
-			audioDevice->RegisterSound("Sounds/Player/Run12.wav");
 			audioDevice->RegisterSound("Sounds/Player/Jump.wav");
 			audioDevice->RegisterSound("Sounds/Player/Land.wav");
 			audioDevice->RegisterSound("Sounds/Player/WaterJump.wav");
 			audioDevice->RegisterSound("Sounds/Player/WaterLand.wav");
-			audioDevice->RegisterSound("Sounds/Weapons/SwitchLocal.wav");
+			audioDevice->RegisterSound("Sounds/Weapons/DryFire.wav");
 			audioDevice->RegisterSound("Sounds/Weapons/Switch.wav");
 			audioDevice->RegisterSound("Sounds/Weapons/Restock.wav");
-			audioDevice->RegisterSound("Sounds/Weapons/RestockLocal.wav");
-			audioDevice->RegisterSound("Sounds/Weapons/AimDownSightLocal.wav");
-			renderer->RegisterImage("Gfx/Ball.png");
-			renderer->RegisterModel("Models/Player/Dead.kv6");
-			renderer->RegisterImage("Gfx/Spotlight.tga");
-			renderer->RegisterImage("Gfx/Glare.tga");
-			renderer->RegisterModel("Models/Weapons/Spade/Spade.kv6");
-			renderer->RegisterModel("Models/Weapons/Block/Block2.kv6");
-			renderer->RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
-			renderer->RegisterModel("Models/Weapons/SMG/Weapon.kv6");
-			renderer->RegisterModel("Models/Weapons/SMG/WeaponNoMagazine.kv6");
-			renderer->RegisterModel("Models/Weapons/SMG/Magazine.kv6");
-			renderer->RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
-			renderer->RegisterModel("Models/Weapons/Rifle/WeaponNoMagazine.kv6");
-			renderer->RegisterModel("Models/Weapons/Rifle/Magazine.kv6");
-			renderer->RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
-			renderer->RegisterModel("Models/Weapons/Shotgun/WeaponNoPump.kv6");
-			renderer->RegisterModel("Models/Weapons/Shotgun/Pump.kv6");
-			renderer->RegisterModel("Models/Player/Arm.kv6");
-			renderer->RegisterModel("Models/Player/UpperArm.kv6");
-			renderer->RegisterModel("Models/Player/LegCrouch.kv6");
-			renderer->RegisterModel("Models/Player/TorsoCrouch.kv6");
-			renderer->RegisterModel("Models/Player/Leg.kv6");
-			renderer->RegisterModel("Models/Player/Torso.kv6");
-			renderer->RegisterModel("Models/Player/Arms.kv6");
-			renderer->RegisterModel("Models/Player/Head.kv6");
-			renderer->RegisterModel("Models/MapObjects/Intel.kv6");
-			renderer->RegisterModel("Models/MapObjects/CheckPoint.kv6");
-			renderer->RegisterImage("Gfx/Sight.tga");
-			renderer->RegisterImage("Gfx/Bullet/7.62mm.tga");
-			renderer->RegisterImage("Gfx/Bullet/9mm.tga");
-			renderer->RegisterImage("Gfx/Bullet/12gauge.tga");
-			renderer->RegisterImage("Gfx/CircleGradient.png");
-			renderer->RegisterImage("Gfx/HurtSprite.png");
-			renderer->RegisterImage("Gfx/HurtRing2.png");
+			audioDevice->RegisterSound("Sounds/Weapons/Zoom.wav");
 			audioDevice->RegisterSound("Sounds/Feedback/Chat.wav");
+			//map objects
+			renderer->RegisterModel("Models/MapObjects/IntelA.kv6");
+			renderer->RegisterModel("Models/MapObjects/IntelB.kv6");			
+			renderer->RegisterModel("Models/MapObjects/CheckPoint.kv6");
+			renderer->RegisterModel("Models/MapObjects/CheckPointA.kv6");
+			renderer->RegisterModel("Models/MapObjects/CheckPointB.kv6");
+			//player
+			//Team A
+			renderer->RegisterModel("Models/PlayerA/Arm_Up.kv6");
+			renderer->RegisterModel("Models/PlayerA/Arm_Low.kv6");
+			renderer->RegisterModel("Models/PlayerA/ArmsTool.kv6");
+			renderer->RegisterModel("Models/PlayerA/ArmsWeap.kv6");
+			renderer->RegisterModel("Models/PlayerA/Dead.kv6");
+			renderer->RegisterModel("Models/PlayerA/Head.kv6");
+			renderer->RegisterModel("Models/PlayerA/Leg.kv6");
+			renderer->RegisterModel("Models/PlayerA/LegCrouch.kv6");
+			renderer->RegisterModel("Models/PlayerA/Torso.kv6");
+			renderer->RegisterModel("Models/PlayerA/TorsoCrouch.kv6");		
+			//Team B
+			renderer->RegisterModel("Models/PlayerB/Arm_Up.kv6");
+			renderer->RegisterModel("Models/PlayerB/Arm_Low.kv6");
+			renderer->RegisterModel("Models/PlayerB/ArmsTool.kv6");
+			renderer->RegisterModel("Models/PlayerB/ArmsWeap.kv6");
+			renderer->RegisterModel("Models/PlayerB/Dead.kv6");
+			renderer->RegisterModel("Models/PlayerB/Head.kv6");
+			renderer->RegisterModel("Models/PlayerB/Leg.kv6");
+			renderer->RegisterModel("Models/PlayerB/LegCrouch.kv6");
+			renderer->RegisterModel("Models/PlayerB/Torso.kv6");
+			renderer->RegisterModel("Models/PlayerB/TorsoCrouch.kv6");
 			
 			SPLog("Started connecting to '%s'", hostname.asString(true).c_str());
 			net.reset(new NetClient(this));
@@ -385,7 +411,8 @@ namespace spades {
 			}
 		}
 		
-		void Client::RunFrame(float dt) {
+		void Client::RunFrame(float dt)
+		{
 			SPADES_MARK_FUNCTION();
 			
 			fpsCounter.MarkFrame();
@@ -427,7 +454,7 @@ namespace spades {
 			mapView->Update(dt);
 			largeMapView->Update(dt);
 			
-			UpdateAutoFocus(dt);
+			//UpdateAutoFocus(dt);
 			
 			if(world){
 				UpdateWorld(dt);
@@ -474,44 +501,71 @@ namespace spades {
 			time += dt;
 		}
 		
-		bool Client::IsLimboViewActive(){
-			if(world){
-				if(!world->GetLocalPlayer()){
+		bool Client::IsLimboViewActive()
+		{
+			if(world)
+			{
+				if(!world->GetLocalPlayer())
+				{
 					return true;
-				}else if(inGameLimbo){
+				}
+				else if(inGameLimbo)
+				{
 					return true;
 				}
 			}
 			return false;
 		}
 		
-		void Client::SpawnPressed() {
+		void Client::SpawnPressed() 
+		{
 			WeaponType weap = limbo->GetSelectedWeapon();
 			int team = limbo->GetSelectedTeam();
 			inGameLimbo = false;
 			if(team == 2)
 				team = 255;
 			
-			if(!world->GetLocalPlayer()){
+			if(!world->GetLocalPlayer())
+			{
 				// join
 				net->SendJoin(team, weap,
 							  playerName, lastKills);
-			}else{
+			}
+			else
+			{
 				Player *p = world->GetLocalPlayer();
-				if(p->GetTeamId() != team){
+				if(p->GetTeamId() != team)
+				{
 					net->SendTeamChange(team);
 				}
-				if(team != 2 && p->GetWeapon()->GetWeaponType() != weap){
+				if(team != 2 && p->GetWeapon()->GetWeaponType() != weap)
+				{
 					net->SendWeaponChange(weap);
 				}
-			}
+
+				if (weap == SMG_WEAPON)
+					world->GetLocalPlayer()->SetWeaponType(weap);
+
+				////Chameleon //transport this to Client_Update(); Check when health == 0
+				//if (weap != SMG_WEAPON)
+				//{
+				//	MaxShots = 1;
+				//}
+				//else
+				//{
+				//	world->GetLocalPlayer()->SetWeaponType(weap);
+				//	MaxShots = -1;
+				//}
+			}			
 		}
 		
 		
 		void Client::ShowAlert(const std::string &contents,
-							   AlertType type) {
+							   AlertType type) 
+		{
 			float timeout;
-			switch(type) {
+			switch(type) 
+			{
 				case AlertType::Notice:
 					timeout = 2.5f;
 					break;
@@ -519,7 +573,7 @@ namespace spades {
 					timeout = 3.f;
 					break;
 				case AlertType::Error:
-					timeout = 3.f;
+					timeout = 5.f;
 					break;
 			}
 			ShowAlert(contents, type, timeout);
@@ -528,24 +582,28 @@ namespace spades {
 		void Client::ShowAlert(const std::string &contents,
 							   AlertType type,
 							   float timeout,
-							   bool quiet) {
+							   bool quiet)
+		{
 			alertType = type;
 			alertContents = contents;
 			alertDisappearTime = time + timeout;
 			alertAppearTime = time;
 			
-			if(type != AlertType::Notice && !quiet) {
+			if(type != AlertType::Notice && !quiet)
+			{
 				PlayAlertSound();
 			}
 		}
 		
-		void Client::PlayAlertSound() {
+		void Client::PlayAlertSound() 
+		{
 			Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Feedback/Alert.wav");
 			audioDevice->PlayLocal(chunk, AudioParam());
 		}
 		
 		/** Records chat message/game events to the log file. */
-		void Client::NetLog(const char *format, ...) {
+		void Client::NetLog(const char *format, ...) 
+		{
 			char buf[4096];
 			va_list va;
 			va_start(va, format);
@@ -579,7 +637,8 @@ namespace spades {
 		
 #pragma mark - Snapshots
 		
-		void Client::TakeMapShot(){
+		void Client::TakeMapShot()
+		{
 			
 			try{
 				std::string name = MapShotPath();
@@ -639,10 +698,14 @@ namespace spades {
 										   const std::string &msg){
 			{
 				std::string s;
-				if(global)
-					/// prefix added to global chat messages.
-					s = _Tr("Client", "[Global] ");
+				//if(global)
+				//	s = _Tr("Client", "[Global] ");/// prefix added to global chat messages.
+
 				s += ChatWindow::TeamColorMessage(p->GetName(), p->GetTeamId());
+				if (!global)
+				{
+					s += ChatWindow::TeamCoords(p->GetPosition().x, p->GetPosition().y);
+				}
 				s += ": ";
 				s += msg;
 				chatWindow->AddMessage(s);
@@ -650,7 +713,7 @@ namespace spades {
 			{
 				std::string s;
 				if(global)
-					s = "[Global] ";
+					s = "[ALL] ";
 				s += p->GetName();
 				s += ": ";
 				s += msg;
@@ -662,7 +725,6 @@ namespace spades {
 				scriptedUI->RecordChatLog(s,
 										  MakeVector4(col.x / 255.f, col.y / 255.f,
 													  col.z / 255.f, 0.8f));
-				
 			}
 			if(global)
 				NetLog("[Global] %s (%s): %s",
@@ -676,7 +738,8 @@ namespace spades {
 					   msg.c_str());
 			
 			
-			if((!IsMuted()) && (int)cg_chatBeep) {
+			if((!IsMuted()) && (int)cg_chatBeep)
+			{
 				Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Feedback/Chat.wav");
 				audioDevice->PlayLocal(chunk, AudioParam());
 			}
@@ -734,7 +797,8 @@ namespace spades {
 			followingPlayerId = nextId;
 		}
 		
-		bool Client::IsFollowing() {
+		bool Client::IsFollowing()
+		{
 			if(!world) return false;
 			if(!world->GetLocalPlayer())
 				return false;

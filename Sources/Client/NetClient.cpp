@@ -639,13 +639,14 @@ namespace spades {
 				return NULL;
 			return GetWorld()->GetPlayer(pId);
 		}
-		Player * NetClient::GetPlayer(int pId){
+		Player * NetClient::GetPlayer(int pId)
+		{
 			SPADES_MARK_FUNCTION();
 			if(!GetWorld())
 				SPRaise("Invalid Player ID %d: No world", pId);
 			if(pId < 0 || pId >= GetWorld()->GetNumPlayerSlots())
 				SPRaise("Invalid Player ID %d: Out of range", pId);
-			if(!GetWorld()->GetPlayer(pId))
+			if (!GetWorld()->GetPlayer(pId))
 				SPRaise("Invalid Player ID %d: Doesn't exist", pId);
 			return GetWorld()->GetPlayer(pId);
 		}
@@ -774,15 +775,27 @@ namespace spades {
 							SPAssert(!isnan(front.y));
 							SPAssert(!isnan(front.z));
 							SPAssert(front.GetLength() < 40.f);
-							if(GetWorld()){
+							
+							if(GetWorld())
+							{
+								//Chameleon //Kraken still crashing, looking at nades....
+								/*if (!GetWorld()->GetPlayer(idx))
+								{
+									SPLog("Player # whatever is not with us");
+									continue;
+								}*/
+
 								p = GetWorld()->GetPlayer(idx);
-								if(p){
-									if(p != GetWorld()->GetLocalPlayer()){
+								if(p)
+								{
+									if(p != GetWorld()->GetLocalPlayer())
+									{
 										p->SetPosition(pos);
 										p->SetOrientation(front);
 										
 										PosRecord& rec = playerPosRecords[idx];
-										if(rec.valid) {
+										if(rec.valid) 
+										{
 											float timespan = GetWorld()->GetTime() - rec.time;
 											timespan = std::max(0.16f, timespan);
 											Vector3 vel = (pos - rec.pos) / timespan;
@@ -857,7 +870,20 @@ namespace spades {
 					if(!GetWorld())
 						break;
 				{
-					reader.ReadByte(); // skip player Id
+					//Chameleon
+					uint8_t tempByte = reader.ReadByte();
+					int teamId;
+					if (!GetWorld()->GetPlayer(tempByte))
+					{
+						SPLog("Player # whatever is not with us");
+						break;
+					}
+					else
+					{
+						Player *p = GetPlayerOrNull(tempByte); // NOT skip player Id
+						teamId = p->GetTeamId();
+					}
+
 					//Player *p = GetPlayerOrNull(reader.ReadByte());
 					float fuseLen = reader.ReadFloat();
 					Vector3 pos, vel;
@@ -874,7 +900,7 @@ namespace spades {
 						break;
 					}*/
 					
-					Grenade *g = new Grenade(GetWorld(), pos, vel, fuseLen);
+					Grenade *g = new Grenade(GetWorld(), pos, vel, fuseLen, teamId);
 					GetWorld()->AddGrenade(g);
 				}
 					break;
@@ -1597,11 +1623,13 @@ namespace spades {
 			enet_peer_send(peer, 0, wri.CreatePacket());
 		}
 		
-		void NetClient::SendWeaponInput( WeaponInput inp) {
+		void NetClient::SendWeaponInput( WeaponInput inp) 
+		{
 			SPADES_MARK_FUNCTION();
 			uint8_t bits = 0;
-			if(inp.primary)		bits |= 1 << 0;
-			if(inp.secondary)	bits |= 1 << 1;
+			
+			if(inp.primary)	bits |= 1 << 0;
+			if(inp.secondary) bits |= 1 << 1;
 
 			if((unsigned int)bits == lastWeaponInput)
 				return;

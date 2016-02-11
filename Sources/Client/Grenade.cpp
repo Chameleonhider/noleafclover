@@ -31,13 +31,14 @@ namespace spades {
 		Grenade::Grenade(World *w,
 						 Vector3 pos,
 						 Vector3 vel,
-						 float fuse){
+						 float fuse, int tId){
 			SPADES_MARK_FUNCTION();
 			
 			position = pos;
 			velocity = vel;
 			this->fuse = fuse;
 			world = w;
+			teamId = tId;
 		}
 		
 		Grenade::~Grenade(){

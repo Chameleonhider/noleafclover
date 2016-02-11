@@ -36,6 +36,7 @@ namespace spades {
 		virtual ~VoxelModel();
 	public:
 		VoxelModel(int width, int height, int depth);
+		//VoxelModel(int width, int height, int depth, int wlim, int hlim, int dlim);
 		
 		void HollowFill();
 		

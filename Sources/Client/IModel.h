@@ -32,6 +32,7 @@ namespace spades {
 			IModel(){}
 			
 			virtual AABB3 GetBoundingBox() = 0;
+			virtual IntVector3 GetDimensions() = 0;
 		};
 	}
 }

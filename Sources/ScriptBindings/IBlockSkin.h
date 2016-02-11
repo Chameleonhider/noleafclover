@@ -32,6 +32,7 @@ namespace spades {
 			ScriptIBlockSkin(asIScriptObject *obj);
 			void SetReadyState(float);
 			void SetBlockColor(Vector3);
+			void SetIsDragging(bool);
 		};
 	}
 }

@@ -108,8 +108,10 @@ namespace spades {
 									break;
 							}
 							d3 = 192.f + d3 * 62.f;
-							brights[x + y * 3 + z * 9]
-							= static_cast<uint8_t>(d3);
+							//Chameleon: no shadows for tracers
+							if (param.customColor.x > 1 || param.customColor.y > 1 || param.customColor.z > 1)
+								d3 = 255.f;
+							brights[x + y * 3 + z * 9] = static_cast<uint8_t>(d3);
 						}
 					}
 				}
@@ -173,10 +175,11 @@ namespace spades {
 			float zNear = r->sceneDef.zNear;
 			for(int x = 0; x < w; x++) {
 				auto v2 = v1;
-				for(int y = 0; y < h; y++) {
-					auto *mp = &model->renderData
-					[model->renderDataAddr[x + y * w]];
-					while(*mp != -1) {
+				for(int y = 0; y < h; y++) 
+				{
+					auto *mp = &model->renderData[model->renderDataAddr[x + y * w]];
+					while(*mp != -1) 
+					{
 						uint32_t data = *(mp++);
 						uint32_t normal = *(mp++);
 						int z = static_cast<int>(data >> 24);
@@ -184,21 +187,43 @@ namespace spades {
 						SPAssert(z >= 0);
 						
 						auto vv = v2 + tAxis3 * zvals[z];
-						if(vv.z < zNear) continue;
-						
+
+						if (vv.z < zNear)
+							continue;
 						// save Z value (don't divide this by W!)
 						float zval = vv.z;
 						
 						// use vv.z for point radius to be divided by W
 						vv.z = pointDiameter;
+
+				//MESS
+						//v2 is bounded cube position in space
+						//Vector3 camPos = r->GetViewMatrix().GetOrigin();
+						//Vector3 camFront = r->GetViewMatrix().GetAxis(0);
+						/*float dist = ((v2.x - camPos.x)*camFront.x + (v2.y - camPos.y)*camFront.y + (v2.z - camPos.z)*camFront.z);
+						float scl = fastRcp(dist);
+						vv *= scl;*/
+
+
+						//vv.z = vv.z / ((v2.x - camPos.x)*camFront.x + (v2.y - camPos.y)*camFront.y + (v2.z - camPos.z)*camFront.z);
+						//vv.z = vv.z / Vector3::Dot((Vector3(v2.x, v2.y, v2.z) - camPos).Normalize(), camFront.Normalize());
+
+				//END OF MESS
 						
 						// perspective division
 						float scl = fastRcp(vv.w);
+						//vv *= scl;
 						vv *= scl;
-						
+
 						int ix = static_cast<int>(vv.x) + ndc2scroffX;
 						int iy = static_cast<int>(vv.y) + ndc2scroffY;
 						int idm = static_cast<int>(vv.z + .99f);
+
+						//MESS //makes voxel be positioned on left-up on screen, does not affect diameter
+						//ix = ix / (v2.x - camPos.x);
+						//iy = iy / (v2.y - camPos.y);
+						//EOf MESS
+
 						idm = std::max(1, idm);
 						int minX = ix - (idm >> 1);
 						int minY = iy - (idm >> 1);

@@ -17,6 +17,8 @@
  along with OpenSpades.  If not, see <http://www.gnu.org/licenses/>.
  
  */
+//Chameleon: I added this for configuration
+#include <Core/Settings.h>
 
 #include "FallingBlock.h"
 #include "IRenderer.h"
@@ -27,8 +29,19 @@
 #include "../Core/Exception.h"
 #include "World.h"
 #include "GameMap.h"
-#include "SmokeSpriteEntity.h"
+//#include "SmokeSpriteEntity.h"
 #include "ParticleSpriteEntity.h"
+
+//Chameleon: I added these for configuration
+SPADES_SETTING(cg_reduceSmoke, "0");
+//Maximum distance of particles
+SPADES_SETTING(opt_particleMaxDist, "");
+//Maximum distance for detailed particles
+SPADES_SETTING(opt_particleNiceDist, "");
+//Scales the amount of particles produced
+SPADES_SETTING(opt_particleNumScale, "");
+//Scales the amount of FallingBlock particles
+SPADES_SETTING(opt_particleFallBlockReduce, "2");
 
 namespace spades {
 	namespace client {
@@ -98,8 +111,10 @@ namespace spades {
 			GameMap *map = client->GetWorld()->GetMap();
 			Vector3 orig = matrix.GetOrigin();
 			
-			if(time > 1.f ||
-			   map->ClipBox(orig.x, orig.y, orig.z)){
+			if(time > 2.f ||  map->ClipBox(orig.x, orig.y, orig.z))
+			{
+				
+
 				// destroy
 				int w = vmodel->GetWidth();
 				int h = vmodel->GetHeight();
@@ -114,33 +129,49 @@ namespace spades {
 				Vector3 vmAxis1 = vmat.GetAxis(0);
 				Vector3 vmAxis2 = vmat.GetAxis(1);
 				Vector3 vmAxis3 = vmat.GetAxis(2);
-				
-				Handle<IImage> img = client->GetRenderer()->RegisterImage("Gfx/White.tga");
-				
+						
+				//basic 1x1 pixel (>64 blocks)
+				Handle<IImage> img = client->GetRenderer()->RegisterImage("Gfx/WhitePixel.tga");
+				//8x8 round blob (<64 blocks)
+				Handle<IImage> img2 = client->GetRenderer()->RegisterImage("Gfx/WhiteDisk.tga");
+				//16x16 round blob (5<x<96 blocks) NOT USING IT
+				Handle<IImage> img3 = client->GetRenderer()->RegisterImage("Gfx/WhiteSmoke.tga");
+
 				bool usePrecisePhysics = false;
-				float dist =(client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetLength();
-				if(dist < 16.f) {
-					if(numBlocks < 1000){
-						usePrecisePhysics = true;
-					}
+
+				float distance =(client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetLength();
+				int distLimit = int(opt_particleMaxDist);
+				if (distance < 16.f*float(opt_particleNiceDist) && numBlocks < 250 * float(opt_particleNumScale))
+				{
+					usePrecisePhysics = true;
 				}
 				
 				float impact;
-				if(dist > 170.f)
+				if (distance > distLimit)
 					return false;
 				
 				impact = (float)numBlocks / 100.f;
 				
-				client->grenadeVibration += impact / (dist + 5.f);
-				if(client->grenadeVibration > 1.f)
-					client->grenadeVibration = 1.f;
-				
-				for(int x = 0; x < w; x++){
+				client->grenadeVibration += impact / (distance + 5.f);
+				if(client->grenadeVibration > 0.25f)
+					client->grenadeVibration = 0.25f;
+
+				bool bSkip = false;
+
+				for (float x = 0; x < w; x++, bSkip = !bSkip)
+				{
 					Vector3 p1 = vmOrigin + vmAxis1 * (float)x;
-					for(int y = 0; y < h; y++){
+					for (float y = 0; y < h; y++, bSkip = !bSkip)
+					{
 						Vector3 p2 = p1 + vmAxis2 * (float)y;
-						for(int z = 0; z < d; z++){
-							if(!vmodel->IsSolid(x, y, z))
+						for (float z = 0; z < d; z++, bSkip = !bSkip)
+						{
+							if (int(opt_particleFallBlockReduce) == 1 && bSkip) //allways
+								continue;
+							else if (int(opt_particleFallBlockReduce) == 2 && bSkip && numBlocks > 250) //above 250 blocks
+								continue;
+
+							if (!vmodel->IsSolid((int)x, (int)y, (int)z))
 								continue;
 							// inner voxel?
 							if(x > 0 && y > 0 && z > 0 &&
@@ -153,17 +184,55 @@ namespace spades {
 							   vmodel->IsSolid(x, y, z+1))
 								continue;
 							uint32_t c = vmodel->GetColor(x, y, z);
+							//transparency for colour
+							float transparency = (distLimit - distance) / (distLimit*1.0f);
 							Vector4 col;
 							col.x = (float)((uint8_t)(c)) / 255.f;
 							col.y = (float)((uint8_t)(c>>8)) / 255.f;
 							col.z = (float)((uint8_t)(c>>16)) / 255.f;
-							col.w = 1.;
+							col.w = transparency+0.5f;
 							
 							Vector3 p3 = p2 + vmAxis3 * (float)z;
 							
+							//particles copied from Client_LocalEnts.cpp - EmitBlockDestroyFragments()
+							//particle (gravity)
+							if (float(opt_particleNumScale) > 0.24f)
 							{
 								ParticleSpriteEntity *ent =
-								new SmokeSpriteEntity(client, col, 70.f);
+									new ParticleSpriteEntity(client, img2, col);
+
+								ent->SetTrajectory(p3,
+									MakeVector3(GetRandom() - GetRandom(),
+									GetRandom() - GetRandom(),
+									GetRandom() - GetRandom()),
+									1.f, 1.f);
+								ent->SetRotation(GetRandom() * 6.48f);
+								ent->SetRadius(0.5f);
+								ent->SetLifeTime(1.f, 0.f, 1.f);
+								if (distance < 32.f * float(opt_particleNiceDist))
+									ent->SetBlockHitAction(ParticleSpriteEntity::BounceWeak);
+								else
+									ent->SetBlockHitAction(ParticleSpriteEntity::Delete);
+								client->AddLocalEntity(ent);
+							}
+							//stationary "smoke" after getting destroyed
+							if (float(opt_particleNumScale) > 0.49f && distance < distLimit * 0.75f * float(opt_particleNiceDist) && !cg_reduceSmoke)
+							{
+								ParticleSpriteEntity *ent =
+									new ParticleSpriteEntity(client, img3, col);
+
+								ent->SetTrajectory(p3, MakeVector3(0, 0, 0), 1.f, 0.f);
+								ent->SetRotation(GetRandom() * 6.48f);
+								ent->SetRadius(0.5f, 0.25f);
+								ent->SetLifeTime(2.f, 0.f, 2.f);
+								ent->SetBlockHitAction(ParticleSpriteEntity::Ignore);
+								client->AddLocalEntity(ent);
+							}
+							//OLD smoke+particle
+							/*if (!cg_reduceSmoke)
+							{
+								ParticleSpriteEntity *ent =
+									new ParticleSpriteEntity(client, img3, col);
 								ent->SetTrajectory(p3,
 												   (MakeVector3(GetRandom()-GetRandom(),
 																GetRandom()-GetRandom(),
@@ -192,7 +261,7 @@ namespace spades {
 								if(usePrecisePhysics)
 									ent->SetBlockHitAction(ParticleSpriteEntity::BounceWeak);
 								client->AddLocalEntity(ent);
-							}
+							}*/
 						}
 					}
 				}

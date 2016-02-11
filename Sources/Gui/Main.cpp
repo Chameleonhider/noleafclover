@@ -158,7 +158,7 @@ class ThreadQuantumSetter {
 
 SPADES_SETTING(cg_lastQuickConnectHost, "");
 SPADES_SETTING(cg_protocolVersion, "");
-SPADES_SETTING(cg_playerName, "");
+SPADES_SETTING(cg_playerName, "/cg_playerName");
 int cg_autoConnect = 0;
 bool cg_printVersion = false;
 bool cg_printHelp = false;
@@ -391,9 +391,9 @@ int main(int argc, char ** argv)
 			datadir += L"\\OpenSpades\\Resources";
 			spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem(Utf8FromWString(datadir.c_str()), true));
 		}
-		
+
 		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem(Utf8FromWString((appdir + L"Resources").c_str()), false));
-		
+
 		//fltk has a console window on windows (can disable while building, maybe use a builtin console for a later release?)
 		HWND hCon = GetConsoleWindow();
 		if( NULL != hCon ) {

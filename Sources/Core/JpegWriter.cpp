@@ -27,7 +27,7 @@
 #include <Core/Settings.h>
 
 // FIXME: make this changable for every calls for "Save"
-SPADES_SETTING(core_jpegQuality, "95");
+SPADES_SETTING(core_jpegQuality, "90");
 
 namespace spades {
 	class JpegWriter: public IBitmapCodec {

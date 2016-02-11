@@ -89,7 +89,11 @@ namespace spades {
 			
 			boundingBox.min = minPos;
 			boundingBox.max = maxPos;
-			
+
+			getDimensions.x = m->GetWidth();
+			getDimensions.y = m->GetHeight();
+			getDimensions.z = m->GetDepth();
+
 			// clean up
 			numIndices = (unsigned int)indices.size();
 			std::vector<Vertex>().swap(vertices);

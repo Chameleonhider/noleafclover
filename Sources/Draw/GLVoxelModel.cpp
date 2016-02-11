@@ -82,7 +82,11 @@ namespace spades {
 			
 			boundingBox.min = minPos;
 			boundingBox.max = maxPos;
-			
+
+			getDimensions.x = m->GetWidth();
+			getDimensions.y = m->GetHeight();
+			getDimensions.z = m->GetDepth();
+
 			// clean up
 			numIndices = (unsigned int)indices.size();
 			std::vector<Vertex>().swap(vertices);
@@ -94,7 +98,7 @@ namespace spades {
 			device->DeleteBuffer(idxBuffer);
 			device->DeleteBuffer(buffer);
 		}
-		
+
 		uint8_t GLVoxelModel::calcAOID(VoxelModel *m,
 									 int x, int y, int z,
 									 int ux, int uy, int uz,

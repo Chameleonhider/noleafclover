@@ -136,12 +136,14 @@ namespace spades {
 			grenades.push_back(g);
 		}
 		
-		std::vector<Grenade *> World::GetAllGrenades() {
+		std::vector<Grenade *> World::GetAllGrenades() 
+		{
 			SPADES_MARK_FUNCTION_DEBUG();
 			
 			std::vector<Grenade *> g;
 			for(std::list<Grenade *>::iterator it = grenades.begin();
-				it != grenades.end(); it++){
+				it != grenades.end(); it++)
+			{
 				g.push_back(*it);
 			}
 			return g;
@@ -428,10 +430,12 @@ namespace spades {
 				Player::HitBoxes hb = p->GetHitBoxes();
 				Vector3 hitPos;
 				
-				if(hb.head.RayCast(startPos, dir, &hitPos)) {
+				if(hb.head.RayCast(startPos, dir, &hitPos)) 
+				{
 					float dist = (hitPos - startPos).GetLength();
 					if(hitPlayer == NULL ||
-					   dist < hitPlayerDistance){
+					   dist < hitPlayerDistance)
+					{
 						if(hitPlayer != p){
 							hitPlayer = p;
 							hitFlag = hit_None;
@@ -453,18 +457,24 @@ namespace spades {
 					}
 				}
 				for(int j = 0; j < 3 ;j++){
-					if(hb.limbs[j].RayCast(startPos, dir, &hitPos)) {
+					if(hb.limbs[j].RayCast(startPos, dir, &hitPos)) 
+					{
 						float dist = (hitPos - startPos).GetLength();
 						if(hitPlayer == NULL ||
-						   dist < hitPlayerDistance){
-							if(hitPlayer != p){
+						   dist < hitPlayerDistance)
+						{
+							if(hitPlayer != p)
+							{
 								hitPlayer = p;
 								hitFlag = hit_None;
 							}
 							hitPlayerDistance = dist;
-							if(j == 2) {
+							if(j == 2) 
+							{
 								hitFlag |= hit_Arms;
-							} else {
+							}
+							else 
+							{
 								hitFlag |= hit_Legs;
 							}
 						}
@@ -485,13 +495,17 @@ namespace spades {
 				result.hitFlag = hit_None;
 				result.blockPos = res2.hitBlock;
 				result.hitPos = res2.hitPos;
-			}else if(hitPlayer) {
+			}
+			else if(hitPlayer)
+			{
 				result.hit = true;
 				result.startSolid = false; // FIXME: startSolid for player
 				result.player = hitPlayer;
 				result.hitPos = startPos + dir * hitPlayerDistance;
 				result.hitFlag = hitFlag;
-			}else{
+			}
+			else
+			{
 				result.hit = false;
 			}
 			

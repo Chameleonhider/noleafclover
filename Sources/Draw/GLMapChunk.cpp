@@ -31,7 +31,7 @@
 #include "../Core/Settings.h"
 #include "GLDynamicLightShader.h"
 
-SPADES_SETTING(r_water, "2");
+SPADES_SETTING(r_water, "0");
 
 #include <AngelScript/include/angelscript.h> // for asOFFSET. somehow `offsetof` fails on gcc-4.8
 
@@ -243,8 +243,10 @@ namespace spades {
 						//col = 0xffffffff;
 						
 						// damaged block?
+						//(uint8_t)col / 510.f, (uint8_t)(col >> 8) / 510.f, (uint8_t)(col >> 16) / 510.f
 						int health = col >> 24;
-						if(health < 100){
+						if(health < 100)
+						{
 							col &= 0xffffff;
 							col &= 0xfefefe;
 							col >>= 1;

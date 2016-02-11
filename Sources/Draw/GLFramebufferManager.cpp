@@ -32,7 +32,7 @@ SPADES_SETTING(r_srgb, "0");
 SPADES_SETTING(r_highPrec, "1");
 SPADES_SETTING(r_hdr, "0");
 SPADES_SETTING(r_blitFramebuffer, "1");
-SPADES_SETTING(r_water, "2");
+SPADES_SETTING(r_water, "0");
 
 namespace spades {
 	namespace draw {

@@ -40,6 +40,7 @@ namespace spades {
 		static const char MsgColorSysInfo = MsgColorGreen;
 		static const char MsgColorRestore = 6;
 		static const char MsgImage = 7;
+		static const char MsgColorBlack = 8;
 		static const char MsgColorMax = 9;
 		
 		class ChatWindow {
@@ -75,7 +76,8 @@ namespace spades {
 			void AddMessage(const std::string&);
 			static std::string ColoredMessage(const std::string&, char);
 			static std::string TeamColorMessage(const std::string&, int);
-			static std::string killImage( int killType, int weapon );
+			static std::string TeamCoords(int, int);
+			static std::string killImage(int killType, int weapon);
 			
 			void Update(float dt);
 			void Draw();

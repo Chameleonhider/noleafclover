@@ -62,7 +62,7 @@ namespace spades {
 			virtual bool Update(float dt);
 			virtual void Render3D();
 			
-			void SetAdditive(bool b){additive = b;}
+			//void SetAdditive(bool b){additive = b;}
 			
 			void SetLifeTime(float lifeTime,
 							 float fadeIn,

@@ -65,3 +65,8 @@ openspades.mk/
 # fltk / fluid output leftovers
 Sources/Gui/DetailConfigWindow.txt
 Sources/Gui/MainWindow.txt
+
+Resources/Scripts/#Backup/BasicViewWeapon.as
+Resources/Scripts/#Backup/Skin/BlockA/ThirdPerson.as
+Resources/Scripts/#Backup/Skin/ShotgunB/ThirdPerson.as
+Resources/Scripts/#Backup/Skin/ShotgunA/View.as

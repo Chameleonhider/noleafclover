@@ -66,6 +66,7 @@ namespace spades {
 			
 			Matrix4 GetEyeMatrix();
 			void AddToSceneThirdPersonView();
+			void AddToSceneMixedPersonView();
 			void AddToSceneFirstPersonView();
 			
 			void SetSkinParameterForTool(Player::ToolType,

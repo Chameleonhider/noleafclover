@@ -18,6 +18,9 @@
  
  */
 
+#include <Core/Settings.h>
+#include <Core/Strings.h>
+
 #include "GunCasing.h"
 #include "IRenderer.h"
 #include "GameMap.h"
@@ -27,6 +30,11 @@
 #include <stdlib.h>
 #include "ParticleSpriteEntity.h"
 #include "IAudioChunk.h"
+
+//Bullet on ground time limit
+SPADES_SETTING(opt_brassTime, "5.0");
+//Maximum distance for detailed particles
+SPADES_SETTING(opt_particleNiceDist, "");
 
 namespace spades {
 	namespace client{
@@ -73,10 +81,13 @@ namespace spades {
 			v.z = GetRandom() - GetRandom();
 			return v.Normalize();
 		}
-		bool GunCasing::Update(float dt) {
-			if(onGround){
+		bool GunCasing::Update(float dt) 
+		{
+			if(onGround)
+			{
 				groundTime += dt;
-				if(groundTime > 2.f){
+				if (groundTime > float(opt_brassTime))
+				{
 					return false;
 				}
 				
@@ -84,7 +95,9 @@ namespace spades {
 				if(!map->ClipWorld(groundPos.x, groundPos.y, groundPos.z)){
 					return false;
 				}
-			}else{
+			}
+			else
+			{
 				Matrix4 lastMat = matrix;
 				
 				matrix = matrix * Matrix4::Rotate(rotAxis, dt * rotSpeed);
@@ -94,12 +107,15 @@ namespace spades {
 				IntVector3 lp = matrix.GetOrigin().Floor();
 				GameMap *m = client->GetWorld()->GetMap();
 				
-				if(lp.z >= 63){
+				if(lp.z >= 63)
+				{
 					// dropped into water
-					float dist = (client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetPoweredLength();
+					float distance = (client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetLength();
 					
-					if(waterSound){
-						if(dist < 40.f * 40.f && !client->IsMuted()){
+					if(waterSound)
+					{
+						if (!client->IsMuted() && distance*4 < client->soundDistance)
+						{
 							IAudioDevice *dev = client->GetAudioDevice();
 							AudioParam param;
 							param.referenceDistance = .6f;
@@ -111,27 +127,28 @@ namespace spades {
 						waterSound = NULL;
 					}
 					
-					if(dist < 40.f * 40.f){
-						int splats = rand() % 3;
+					if (distance < 16.f * float(opt_particleNiceDist))
+					{
+						//int splats = rand() % 3;
 						
-						Handle<IImage> img = client->GetRenderer()->RegisterImage("Gfx/White.tga");
+						Handle<IImage> img = client->GetRenderer()->RegisterImage("Gfx/WhiteDisk.tga");
 						
-						Vector4 col = {1, 1, 1, 0.8f};
+						Vector4 col = {0.7f, 0.7f, 0.5f, 0.5f};
 						Vector3 pt = matrix.GetOrigin();
 						pt.z = 62.99f;
-						for(int i = 0; i < splats; i++){
-							ParticleSpriteEntity *ent =
-							new ParticleSpriteEntity(client, img, col);
-							ent->SetTrajectory(pt,
-											   MakeVector3(GetRandom()-GetRandom(),
-														   GetRandom()-GetRandom(),
-														   -GetRandom()) * 2.f,
-											   1.f, .4f);
-							ent->SetRotation(GetRandom() * (float)M_PI * 2.f);
-							ent->SetRadius(0.1f + GetRandom()*GetRandom()*0.1f);
-							ent->SetLifeTime(2.f, 0.f, 1.f);
-							client->AddLocalEntity(ent);
-						}
+						//for(int i = 0; i < splats; i++){
+						ParticleSpriteEntity *ent =
+						new ParticleSpriteEntity(client, img, col);
+						ent->SetTrajectory(pt,
+											MakeVector3(GetRandom()-GetRandom(),
+														GetRandom()-GetRandom(),
+														-GetRandom()) * 2.f,
+											1.f, .4f);
+						ent->SetRotation(GetRandom() * (float)M_PI * 2.f);
+						ent->SetRadius(0.1f + GetRandom()*GetRandom()*0.1f);
+						ent->SetLifeTime(1.f, 0.f, 0.f);
+						client->AddLocalEntity(ent);
+						//}
 							
 					}
 					
@@ -145,9 +162,11 @@ namespace spades {
 					if (lp.z != lp2.z && ((lp.x == lp2.x && lp.y == lp2.y) ||
 										  !m->ClipWorld(lp.x, lp.y, lp2.z))){
 						vel.z = -vel.z;
-						if(lp2.z < lp.z){
+						if(lp2.z < lp.z)
+						{
 							// ground hit
-							if(vel.GetLength() < .5f + dt * 100.f && !dropSound){
+							if(vel.GetLength() < 0.5f + dt * 100.f && !dropSound)
+							{
 								// stick to ground
 								onGround = true;
 								groundPos = lp;
@@ -169,10 +188,14 @@ namespace spades {
 								v1 = Vector3::Cross(v2, v3).Normalize();
 								
 								matrix = Matrix4::FromAxis(v1, v2, v3, matrix.GetOrigin());
-							}else{
-								if(dropSound){
-									float dist = (client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetPoweredLength();
-									if(dist < 40.f * 40.f && !client->IsMuted()){
+							}
+							else
+							{
+								if(dropSound)
+								{
+									float distance = (client->GetLastSceneDef().viewOrigin - matrix.GetOrigin()).GetLength();
+									if (!client->IsMuted() && distance*4 < client->soundDistance)
+									{
 										IAudioDevice *dev = client->GetAudioDevice();
 										AudioParam param;
 										param.referenceDistance = .6f;
@@ -211,12 +234,14 @@ namespace spades {
 			return true;
 		}
 		
-		void GunCasing::Render3D() {
+		void GunCasing::Render3D() 
+		{
 			ModelRenderParam param;
-			param.matrix = matrix * Matrix4::Scale(.02f);
-			if(groundTime > 1.f){
+			param.matrix = matrix * Matrix4::Scale(.015f);
+			if (groundTime > float(opt_brassTime))
+			{
 				// sink
-				float move = (groundTime - 1.f) * .2f;
+				float move = (groundTime - float(opt_brassTime) + 1.f) * 0.2f;
 				param.matrix = Matrix4::Translate(0,0,move) * param.matrix;
 			}
 			renderer->RenderModel(model, param);

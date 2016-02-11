@@ -32,6 +32,15 @@
 #include "../Core/Settings.h"
 #include "HitTestDebugger.h"
 
+//#include "Client.cpp"
+//#include "Client.h"
+
+SPADES_SETTING(opt_tracers, "2");
+
+SPADES_SETTING(d_a, "1");
+SPADES_SETTING(d_b, "1");
+SPADES_SETTING(d_c, "1");
+
 namespace spades {
 	namespace client {
 		
@@ -84,6 +93,10 @@ namespace spades {
 			holdingGrenade = false;
 			reloadingServerSide = false;
 			canPending = false;
+
+			//Chameleon
+			crouching = false;
+			spreadAdd = 0.f;
 		}
 		
 		Player::~Player() {
@@ -103,11 +116,40 @@ namespace spades {
 			if(!IsAlive())
 				return;
 			
-			if(newInput.crouch != input.crouch && !airborne) {
-				if(newInput.crouch)
+			if (newInput.crouch != input.crouch && !airborne)
+			{
+				if (newInput.crouch)
+				{
 					position.z += 0.9f;
+				}
 				else
+				{
 					position.z -= 0.9f;
+				}				
+			}
+			if (newInput.crouch != input.crouch && this->IsLocalPlayer())
+			{
+				//Chameleon: disable stability bonus
+				if (spreadAdd < 0)
+					spreadAdd = 0;
+
+				//Chameleon: recoil and weapon movement
+				if (newInput.crouch)
+				{
+					crouching = true;
+					if (weapInput.secondary)
+						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
+					else
+						world->GetListener()->SetWeaponXY(Vector2(0, -0.2f));
+				}
+				else
+				{
+					crouching = false;
+					if (weapInput.secondary)
+						world->GetListener()->SetWeaponXY(Vector2(0, -0.2f));
+					else
+						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
+				}
 			}
 			input = newInput;
 		}
@@ -119,48 +161,81 @@ namespace spades {
 			if(!IsAlive())
 				return;
 			
-			if(input.sprint){
+			//if actually sprinting
+			if(input.sprint && (input.moveBackward || input.moveForward || input.moveLeft || input.moveRight))
+			{
 				newInput.primary = false;
 				newInput.secondary = false;
 			}
-			if(tool == ToolSpade){
+			//holding only sprint key
+			else if (input.sprint)
+			{
+				newInput.primary = false;
+
+				if (this->IsLocalPlayer())
+				{
+					newInput.peeking = true;
+				}
+			}
+			//not sprinting or holding sprint, reset view to normal
+			else if(this->IsLocalPlayer())
+			{
+				newInput.peeking = false;
+			}
+
+			if(tool == ToolSpade)
+			{
 				if(newInput.secondary)
 					newInput.primary = false;
-				if(newInput.secondary != weapInput.secondary){
-					if(newInput.secondary){
+				if(newInput.secondary != weapInput.secondary)
+				{
+					if(newInput.secondary)
+					{
 						nextDigTime = world->GetTime() + 1.f;
 						firstDig = true;
 					}
 				}
-			}else if(tool == ToolGrenade) {
-				if(world->GetTime() < nextGrenadeTime){
+			}
+			else if(tool == ToolGrenade)
+			{
+				if(world->GetTime() < nextGrenadeTime)
+				{
 					newInput.primary = false;
 				}
-				if(grenades == 0){
+				if(grenades == 0)
+				{
 					newInput.primary = false;
 				}
 				if(weapInput.primary && holdingGrenade &&
-				   GetGrenadeCookTime() < .15f) {
+				   GetGrenadeCookTime() < .15f) 
+				{
 					// pin is not pulled yet
 					newInput.primary = true;
 				}
-				if(newInput.primary != weapInput.primary){
-					if(!newInput.primary){
-						if(holdingGrenade){
+				if(newInput.primary != weapInput.primary)
+				{
+					if(!newInput.primary)
+					{
+						if(holdingGrenade)
+						{
 							nextGrenadeTime = world->GetTime() + .5f;
 							ThrowGrenade();
 						}
-					}else{
+					}
+					else
+					{
 						holdingGrenade = true;
 						grenadeTime = world->GetTime();
 						if(listener &&
 						   this == world->GetLocalPlayer())
 							// playing other's grenade sound
 							// is cheating
-							listener->LocalPlayerPulledGrenadePin();
+							listener->LocalPlayerPulledGrenadePin(this->GetTeamId());
 					}
 				}
-			}else if(tool == ToolBlock){
+			}
+			else if(tool == ToolBlock)
+			{
 				// work-around for bug that placing block
 				// occasionally becomes impossible
 				if(nextBlockTime > world->GetTime() +
@@ -239,10 +314,12 @@ namespace spades {
 							
 							nextBlockTime = world->GetTime() + GetToolPrimaryDelay();
 						}else if(blockStocks > 0 && airborne && canPending &&
-								 this == world->GetLocalPlayer()) {
+								 this == world->GetLocalPlayer()) 
+						{
 							pendingPlaceBlock = true;
 							pendingPlaceBlockPos = blockCursorPos;
-						}else if(!IsBlockCursorActive()) {
+						}
+						else if(!IsBlockCursorActive()) {
 							// wait for building becoming possible
 						}
 						
@@ -259,20 +336,51 @@ namespace spades {
 						}
 					}
 				}
-			}else if(IsToolWeapon()){
-				weapon->SetShooting(newInput.primary);
-			}else{
+			}
+			else if(IsToolWeapon())
+			{
+				//not working - called, but does nothing. //does it really NIOT work?
+				//maybe transfer to player.cpp or clientPlayer.cpp
+				if (IsLocalPlayer())
+				{
+					IWorldListener *iL = world->GetListener();
+					if (iL->GetMaxShots() > 0)
+					{
+						if (iL->GetShotsFired() >= iL->GetMaxShots())
+						{
+							//SPLog("UpdateLocalPlayer()");
+							weapon->SetShooting(false);
+							//SPLog("Fired MaxShots already, ceasing fire");
+						}
+						else
+						{
+							//SPLog("Firing weapon");
+							weapon->SetShooting(newInput.primary);
+						}
+					}
+					else
+					{
+						iL->SetShotsFired(0);
+						weapon->SetShooting(newInput.primary);
+					}
+				}
+				else
+				{
+					weapon->SetShooting(newInput.primary);
+				}				
+			}
+			else
+			{
 				SPAssert(false);
 			}
-			
-			weapInput = newInput;
-			
-			
+
+			weapInput = newInput;			
 		}
 		
 		void Player::Reload() {
 			SPADES_MARK_FUNCTION();
-			if(health == 0){
+			if(health == 0)
+			{
 				// dead man cannot reload
 				return;
 			}
@@ -287,9 +395,11 @@ namespace spades {
 			weapon->ReloadDone(clip, stock);
 		}
 		
-		void Player::Restock() {
+		void Player::Restock() 
+		{
 			SPADES_MARK_FUNCTION();
-			if(health == 0){
+			if(health == 0)
+			{
 				// dead man cannot restock
 				return;
 			}
@@ -393,12 +503,41 @@ namespace spades {
 			auto* listener = world->GetListener();
 			
 			MovePlayer(dt);
-			
-			if(!IsAlive()) {
+
+			if(!IsAlive())
+			{
 				// do death cleanup
 				blockCursorDragging = false;
 			}
 			
+			//in client_update
+			//Chameleon: decreases spread (it is set to -0.5 when not moving, and 0 when moving)
+			//change this.
+			//spread could be 50%, but then recoil should be increased by (spread*50%)
+			//also make weapon, when recoiling, add to mouse velocity
+			//when recoiling, kill minus vertical mouse velocity
+			//when recoiling, add to mouse inertia
+			//mouse inertia should be less static (not only depend on current health&sprintstate, but also increase and decrease according to shootingstate)
+			//if (IsLocalPlayer())
+			//{
+			//	//spreadAdd is == 0 when player moving
+			//	//spreadAdd is == 1 when airborne
+			//	//spreadAdd is == -0.5 when completely stationary.
+			//	//spreadAdd affects weapon "lag"
+			//	if (spreadAdd > 5.f)
+			//		spreadAdd = 5.f;
+			//	if (spreadAdd > 1.f)
+			//		spreadAdd -= spreadAdd*dt;
+			//	spreadAdd -= dt;
+			//	if (spreadAdd < -0.5f && velocity.GetLength() < 0.01f)
+			//		spreadAdd = -0.5;
+			//	else if (spreadAdd < -0.5f + velocity.GetLength() * 3 && !crouching)
+			//		spreadAdd = -0.5f + velocity.GetLength() * 3;
+			//	else if (spreadAdd < -0.5f + velocity.GetLength() * 6 && crouching)
+			//		spreadAdd = -0.5f + velocity.GetLength() * 6;
+			//}
+				
+
 			if(tool == ToolSpade){
 				if(weapInput.primary){
 					if(world->GetTime() > nextSpadeTime){
@@ -512,7 +651,8 @@ namespace spades {
 		
 			if(tool != ToolWeapon)
 				weapon->SetShooting(false);
-			if(weapon->FrameNext(dt)){
+			if(weapon->FrameNext(dt))
+			{
 				FireWeapon();
 			}
 			
@@ -551,7 +691,8 @@ namespace spades {
 			Arms
 		};
 		
-		void Player::FireWeapon() {
+		void Player::FireWeapon()
+		{
 			SPADES_MARK_FUNCTION();
 			
 			Vector3 muzzle = GetEye();
@@ -567,18 +708,69 @@ namespace spades {
 			int pellets = weapon->GetPelletSize();
 			float spread = weapon->GetSpread();
 			GameMap *map = world->GetMap();
-			
+			//Chameleon
+//change;
+			//make spread slowly reduce to half when >completely< stationary. +
+			//also make spread depend on weapon movement itself --- and weapon movement depend on mouse input.
+			//for example, if mouse moves to right, weapon stays to left side and gradually goes to right side. Represent real weapon's barrel.
+			if (IsLocalPlayer())
+			{
+				//old one for backup
+				/*spread += spread * spreadAdd;
+				if (airborne)
+				{
+					spread *= 4;
+				}
+				else if (velocity.GetLength() > 0.01f && weapon->GetWeaponType() != SHOTGUN_WEAPON)
+				{
+					if (crouching)
+						spread += spread * velocity.GetLength() * 6;
+					else
+						spread += spread * velocity.GetLength() * 3;
+				}*/
+				if (weapon->GetWeaponType() != SHOTGUN_WEAPON)
+					spread += spread * spreadAdd;
+
+				if (spreadAdd < 0)
+					spreadAdd = 0;
+			}
+
 			// pyspades takes destroying more than one block as a
 			// speed hack (shotgun does this)
 			bool blockDestroyed = false;
 			
 			Vector3 dir2 = GetFront();
-			for(int i =0 ; i < pellets; i++){
-				
+			for(int i =0 ; i < pellets; i++)
+			{
+				//Chameleon: sync visual weapon with hit location. Needs thorough testing
+				if (IsLocalPlayer())
+				{
+					if (weapInput.secondary)
+					{
+						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x * 3;
+						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y * 3;
+						dir2.z -= world->GetListener()->GetWeaponY() * 3;
+					}
+					else
+					{
+						dir2.x += world->GetListener()->GetWeaponX()*GetRight().x;
+						dir2.y += world->GetListener()->GetWeaponX()*GetRight().y;
+						dir2.z += world->GetListener()->GetWeaponY();
+					}
+
+					/*if (weapInput.secondary)
+					{
+					dir2.x -= world->GetListener()->GetWeaponX();
+					dir2.y -= world->GetListener()->GetWeaponX();
+					dir2.z += world->GetListener()->GetWeaponY();
+					}*/
+				}
+
 				// AoS 0.75's way (dir2 shouldn't be normalized!)
 				dir2.x += (GetRandom() - GetRandom()) * spread;
 				dir2.y += (GetRandom() - GetRandom()) * spread;
 				dir2.z += (GetRandom() - GetRandom()) * spread;
+				
 				Vector3 dir = dir2.Normalize();
 				
 				bulletVectors.push_back(dir);
@@ -643,14 +835,14 @@ namespace spades {
 				}
 				
 				Vector3 finalHitPos;
-				finalHitPos = muzzle + dir * 128.f;
+				finalHitPos = muzzle + dir * 134.f;
 				
 				if(hitPlayer == nullptr && !mapResult.hit) {
 					// might hit water surface.
 					
 				}
 				
-				if(mapResult.hit && (mapResult.hitPos - muzzle).GetLength() < 128.f &&
+				if(mapResult.hit && (mapResult.hitPos - muzzle).GetLength() < 134.f &&
 				   (hitPlayer == NULL || (mapResult.hitPos - muzzle).GetLength() < hitPlayerDistance)){
 					IntVector3 outBlockCoord = mapResult.hitBlock;
 					// TODO: set correct ray distance
@@ -695,6 +887,7 @@ namespace spades {
 								
 							}
 							color = (color & 0xffffff) | ((uint32_t)health << 24);
+							//(uint8_t)col / 510.f, (uint8_t)(col >> 8) / 510.f, (uint8_t)(col >> 16) / 510.f
 							if(map->IsSolid(x, y, z))
 								map->Set(x, y, z, true, color);
 							
@@ -705,7 +898,7 @@ namespace spades {
 						}
 					}
 			    }else if(hitPlayer != NULL){
-					if(hitPlayerDistance < 128.f){
+					if(hitPlayerDistance < 134.f){
 						
 						finalHitPos = muzzle + dir * hitPlayerDistance;
 						
@@ -765,27 +958,58 @@ namespace spades {
 					}
 				}
 				
-				if(world->GetListener() && this != world->GetLocalPlayer())
-					world->GetListener()->AddBulletTracer(this,
-														  muzzle, finalHitPos);
+				//if(world->GetListener() && this != world->GetLocalPlayer()) //old one
+				if (world->GetListener() && (int)opt_tracers != 0)
+					world->GetListener()->AddBulletTracer(this, muzzle, finalHitPos);
 				
 				// one pellet done
 			}
 			
 			// do hit test debugging
 			auto *debugger = world->GetHitTestDebugger();
-			if(debugger && IsLocalPlayer()) {
+			if(debugger && IsLocalPlayer())
+			{
 				debugger->SaveImage(playerHits, bulletVectors);
 			}
 			
 			// in AoS 0.75's way
 			Vector3 o = orientation;
 			Vector3 rec = weapon->GetRecoil();
+			//Chameleon
+//change2;
+			//make recoil also induce mouse velocity.
+			//if mouse velocity is to right side, make more mouse velocity to right side. Recoil itself will also point to right side.
+			//if mouse velocity is downwards, kill it without compensation.
+			//these things should not depend on health/sprintstate/aimdownstate //maybe aimdown state would affect horizontal recoil
+			if (IsLocalPlayer())
+			{
+				if (airborne)
+				{
+					rec *= 4;
+				}
+				else if (velocity.GetLength() > 0.01f)
+				{
+					rec += rec * velocity.GetLength() * 4;
+				}
+				if (!crouching)
+				{
+					rec *= 2;
+				}
+
+				
+			}
+
 			float upLimit = Vector3::Dot(GetFront2D(), o);
 			upLimit -= 0.03f;
 			o += GetUp() * std::min(rec.y, std::max(0.f, upLimit));
 			o += GetRight() * rec.x * sinf(world->GetTime() * 2.f);
+
+			//Chameleon: freeaim recoil + horizontal mouse velocity
+			if (IsLocalPlayer())
+				world->GetListener()->LocalPlayerRecoil(Vector2(std::min(rec.y, std::max(0.f, upLimit)), rec.x));
+
 			o = o.Normalize();
+
 			SetOrientation(o);
 			
 			reloadingServerSide = false;
@@ -808,14 +1032,17 @@ namespace spades {
 				vel = MakeVector3(0,0,0);
 			}
 			
-			vel += GetVelocty();
+			vel += GetVelocity();
 			
-			if(this == world->GetLocalPlayer()){
-				Grenade *gren = new Grenade(world, muzzle, vel, fuse);
+			if(this == world->GetLocalPlayer())
+			{
+				Grenade *gren = new Grenade(world, muzzle, vel, fuse, teamId);
 				world->AddGrenade(gren);
 				if(world->GetListener())
 					world->GetListener()->PlayerThrownGrenade(this, gren);
-			}else{
+			}
+			else
+			{
 				// grenade packet will be sent by server
 				if(world->GetListener())
 					world->GetListener()->PlayerThrownGrenade(this, NULL);
@@ -841,7 +1068,7 @@ namespace spades {
 			outBlockCoord = mapResult.hitBlock;
 			
 			// TODO: set correct ray distance
-			if(mapResult.hit && BoxDistanceToBlock(mapResult.hitBlock + mapResult.normal) < 3.f &&
+			if(mapResult.hit && BoxDistanceToBlock(mapResult.hitBlock + mapResult.normal) < 2.9f &&
 			   outBlockCoord.x >= 0 && outBlockCoord.y >= 0 && outBlockCoord.z >= 0 &&
 			   outBlockCoord.x < map->Width() && outBlockCoord.y < map->Height() &&
 			   outBlockCoord.z < map->Depth()){
@@ -1144,16 +1371,21 @@ namespace spades {
 			}
 		}
 		
-		void Player::MovePlayer(float fsynctics) {
+		void Player::MovePlayer(float fsynctics)
+		{
 			if(input.jump && (!lastJump) &&
-			   IsOnGroundOrWade()) {
+			   IsOnGroundOrWade())
+			{
 				velocity.z = -0.36f;
 				lastJump = true;
-				if(world->GetListener() && world->GetTime() > lastJumpTime + .1f){
+				if(world->GetListener() && world->GetTime() > lastJumpTime + .1f)
+				{
 					world->GetListener()->PlayerJumped(this);
 					lastJumpTime = world->GetTime();
 				}
-			}else if(!input.jump){
+			}
+			else if(!input.jump)
+			{
 				lastJump = false;
 			}
 			
@@ -1215,7 +1447,8 @@ namespace spades {
 			BoxClipMove(fsynctics);
 			
 			// hit ground
-			if(velocity.z == 0.f && (f2 > FALL_SLOW_DOWN)) {
+			if(velocity.z == 0.f && (f2 > FALL_SLOW_DOWN)) 
+			{
 				velocity.x *= .5f;
 				velocity.y *= .5f;
 				
@@ -1233,7 +1466,8 @@ namespace spades {
 			
 			if(velocity.z >= 0.f && velocity.z < .017f &&
 			   !input.sneak && !input.crouch &&
-			   !(weapInput.secondary && IsToolWeapon())){
+			   !(weapInput.secondary && IsToolWeapon()))
+			{
 				// count move distance
 				f = fsynctics * 32.f;
 				float dx = f * velocity.x;
@@ -1242,15 +1476,54 @@ namespace spades {
 				moveDistance += dist * .3f;
 				
 				bool madeFootstep = false;
-				while(moveDistance > 1.f){
-					moveSteps++;
+				while(moveDistance > 1.f)
+				{
+					moveSteps++;//walk animation
 					moveDistance -= 1.f;
 					
-					if(world->GetListener() && !madeFootstep){
+					if(world->GetListener() && !madeFootstep)
+					{
+						//world->GetListener()->SwitchBFootSide(); //for non-random roll to left&right
 						world->GetListener()->PlayerMadeFootstep(this);
 						madeFootstep = true;
 					}
 				}
+				if (IsLocalPlayer())
+				{
+					if ((input.moveBackward || input.moveForward || input.moveLeft || input.moveRight) && velocity.GetLength() > 0.01f)
+						world->GetListener()->SetWalkProgress(moveDistance);
+					else
+						world->GetListener()->SetWalkProgress(0.f);
+				}				
+			}
+			//Chameleon - if moving while aiming, shake a bit; local player only
+			else if (velocity.z >= 0.f && velocity.z < .017f &&
+					(weapInput.secondary && IsToolWeapon()) 
+					&& IsLocalPlayer())
+			{
+				// count move distance
+				f = fsynctics * 64.f; //if shift+walking, double distance
+				//if (input.crouch) //if crouch+walking, inc distance
+					//f *= 1.7f;
+				float dx = f * velocity.x;
+				float dy = f * velocity.y;
+				float dist = sqrtf(dx*dx + dy*dy);
+				moveDistance += dist * .2f;
+
+				bool madeFootstep = false;
+				while (moveDistance > 1.f)
+				{
+					moveDistance -= 1.f;
+				}
+				if ((input.moveBackward || input.moveForward || input.moveLeft || input.moveRight) && velocity.GetLength() > 0.01f)
+					world->GetListener()->SetWalkProgress(moveDistance);
+				else
+					world->GetListener()->SetWalkProgress(0.f);
+			}
+			else if (velocity.z >= 0.f && velocity.z < .017f 
+					&& !airborne && IsLocalPlayer())
+			{
+				world->GetListener()->SetWalkProgress(0.f);
 			}
 		}
 		
@@ -1377,7 +1650,8 @@ namespace spades {
 			return world->GetPlayerPersistent(GetId()).name;
 		}
 		
-		float Player::GetWalkAnimationProgress() {
+		float Player::GetWalkAnimationProgress() 
+		{
 			return moveDistance * .5f +
 			(float)(moveSteps & 1) * .5f;
 		}

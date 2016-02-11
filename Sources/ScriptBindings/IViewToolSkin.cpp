@@ -27,6 +27,20 @@ namespace spades{
 		ScriptIViewToolSkin::ScriptIViewToolSkin(asIScriptObject *obj):
 		obj(obj){}
 		
+		//Chameleon: scope zoom
+		void ScriptIViewToolSkin::SetScopeZoom(int v) {
+			SPADES_MARK_FUNCTION_DEBUG();
+			static ScriptFunction func("IViewToolSkin",
+				"void set_ScopeZoom(int)");
+			ScriptContextHandle ctx = func.Prepare();
+			int r;
+			r = ctx->SetObject((void *)obj);
+			ScriptManager::CheckError(r);
+			r = ctx->SetArgDWord(0, (asDWORD)v);
+			ScriptManager::CheckError(r);
+			ctx.ExecuteChecked();
+		}
+
 		void ScriptIViewToolSkin::SetEyeMatrix(Matrix4 m) {
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IViewToolSkin",
@@ -106,6 +120,10 @@ namespace spades{
 						
 						break;
 					case PhaseObjectMember:
+						//Chameleon: scope
+						r = eng->RegisterInterfaceMethod("IViewToolSkin",
+														 "void set_ScopeZoom(int)");
+
 						r = eng->RegisterInterfaceMethod("IViewToolSkin",
 														 "void set_EyeMatrix(Matrix4)");
 						manager->CheckError(r);
@@ -117,9 +135,9 @@ namespace spades{
 						manager->CheckError(r);
 						r = eng->RegisterInterfaceMethod("IViewToolSkin",
 														 "Vector3 get_RightHandPosition()");
-					manager->CheckError(r);
-					r = eng->RegisterInterfaceMethod("IViewToolSkin",
-													 "void Draw2D()");
+						manager->CheckError(r);
+						r = eng->RegisterInterfaceMethod("IViewToolSkin",
+														 "void Draw2D()");
 					manager->CheckError(r);
 						break;
 					default:

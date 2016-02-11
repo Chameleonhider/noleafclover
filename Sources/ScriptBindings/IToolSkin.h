@@ -32,7 +32,9 @@ namespace spades {
 			ScriptIToolSkin(asIScriptObject *obj);
 			void SetSprintState(float);
 			void SetRaiseState(float);
-			void SetTeamColor(Vector3);
+			void SetTeamColor(IntVector3);
+			void SetClientDistance(float);
+			void SetSoundDistance(float);
 			void SetMuted(bool);
 			void Update(float);
 			void AddToScene();

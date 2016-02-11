@@ -164,6 +164,49 @@ namespace spades {
 			SceneDefinition lastSceneDef;
 			float localFireVibrationTime;
 			float grenadeVibration;
+
+			//Chameleon: visual weapon lag
+			float weapX;
+			//Chameleon: visual weapon lag
+			float weapY;
+			//Chameleon: frozen cg_fov
+			float FOV;
+			//Chameleon: scope on/off
+			bool scopeOn;
+			//Chameleon: scope magnification
+			int scopeZoom;
+			//Chameleon: mouse inertia factor, 0-1
+			float mouseInertia;
+			//Chameleon: mouse inertia X
+			float mouseX;
+			//Chameleon: mouse inertia Y
+			float mouseY;
+			//Chameleon: drunk cam
+			float mouseRoll;
+			//Chameleon: freeaim
+			float mousePitch;
+			//Chameleon: freeaim
+			float mouseYaw;
+			//Chameleon: view shakes up&down when moving (sprint, run, aim+walk)
+			float stepVibration;
+			//Chameleon: toggles between left&right roll made by footsteps
+			bool bFootSide;
+			public:
+			//Chameleon: needed for walking view movement (up&down + roll)
+			float walkProgress;			
+			//Chameleon: player gets deaf when firing weapon, so limit sound radius; expand it in silence
+			float soundDistance; 
+			//Chameleon: provides semi-auto firing mechanism
+			int ShotsFired;
+			//Chameleon: semi-auto fire mode
+			int MaxShots;
+			//Chameleon: tinnitus effect; this variable shows how long ago a tinnitus sound was played
+			//when 0, means that sound just started playing
+			//when 1, means that sound stopped playing
+			//additional tinnitus sound can be played only when above 0.75
+			//public: float lastShellShockTime;
+
+			private:
 			bool scoreboardVisible;
 			bool flashlightOn;
 			float flashlightOnTime;
@@ -201,11 +244,11 @@ namespace spades {
 			std::vector<DynamicLightParam> flashDlights;
 			std::vector<DynamicLightParam> flashDlightsOld;
 			void Bleed(Vector3);
-			void EmitBlockFragments(Vector3, IntVector3 color);
+			void EmitBlockFragments(Vector3, IntVector3 color, bool local);
 			void EmitBlockDestroyFragments(IntVector3, IntVector3 color);
 			void GrenadeExplosion(Vector3);
 			void GrenadeExplosionUnderwater(Vector3);
-			void MuzzleFire(Vector3, Vector3 dir, bool local);
+			void MuzzleFire(Vector3, Vector3 dir);
 			void BulletHitWaterSurface(Vector3);
 			
 			// drawings
@@ -240,6 +283,7 @@ namespace spades {
 			
 			void DrawSplash();
 			void DrawStartupScreen();
+			void DrawDisconnectScreen();
 			void DoInit();
 			
 			void ShowAlert(const std::string& contents,
@@ -282,6 +326,7 @@ namespace spades {
 			void DrawTCObjects();
 			
 			float GetAimDownZoomScale();
+			float GetAimDownZoomDelta();
 			bool ShouldRenderInThirdPersonView();
 			SceneDefinition CreateSceneDefinition();
 			
@@ -303,6 +348,7 @@ namespace spades {
 			
 			virtual void Closing();
 			virtual void MouseEvent(float x, float y);
+			virtual void MouseEventInertia(float x, float y);
 			virtual void WheelEvent(float x, float y);
 			virtual void KeyEvent(const std::string&,
 								  bool down);
@@ -344,6 +390,25 @@ namespace spades {
 			void PlayerLeaving(Player *);
 			void PlayerJoinedTeam(Player *);
 			
+			//Chameleon
+			virtual void SetWeaponXY(Vector2);
+			//Chameleon
+			virtual float GetWeaponX();
+			//Chameleon
+			virtual float GetWeaponY();
+			//Chameleon
+			virtual void SetWalkProgress(float);
+			//Chameleon
+			virtual void SwitchBFootSide();
+			//Chameleon
+			virtual int GetShotsFired();
+			//Chameleon
+			virtual int GetMaxShots();
+			//Chameleon
+			virtual void SetShotsFired(int);
+			//Chameleon
+			virtual void SetMaxShots(int);
+
 			virtual void PlayerObjectSet(int);
 			virtual void PlayerMadeFootstep(Player *);
 			virtual void PlayerJumped(Player *);
@@ -381,12 +446,15 @@ namespace spades {
 			
 			virtual void BlocksFell(std::vector<IntVector3>);
 			
-			virtual void LocalPlayerPulledGrenadePin();
+			virtual void LocalPlayerPulledGrenadePin(int teamId);
 			virtual void LocalPlayerBlockAction(IntVector3, BlockActionType type);
 			virtual void LocalPlayerCreatedLineBlock(IntVector3, IntVector3);
 			virtual void LocalPlayerHurt(HurtType type, bool sourceGiven,
 										 Vector3 source);
 			virtual void LocalPlayerBuildError(BuildFailureReason reason);
+
+			//Chameleon: freeaim recoil + horizontal mouse velocity
+			virtual void LocalPlayerRecoil(Vector2 rec);
 		};
 	}
 }

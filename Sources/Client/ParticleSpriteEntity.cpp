@@ -41,7 +41,7 @@ namespace spades {
 			time = 0.f;
 			fadeInDuration = .1f;
 			fadeOutDuration = .5f;
-			additive = false;
+			//additive = false;
 			blockHitAction = Delete;
 			
 			if(image != NULL)
@@ -160,8 +160,8 @@ namespace spades {
 			col.y *= col.w;
 			col.z *= col.w;
 			
-			if(additive)
-				col.w = 0.f;
+			//if(additive)
+			//	col.w = 0.f;
 			
 			renderer->SetColorAlphaPremultiplied(col);
 			renderer->AddSprite(image,

@@ -17,15 +17,22 @@
  along with OpenSpades.  If not, see <http://www.gnu.org/licenses/>.
  
  */
-
+ 
 namespace spades {
 	class BasicViewWeapon: 
 	IToolSkin, IViewToolSkin, IWeaponSkin {
+		
+		private ConfigItem cfg("v_defaultFireVibration", "0");
+		private int defFireVib = cfg.IntValue;
+		
 		// IToolSkin
 		private float sprintState;
 		private float raiseState;
-		private Vector3 teamColor;
+		private IntVector3 teamColor;
 		private bool muted;
+		//Chameleon
+		private float clientDistance;
+		private float soundDistance;
 		
 		float SprintState { 
 			set { sprintState = value; }
@@ -37,9 +44,20 @@ namespace spades {
 			get { return raiseState; }
 		}
 		
-		Vector3 TeamColor { 
+		IntVector3 TeamColor { 
 			set { teamColor = value; }
 			get { return teamColor; } 
+		}
+		
+		float ClientDistance { 
+			set { clientDistance = value; }
+			get { return clientDistance; } 
+		}
+		
+		float SoundDistance 
+		{ 
+			set { soundDistance = value; }
+			get { return soundDistance; } 
 		}
 		
 		bool IsMuted {
@@ -59,38 +77,47 @@ namespace spades {
 		private int ammo, clipSize;
 		private float localFireVibration;
 		
-		float AimDownSightState {
-			set { 
+		float AimDownSightState 
+		{
+			set 
+			{ 
 				aimDownSightState = value;
 				aimDownSightStateSmooth = SmoothStep(value);
 			}
-			get {
+			get 
+			{
 				return aimDownSightState;
 			}
 		}
 		
-		float AimDownSightStateSmooth {
+		float AimDownSightStateSmooth 
+		{
 			get { return aimDownSightStateSmooth; }
 		}
 		
-		bool IsReloading {
+		bool IsReloading
+		{
 			get { return reloading; }
 			set { reloading = value; }
 		}
-		float ReloadProgress {
+		float ReloadProgress
+		{
 			get { return reloadProgress; }
 			set { reloadProgress = value; }
 		}
-		int Ammo {
+		int Ammo 
+		{
 			set { ammo = value; }
 			get { return ammo; }
 		}
-		int ClipSize {
+		int ClipSize
+		{
 			set { clipSize = value; }
 			get { return clipSize; }
 		}
 		
-		float ReadyState {
+		float ReadyState
+		{
 			set { readyState = value; }
 			get { return readyState; }
 		}
@@ -102,17 +129,20 @@ namespace spades {
 		private Vector3 leftHand;
 		private Vector3 rightHand;
 		
-		Matrix4 EyeMatrix {
+		Matrix4 EyeMatrix 
+		{
 			set { eyeMatrix = value; }
 			get { return eyeMatrix; }
 		}
 		
-		Vector3 Swing {
+		Vector3 Swing 
+		{
 			set { swing = value; }
 			get { return swing; }
 		}	
 		
-		Vector3 LeftHandPosition {
+		Vector3 LeftHandPosition
+		{
 			get {
 				return leftHand;
 			}
@@ -120,7 +150,8 @@ namespace spades {
 				leftHand = value;
 			}
 		}
-		Vector3 RightHandPosition { 
+		Vector3 RightHandPosition 
+		{ 
 			get  {
 				return rightHand;
 			}
@@ -131,27 +162,36 @@ namespace spades {
 		
 		private Renderer@ renderer;
 		private Image@ sightImage;
+		private Image@ sightImage1;
 		
-		BasicViewWeapon(Renderer@ renderer) {
+		BasicViewWeapon(Renderer@ renderer)
+		{
 			@this.renderer = renderer;
 			localFireVibration = 0.f;
-			@sightImage = renderer.RegisterImage
-				("Gfx/Sight.tga");
+			@sightImage = renderer.RegisterImage("Gfx/Sight.tga");
+			@sightImage1 = renderer.RegisterImage("Gfx/Sight.png");
 		}
 		
-		float GetLocalFireVibration() {
-			return localFireVibration;
+		float GetLocalFireVibration() 
+		{
+			if (defFireVib == 0) return 0;
+			return localFireVibration; 
 		}
 		
-		float GetMotionGain() {
-			return 1.f - AimDownSightStateSmooth * 0.4f;
+		float GetMotionGain() 
+		{
+			return 1.f - AimDownSightStateSmooth * 0.2f;
 		}
 		
-		float GetZPos() {
+		float GetZPos()
+		{
 			return 0.2f - AimDownSightStateSmooth * 0.05f;
 		}
 		
-		Vector3 GetLocalFireVibrationOffset() {
+		Vector3 GetLocalFireVibrationOffset()
+		{
+			if (defFireVib == 0) return Vector3(0,0,0);
+			
 			float vib = GetLocalFireVibration();
 			float motion = GetMotionGain();
 			Vector3 hip = Vector3(
@@ -162,9 +202,11 @@ namespace spades {
 			return Mix(hip, ads, AimDownSightStateSmooth);
 		}
 		
-		Matrix4 GetViewWeaponMatrix() {
+		Matrix4 GetViewWeaponMatrix()
+		{
 			Matrix4 mat;
-			if(sprintState > 0.f) {
+			if(sprintState > 0.f)
+			{
 				mat = CreateRotateMatrix(Vector3(0.f, 0.f, 1.f),
 					sprintState * -1.3f) * mat;
 				mat = CreateRotateMatrix(Vector3(0.f, 1.f, 0.f),
@@ -173,7 +215,8 @@ namespace spades {
 					* sprintState)  * mat;
 			}
 			
-			if(raiseState < 1.f) {
+			if(raiseState < 1.f) 
+			{
 				float putdown = 1.f - raiseState;
 				mat = CreateRotateMatrix(Vector3(0.f, 0.f, 1.f),
 					putdown * -1.3f) * mat;
@@ -190,34 +233,54 @@ namespace spades {
 			trans += GetLocalFireVibrationOffset();
 			mat = CreateTranslateMatrix(trans) * mat;
 			
+			mat *= CreateTranslateMatrix(Vector3(0.f, -0.25f, 0.f));
+			if (AimDownSightStateSmooth > 0.8f)
+			{
+				mat *= CreateTranslateMatrix(Vector3(0.f, -0.25f*AimDownSightStateSmooth, 0.f));
+			}
+			
 			return mat;
 		}
 		
-		void Update(float dt) {
-			localFireVibration -= dt * 10.f;
-			if(localFireVibration < 0.f){
-				localFireVibration = 0.f;
+		void Update(float dt)
+		{
+			if (localFireVibration > 0)
+			{
+				localFireVibration -= dt * 10.f;
+				if(localFireVibration < 0.f) localFireVibration = 0.f;
 			}
 		}
 		
-		void WeaponFired(){
+		void WeaponFired()
+		{
 			localFireVibration = 1.f;
 		}
 		
-		void AddToScene() {
+		void AddToScene() 
+		{
+		
 		}
 		
-		void ReloadingWeapon() {
+		void ReloadingWeapon()
+		{
+		
 		}
 		
-		void ReloadedWeapon() {
+		void ReloadedWeapon()
+		{
+		
 		}
 		
-		void Draw2D() {
-			renderer.ColorNP = (Vector4(1.f, 1.f, 1.f, 1.f));
-			renderer.DrawImage(sightImage,
-				Vector2((renderer.ScreenWidth - sightImage.Width) * 0.5f,
-						(renderer.ScreenHeight - sightImage.Height) * 0.5f));
+		void Draw2D() 
+		{
+			// renderer.ColorNP = (Vector4(1.f, 1.f, 1.f, 0.5f));
+			// renderer.DrawImage(sightImage,
+				// Vector2((renderer.ScreenWidth - sightImage.Width) * 0.5f,
+						// (renderer.ScreenHeight - sightImage.Height) * 0.5f));
+		}
+		void DrawXH() 
+		{
+		
 		}
 	}
 	

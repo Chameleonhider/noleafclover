@@ -70,7 +70,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			renderer->SetFogColor(MakeVector3(0.f, 0.f, 0.f));
-			renderer->SetFogDistance(128.f);
+			renderer->SetFogDistance(129.f);
 			
 			Player *localPlayer = world->GetLocalPlayer();
 			
@@ -142,7 +142,7 @@ namespace spades {
 			def.skipWorld = ((int)cg_smp != 0);
 			
 			def.zNear = 0.05f;
-			def.zFar = 200.f;
+			def.zFar = 150.f;
 			
 			// start rendering
 			IGameMapListener *oldListener = nullptr;
@@ -230,7 +230,7 @@ namespace spades {
 			renderer->EndScene();
 			
 			// draw crosshair
-			IImage *img = renderer->RegisterImage("Gfx/White.tga");
+			IImage *img = renderer->RegisterImage("Gfx/WhitePixel.tga");
 			float size = renderer->ScreenWidth();
 			
 			renderer->SetColorAlphaPremultiplied(Vector4(1.f, 0.f, 0.f, 0.9f));

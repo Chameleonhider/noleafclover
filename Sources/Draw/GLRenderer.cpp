@@ -64,24 +64,24 @@
 #include "GLSoftLitSpriteRenderer.h"
 #include "GLAutoExposureFilter.h"
 
-SPADES_SETTING(r_water, "2");
-SPADES_SETTING(r_bloom, "1");
-SPADES_SETTING(r_lens, "1");
+SPADES_SETTING(r_water, "0");
+SPADES_SETTING(r_bloom, "0");
+SPADES_SETTING(r_lens, "0");
 SPADES_SETTING(r_depthOfField, "0");
-SPADES_SETTING(r_lensFlare, "1");
-SPADES_SETTING(r_lensFlareDynamic, "1");
-SPADES_SETTING(r_softParticles, "1");
-SPADES_SETTING(r_cameraBlur, "1");
-SPADES_SETTING(r_dlights, "1");
+SPADES_SETTING(r_lensFlare, "0");
+SPADES_SETTING(r_lensFlareDynamic, "0");
+SPADES_SETTING(r_softParticles, "0");
+SPADES_SETTING(r_cameraBlur, "0");
+SPADES_SETTING(r_dlights, "0");
 SPADES_SETTING(r_optimizedVoxelModel, "1");
 SPADES_SETTING(r_radiosity, "0");
 SPADES_SETTING(r_fogShadow, "0");
-SPADES_SETTING(r_fxaa, "1");
+SPADES_SETTING(r_fxaa, "0");
 SPADES_SETTING(r_srgb, "");
 SPADES_SETTING(r_srgb2D, "1");
 SPADES_SETTING(r_colorCorrection, "1");
 SPADES_SETTING(r_hdr, "");
-SPADES_SETTING(r_hdrAutoExposure, "1");
+SPADES_SETTING(r_hdrAutoExposure, "0");
 SPADES_SETTING(r_exposureValue, "0");
 
 SPADES_SETTING(r_debugTiming, "0");
@@ -342,7 +342,9 @@ namespace spades {
 				mp->AddListener(this);
 				mp->AddRef();
 				SPLog("Created");
-			}else{
+			}
+			else
+			{
 				SPLog("No map loaded");
 			}
             this->map = mp;

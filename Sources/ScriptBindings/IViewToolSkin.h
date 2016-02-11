@@ -29,6 +29,8 @@ namespace spades {
 			asIScriptObject *obj;
 		public:
 			ScriptIViewToolSkin(asIScriptObject *obj);
+			//Chameleon: scope
+			void SetScopeZoom(int);
 			void SetEyeMatrix(Matrix4 m);
 			void SetSwing(Vector3);
 			Vector3 GetLeftHandPosition();

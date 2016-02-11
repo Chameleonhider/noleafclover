@@ -174,7 +174,7 @@ namespace spades {
 				auto *img = renderer->RegisterImage(imgPath.c_str()); // addref'd
 				images.push_back(img);
 			}
-			whiteImage.Set(renderer->RegisterImage("Gfx/White.tga"), false);
+			whiteImage.Set(renderer->RegisterImage("Gfx/WhitePixel.tga"), false);
 			
 			// SW renderer doesn't perform linear interpolation on
 			// rendering images, so size rounding must be done to

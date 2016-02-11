@@ -35,6 +35,26 @@ namespace spades {
 		
 		class IWorldListener{
 		public:
+			//Chameleon
+			virtual void SetWeaponXY(Vector2) = 0;
+			//Chameleon
+			virtual float GetWeaponX() = 0;
+			//Chameleon
+			virtual float GetWeaponY() = 0;
+			//Chameleon
+			virtual void SetWalkProgress(float) = 0;
+			//Chameleon
+			virtual void SwitchBFootSide() = 0;
+			//Chameleon
+			virtual int GetShotsFired() = 0;
+			//Chameleon
+			virtual int GetMaxShots() = 0;
+			//Chameleon
+			virtual void SetShotsFired(int) = 0;
+			//Chameleon
+			virtual void SetMaxShots(int) = 0;
+			
+
 			virtual void PlayerObjectSet(int playerId) = 0;
 			virtual void PlayerMadeFootstep(Player *) = 0;
 			virtual void PlayerJumped(Player *) = 0;
@@ -71,12 +91,15 @@ namespace spades {
 			
 			virtual void BlocksFell(std::vector<IntVector3>) = 0;
 			
-			virtual void LocalPlayerPulledGrenadePin() = 0;
+			virtual void LocalPlayerPulledGrenadePin(int teamId) = 0;
 			virtual void LocalPlayerBlockAction(IntVector3, BlockActionType type) = 0;
 			virtual void LocalPlayerCreatedLineBlock(IntVector3, IntVector3) = 0;
 			virtual void LocalPlayerHurt(HurtType type, bool sourceGiven,
 										 Vector3 source) = 0;
 			virtual void LocalPlayerBuildError(BuildFailureReason reason) = 0;
+
+			//Chameleon: freeaim recoil + horizontal mouse velocity
+			virtual void LocalPlayerRecoil(Vector2 rec) = 0;
 		};
 	}
 }

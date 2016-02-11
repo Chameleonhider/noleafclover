@@ -36,8 +36,10 @@ namespace spades {
 			int h = m->GetHeight();
 			int d = m->GetDepth();
 			
-			for(int y = 0; y < h; y++) {
-				for(int x = 0; x < w; x++) {
+			for(int y = 0; y < h; y++)
+			{
+				for(int x = 0; x < w; x++) 
+				{
 					
 					renderDataAddr.push_back(static_cast<uint32_t>(renderData.size()));
 					
@@ -50,12 +52,14 @@ namespace spades {
 					map1 &= map3;
 					map1 &= map4;
 					
-					for(int z = 0; z < d; z++) {
+					for(int z = 0; z < d; z++) 
+					{
 						if(!(map & (1ULL << z)))
 							continue;
 						if(z == 0 || z == (d-1) ||
 						   ((map>>(z-1)) & 7ULL) != 7ULL ||
-						   (map1 & (1ULL << z)) == 0) {
+						   (map1 & (1ULL << z)) == 0) 
+						{
 							uint32_t col = m->GetColor(x, y, z);
 							SPAssert(col != 0xddbeef);
 							col = (col & 0xff00) |
@@ -68,10 +72,14 @@ namespace spades {
 							int nx = 0, ny = 0, nz = 0;
 							for(int cx = -1; cx <= 1; cx++)
 								for(int cy = -1; cy <= 1; cy++)
-									for(int cz = -1; cz <= 1; cz++) {
-										if(m->IsSolid(x+cx, y+cy, z+cz)) {
+									for(int cz = -1; cz <= 1; cz++) 
+									{
+										if(m->IsSolid(x+cx, y+cy, z+cz)) 
+										{
 											nx -= cx; ny -= cy; nz -= cz;
-										}else{
+										}
+										else
+										{
 											nx += cx; ny += cy; nz += cz;
 										}
 									}
@@ -91,6 +99,11 @@ namespace spades {
 		SWModel::~SWModel() {
 		}
 		
+		IntVector3 SWModel::GetDimensions()
+		{
+			return IntVector3{rawModel->GetWidth(), rawModel->GetHeight(), rawModel->GetDepth()};
+		}
+
 		AABB3 SWModel::GetBoundingBox()
 		{
 			VoxelModel *m = rawModel;

@@ -640,7 +640,9 @@ namespace spades {
 			
 			auto *chunk = dynamic_cast<YsrAudioChunk *>(c);
 			if(chunk == nullptr) SPRaise("Invalid chunk: null or invalid type.");
-			
+
+			client::AudioParam params;
+			params = param;
 			driver->PlayAbsolute(chunk->GetBuffer(), origin,
 								 TranslateParam(param));
 		}
@@ -649,7 +651,9 @@ namespace spades {
 			
 			auto *chunk = dynamic_cast<YsrAudioChunk *>(c);
 			if(chunk == nullptr) SPRaise("Invalid chunk: null or invalid type.");
-			
+
+			client::AudioParam params;
+			params = param;
 			driver->PlayRelative(chunk->GetBuffer(), origin,
 								 TranslateParam(param));
 			
@@ -659,7 +663,9 @@ namespace spades {
 			
 			auto *chunk = dynamic_cast<YsrAudioChunk *>(c);
 			if(chunk == nullptr) SPRaise("Invalid chunk: null or invalid type.");
-			
+
+			client::AudioParam params;
+			params = param;
 			driver->PlayLocal(chunk->GetBuffer(), TranslateParam(param));
 			
 		}

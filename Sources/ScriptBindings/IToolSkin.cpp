@@ -26,7 +26,7 @@ namespace spades{
 	namespace client {
 		ScriptIToolSkin::ScriptIToolSkin(asIScriptObject *obj):
 		obj(obj){}
-		
+
 		void ScriptIToolSkin::SetSprintState(float v) {
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IToolSkin",
@@ -64,10 +64,11 @@ namespace spades{
 			ScriptManager::CheckError(r);
 			ctx.ExecuteChecked();
 		}
-		void ScriptIToolSkin::SetTeamColor(Vector3 v){
+		void ScriptIToolSkin::SetTeamColor(IntVector3 v)
+		{
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IToolSkin",
-									   "void set_TeamColor(Vector3)");
+										"void set_TeamColor(IntVector3)");
 			ScriptContextHandle ctx = func.Prepare();
 			int r;
 			r = ctx->SetObject((void *)obj);
@@ -76,6 +77,34 @@ namespace spades{
 			ScriptManager::CheckError(r);
 			ctx.ExecuteChecked();
 		}
+		//Chameleon
+		void ScriptIToolSkin::SetClientDistance(float v)
+		{
+			SPADES_MARK_FUNCTION_DEBUG();
+			static ScriptFunction func("IToolSkin",
+										"void set_ClientDistance(float)");
+			ScriptContextHandle ctx = func.Prepare();
+			int r;
+			r = ctx->SetObject((void *)obj);
+			ScriptManager::CheckError(r);
+			r = ctx->SetArgFloat(0, v);
+			ScriptManager::CheckError(r);
+			ctx.ExecuteChecked();
+		}
+		void ScriptIToolSkin::SetSoundDistance(float v)
+		{
+			SPADES_MARK_FUNCTION_DEBUG();
+			static ScriptFunction func("IToolSkin",
+										"void set_SoundDistance(float)");
+			ScriptContextHandle ctx = func.Prepare();
+			int r;
+			r = ctx->SetObject((void *)obj);
+			ScriptManager::CheckError(r);
+			r = ctx->SetArgFloat(0, v);
+			ScriptManager::CheckError(r);
+			ctx.ExecuteChecked();
+		}
+
 		void ScriptIToolSkin::Update(float v) {
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IToolSkin",
@@ -125,10 +154,18 @@ namespace spades{
 														 "void set_RaiseState(float)");
 						manager->CheckError(r);
 						r = eng->RegisterInterfaceMethod("IToolSkin",
-														 "void set_TeamColor(Vector3)");
+														 "void set_TeamColor(IntVector3)");
 						manager->CheckError(r);
 						r = eng->RegisterInterfaceMethod("IToolSkin",
 														 "void set_IsMuted(bool)");
+						//Chameleon
+						manager->CheckError(r);
+						r = eng->RegisterInterfaceMethod("IToolSkin",
+														 "void set_ClientDistance(float)");
+						manager->CheckError(r);
+						r = eng->RegisterInterfaceMethod("IToolSkin",
+														 "void set_SoundDistance(float)");
+
 						manager->CheckError(r);
 						r = eng->RegisterInterfaceMethod("IToolSkin",
 														 "void Update(float)");

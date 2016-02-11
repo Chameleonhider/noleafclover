@@ -41,6 +41,8 @@ namespace spades {
 			SPRaise("Voxel model with depth > 64 is not supported.");
 		}
 		
+		//SPLog("Model Loaded %d x %d x %d", w, h, d);
+
 		solidBits = new uint64_t[w * h];
 		colors = new uint32_t[w * h * d];
 		
@@ -48,6 +50,30 @@ namespace spades {
 		
 		
 	}
+	/*VoxelModel::VoxelModel(int w, int h, int d, int wlim, int hlim, int dlim) 
+	{
+		SPADES_MARK_FUNCTION();
+
+		if (w < 1 || h < 1 || d < 1 || w > 4096 || h > 4096)
+			SPRaise("Invalid dimension: %dx%dx%d", w, h, d);
+		if (w > wlim || h > hlim || d > dlim)
+			SPRaise("Invalid dimension: %dx%dx%d", w, h, d);
+
+		width = w;
+		height = h;
+		depth = d;
+		if (d > 64)
+		{
+			SPRaise("Voxel model with depth > 64 is not supported.");
+		}
+
+		solidBits = new uint64_t[w * h];
+		colors = new uint32_t[w * h * d];
+
+		SPLog("Model Loaded %d x %d x %d", w, h, d);
+
+		std::fill(solidBits, solidBits + w * h, 0);
+	}*/
 	VoxelModel::~VoxelModel() {
 		SPADES_MARK_FUNCTION();
 		

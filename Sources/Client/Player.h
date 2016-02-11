@@ -55,9 +55,12 @@ namespace spades {
 		struct WeaponInput {
 			bool primary: 1;
 			bool secondary: 1;
+			bool peeking : 1;
+
 			WeaponInput():
 			primary(false),
-			secondary(false){}
+			secondary(false),
+			peeking(false){}
 		};
 		
 		
@@ -133,6 +136,14 @@ namespace spades {
 			
 			float respawnTime;
 			
+			//Chameleon
+			public:
+			//Chameleon: recoil when standing
+			bool crouching;
+			//Chameleon: spread when repeatedly crouching
+			float spreadAdd;
+
+		private:
 			void RepositionPlayer(const Vector3&);
 			void MovePlayer(float fsynctics);
 			void BoxClipMove(float fsynctics);
@@ -218,7 +229,7 @@ namespace spades {
 			Vector3 GetUp();
 			Vector3 GetEye() { return eye; }
 			Vector3 GetOrigin(); // actually not origin at all!
-			Vector3 GetVelocty() { return velocity; }
+			Vector3 GetVelocity() { return velocity; }
 			int GetMoveSteps() {return moveSteps;}
 			
 			World *GetWorld() { return world; }

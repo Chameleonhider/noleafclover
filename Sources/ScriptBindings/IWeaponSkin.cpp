@@ -26,7 +26,7 @@ namespace spades{
 	namespace client {
 		ScriptIWeaponSkin::ScriptIWeaponSkin(asIScriptObject *obj):
 		obj(obj){}
-		
+
 		void ScriptIWeaponSkin::SetReadyState(float v) {
 			SPADES_MARK_FUNCTION_DEBUG();
 			static ScriptFunction func("IWeaponSkin",

@@ -27,38 +27,22 @@
 namespace spades{
 	namespace client{
 		static IRenderer *lastRenderer = NULL;
-		static IImage *lastSeq[180];
-		static IImage *lastSeq2[48];
+		static IImage *lastSeq;
 		
         // FIXME: add "image manager"?
-		static void Load(IRenderer *r) {
+		static void Load(IRenderer *r) 
+		{
 			if(r == lastRenderer)
 				return;
             
-			for(int i = 0; i < 180; i++){
-				char buf[256];
-				sprintf(buf, "Textures/Smoke1/%03d.png", i);
-				lastSeq[i] = r->RegisterImage(buf);
-			}
-			for(int i = 0; i < 48; i++){
-				char buf[256];
-				sprintf(buf, "Textures/Smoke2/%03d.png", i);
-				lastSeq2[i] = r->RegisterImage(buf);
-			}
-			
+				r->RegisterImage("Gfx/WhitePixel.tga");			
 			lastRenderer = r;
 		}
 		
 		IImage *SmokeSpriteEntity::GetSequence(int i, IRenderer *r,
 											   Type type){
 			Load(r);
-			if(type == Type::Steady) {
-				SPAssert(i >= 0 && i < 180);
-				return lastSeq[i];
-			} else {
-				SPAssert(i >= 0 && i < 48);
-				return lastSeq2[i];
-			}
+			return lastSeq;
 		}
 		
 		SmokeSpriteEntity::SmokeSpriteEntity(Client *c,
@@ -74,19 +58,9 @@ namespace spades{
 			Load(r);
 		}
 		
-		bool SmokeSpriteEntity::Update(float dt) {
-			frame += dt * fps;
-			if(type == Type::Steady) {
-				frame = fmodf(frame, 180.f);
-			} else {
-				if(frame > 47.f) {
-					frame = 47.f;
-					return false;
-				}
-			}
-			
-			int fId = (int)floorf(frame);
-			SetImage(GetSequence(fId, GetRenderer(), type));
+		bool SmokeSpriteEntity::Update(float dt)
+		{
+			SetImage(GetSequence(0, GetRenderer(), type));
 			
 			return ParticleSpriteEntity::Update(dt);
 		}

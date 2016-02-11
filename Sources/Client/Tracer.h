@@ -14,19 +14,30 @@
 namespace spades {
 	namespace client {
 		class Client;
+		class Player;
 		class IImage;
+		class IAudioChunk;
+		class IModel;
 		class Tracer: public ILocalEntity {
 			Client *client;
+			Player *player;
 			IImage *image;
+			IAudioChunk *snd;
+			IModel *model;
 			Vector3 startPos, dir;
+			Matrix4 matrix;
 			float length;
 			float curDistance;
 			float visibleLength;
 			float velocity;
 			bool firstUpdate;
+			//bool soundPlayed;
+			float flyByDist;
+			Vector3 colour;
+			IntVector3 teamCol;
 		public:
-			Tracer(Client *, Vector3 p1, Vector3 p2,
-				   float bulletVel);
+			Tracer(Client *, Player *, IModel *, Vector3 p1, Vector3 p2,
+				   float bulletVel, IntVector3 team);
 			virtual ~Tracer();
 			
 			virtual bool Update(float dt);
