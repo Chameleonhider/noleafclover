@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 openspades
 ====================================================================================================
 
@@ -120,3 +121,6 @@ Licensing
 Please see the file named LICENSE.
 
 Note that other assets including sounds and models are not open source.
+=======
+# noleafclover
+>>>>>>> origin/master
