@@ -186,8 +186,8 @@ namespace spades {
 
 					//Chameleon: weapon visual lag
 					{
-						weapX -= x*0.00025f*(1.f - aimDownState);
-						weapY -= y*0.00025f*(1.f - aimDownState);
+						/*weapX -= x*0.00025f*(1.f - aimDownState);
+						weapY -= y*0.00025f*(1.f - aimDownState);*/
 						weapX += x*0.000125f*(GetAimDownZoomScale()+1);
 						weapY += y*0.000125f*(GetAimDownZoomScale()+1);
 					}
@@ -276,8 +276,8 @@ namespace spades {
 
 					//Chameleon: weapon visual lag
 					{
-						weapX -= x*0.0005f*(1.f - aimDownState);
-						weapY -= y*0.0005f*(1.f - aimDownState);
+						/*weapX -= x*0.0005f*(1.f - aimDownState);
+						weapY -= y*0.0005f*(1.f - aimDownState);*/
 						weapX += x*0.00025f*(GetAimDownZoomScale()+1);
 						weapY += y*0.00025f*(GetAimDownZoomScale()+1);
 					}

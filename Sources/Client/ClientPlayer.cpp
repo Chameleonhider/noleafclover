@@ -55,6 +55,9 @@ SPADES_SETTING(opt_particleNiceDist, "");
 //maximum distance of models, not really useful, just default values were shit
 SPADES_SETTING(opt_modelMaxDist, "");
 
+SPADES_SETTING(d_x, "0");
+SPADES_SETTING(d_y, "0");
+
 namespace spades {
 	namespace client {
 		
@@ -498,11 +501,14 @@ namespace spades {
 
 				//Chameleon: weapon visual lag
 				{
-					//viewWeaponOffset.x -= (float)d_x;
-					//viewWeaponOffset.z += (float)d_y;
+					//viewWeaponOffset.x -= (float)d_x; //for debugging
+					//viewWeaponOffset.z += (float)d_y; //for debugging
+					//client->weapX = (float)d_x; //for debugging
+					//client->weapY = (float)d_y; //for debugging
 
-					viewWeaponOffset.x -= client->weapX*dt*10;
-					viewWeaponOffset.z += client->weapY*dt*10;
+					//reverse it when not aiming down
+					viewWeaponOffset.x -= client->weapX*dt*10 * (2*GetAimDownState() - 1);
+					viewWeaponOffset.z += client->weapY*dt*10 * (2*GetAimDownState() - 1);
 
 					client->weapX -= client->weapX*dt*10;
 					client->weapY -= client->weapY*dt*10;

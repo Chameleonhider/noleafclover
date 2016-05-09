@@ -64,7 +64,7 @@ namespace spades{
 			
 			items.push_back(MenuItem(MenuSpawn, AABB2(left + contentsWidth - 266.f, firstY + 4.f, 256.f, 64.f), _Tr("Client", "Spawn")));
 
-			cursorPos = MakeVector2(renderer->ScreenWidth()*.5f, renderer->ScreenHeight()*.5f);
+			cursorPos = MakeVector2(renderer->ScreenWidth()*.5f, renderer->ScreenHeight()*.75f);
 
 			selectedTeam = 2;
 			selectedWeapon = RIFLE_WEAPON;

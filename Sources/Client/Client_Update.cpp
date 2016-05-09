@@ -288,52 +288,63 @@ namespace spades {
 			//mouse inertia
 			if (player)
 			{
-				float health = world->GetLocalPlayer()->GetHealth();
-				//mouseInertia is used in Client_Input(), but not here
-				mouseInertia = 0.50f - health/250.f;
-				if (mouseInertia > 1.f)
-					mouseInertia = 1.f;
-				if (mouseInertia < 0.f)
-					mouseInertia = 0.f;
-
-				//smoothly reduces inertia
-				//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
-				//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
-				//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
-				float inertiaX = mouseX / (100 * (2 - 0.01f*health));
-				float inertiaY = mouseY / (100 * (2 - 0.01f*health));
-				{					
-					if (inertiaX < 0)
-						inertiaX *= (-1);
-					if (inertiaY < 0)
-						inertiaY *= (-1);
-					MouseEventInertia(mouseX*dt*inertiaX, mouseY*dt*inertiaY);
-					mouseX -= mouseX*dt*inertiaX;
-					mouseY -= mouseY*dt*inertiaY;
-				}
-
-				//always reduces inertia, from 50 to 25 per second
-				{
-					if (mouseX > 25/(2-0.01f*health) && mouseX < -25/(2-0.01f*health))
-						inertiaX = (mouseX/abs(mouseX)) * (50/(2-0.01f*health));
-					else
-						inertiaX = mouseX;
-
-					if (mouseY > 25/(2-0.01f*health) && mouseY < -25/(2-0.01f*health))
-						inertiaY = (mouseY/abs(mouseY)) * (50/(2-0.01f*health));
-					else
-						inertiaY = mouseY;
-
-					MouseEventInertia(inertiaX*dt, inertiaY*dt);
-					mouseX -= dt*inertiaX;
-					mouseY -= dt*inertiaY;
-				}
 				//if player is no longer alive, kill inertia
 				if (!world->GetLocalPlayer()->IsAlive())
 				{
 					MouseEventInertia(mouseX, mouseY);
 					mouseX = 0.f;
 					mouseY = 0.f;
+				}
+				else
+				{
+					float health = world->GetLocalPlayer()->GetHealth()*0.01f;
+					//mouseInertia is used in Client_Input(), but not here
+					mouseInertia = 0.50f - health*0.4f;
+					if (mouseInertia > 1.f)
+						mouseInertia = 1.f;
+					if (mouseInertia < 0.f)
+						mouseInertia = 0.f;
+
+					//smoothly reduces inertia
+					//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
+					//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
+					//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
+					float inertiaX = mouseX / (25 * (2 - health));
+					float inertiaY = mouseY / (25 * (2 - health));
+					{
+						if (inertiaX < 0)
+							inertiaX *= (-1);
+						if (inertiaY < 0)
+							inertiaY *= (-1);
+						MouseEventInertia(mouseX*dt*inertiaX, mouseY*dt*inertiaY);
+						mouseX -= mouseX*dt*inertiaX;
+						mouseY -= mouseY*dt*inertiaY;
+					}
+
+					//linear mouse velocity reduction, from 50 to 25 per second
+					inertiaX = 0;
+					inertiaY = 0;
+					//inertia mouseX
+					if (mouseX != 0)
+					{
+						inertiaX = 25*dt / (2 - health);
+						if (abs(mouseX) < inertiaX)
+							inertiaX = abs(mouseX);
+
+						inertiaX *= (mouseX / abs(mouseX));
+					}
+					//inertia mouseY
+					if (mouseY != 0)
+					{
+						inertiaY = 25*dt / (2 - health);
+						if (abs(mouseY) < inertiaY)
+							inertiaY = abs(mouseY);
+
+						inertiaY *= (mouseY / abs(mouseY));
+					}
+					MouseEventInertia(inertiaX, inertiaY);
+					mouseX -= inertiaX;
+					mouseY -= inertiaY;
 				}
 			}
 			else
@@ -1710,8 +1721,8 @@ namespace spades {
 		//Chameleon: set weapon muzzle direction
 		void Client::SetWeaponXY(Vector2 vec)
 		{
-			weapX = vec.x;
-			weapY = vec.y;
+			weapX += vec.x;
+			weapY += vec.y;
 		}
 		//Chameleon: return weapon muzzle direction
 		float Client::GetWeaponX()

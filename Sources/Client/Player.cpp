@@ -37,9 +37,9 @@
 
 SPADES_SETTING(opt_tracers, "2");
 
-SPADES_SETTING(d_a, "1");
-SPADES_SETTING(d_b, "1");
-SPADES_SETTING(d_c, "1");
+//SPADES_SETTING(d_a, "1");
+//SPADES_SETTING(d_b, "1");
+//SPADES_SETTING(d_c, "1");
 
 namespace spades {
 	namespace client {
@@ -137,18 +137,18 @@ namespace spades {
 				if (newInput.crouch)
 				{
 					crouching = true;
-					if (weapInput.secondary)
+					/*if (weapInput.secondary)
 						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
-					else
-						world->GetListener()->SetWeaponXY(Vector2(0, -0.2f));
+					else*/
+						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
 				}
 				else
 				{
 					crouching = false;
-					if (weapInput.secondary)
-						world->GetListener()->SetWeaponXY(Vector2(0, -0.2f));
-					else
-						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
+					/*if (weapInput.secondary)
+						world->GetListener()->SetWeaponXY(Vector2(0, -0.25f));
+					else*/
+						world->GetListener()->SetWeaponXY(Vector2(0, -0.25f));
 				}
 			}
 			input = newInput;
@@ -709,25 +709,11 @@ namespace spades {
 			float spread = weapon->GetSpread();
 			GameMap *map = world->GetMap();
 			//Chameleon
-//change;
 			//make spread slowly reduce to half when >completely< stationary. +
 			//also make spread depend on weapon movement itself --- and weapon movement depend on mouse input.
 			//for example, if mouse moves to right, weapon stays to left side and gradually goes to right side. Represent real weapon's barrel.
 			if (IsLocalPlayer())
 			{
-				//old one for backup
-				/*spread += spread * spreadAdd;
-				if (airborne)
-				{
-					spread *= 4;
-				}
-				else if (velocity.GetLength() > 0.01f && weapon->GetWeaponType() != SHOTGUN_WEAPON)
-				{
-					if (crouching)
-						spread += spread * velocity.GetLength() * 6;
-					else
-						spread += spread * velocity.GetLength() * 3;
-				}*/
 				if (weapon->GetWeaponType() != SHOTGUN_WEAPON)
 					spread += spread * spreadAdd;
 
@@ -740,30 +726,24 @@ namespace spades {
 			bool blockDestroyed = false;
 			
 			Vector3 dir2 = GetFront();
-			for(int i =0 ; i < pellets; i++)
+			for(int i = 0; i < pellets; i++)
 			{
-				//Chameleon: sync visual weapon with hit location. Needs thorough testing
+				//Chameleon: sync visual weapon with hit location.
+				//synced when weapXY -> 0
 				if (IsLocalPlayer())
 				{
 					if (weapInput.secondary)
 					{
-						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x * 3;
-						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y * 3;
-						dir2.z -= world->GetListener()->GetWeaponY() * 3;
+						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x*0.667f;
+						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y*0.667f;
+						dir2.z -= world->GetListener()->GetWeaponY()*0.667f;
 					}
 					else
 					{
-						dir2.x += world->GetListener()->GetWeaponX()*GetRight().x;
-						dir2.y += world->GetListener()->GetWeaponX()*GetRight().y;
-						dir2.z += world->GetListener()->GetWeaponY();
+						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x*0.15f;
+						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y*0.15f;
+						dir2.z -= world->GetListener()->GetWeaponY()*0.15f;
 					}
-
-					/*if (weapInput.secondary)
-					{
-					dir2.x -= world->GetListener()->GetWeaponX();
-					dir2.y -= world->GetListener()->GetWeaponX();
-					dir2.z += world->GetListener()->GetWeaponY();
-					}*/
 				}
 
 				// AoS 0.75's way (dir2 shouldn't be normalized!)

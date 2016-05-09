@@ -150,7 +150,7 @@ set(OPENSPADES_INSTALL_BINARY    "games"                CACHE STRING "Directory 
 set(OPENSPADES_INSTALL_DESKTOP   "share/applications"   CACHE STRING "Directory for installing .desktop file. ")
 set(OPENSPADES_INSTALL_LIBS      "lib/openspades"       CACHE STRING "Directory for installing various non-media stuff. Currently not used")
 
-set(OPENSPADES_RESDIR "" CACHE STRING "Resource dir to use while developing")
+set(OPENSPADES_RESDIR "C:/Projects/noleafclover/OpenSpades.msvc/os.Resources" CACHE STRING "Resource dir to use while developing")
 set(OPENSPADES_EXTRATITLE "" CACHE STRING "Extra info to add to the package name")
 if(OPENSPADES_RESDIR)
 	set(RESDIR ${OPENSPADES_RESDIR})
