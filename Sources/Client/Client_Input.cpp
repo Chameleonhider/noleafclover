@@ -38,6 +38,7 @@
 
 #include "NetClient.h"
 
+using namespace std;
 
 SPADES_SETTING(cg_mouseSensitivity, "1");
 SPADES_SETTING(cg_mouseCrouchScale, "0.75");
@@ -278,8 +279,8 @@ namespace spades {
 					{
 						/*weapX -= x*0.0005f*(1.f - aimDownState);
 						weapY -= y*0.0005f*(1.f - aimDownState);*/
-						weapX += x*0.00025f*(GetAimDownZoomScale()+1);
-						weapY += y*0.00025f*(GetAimDownZoomScale()+1);
+						weapX += x*0.000125f*(GetAimDownZoomScale()+1);
+						weapY += y*0.000125f*(GetAimDownZoomScale()+1);
 					}
 
 					//SPLog("MouseEventInertia: %f, %f", x, y);

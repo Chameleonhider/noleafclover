@@ -140,7 +140,7 @@ namespace spades {
 					/*if (weapInput.secondary)
 						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
 					else*/
-						world->GetListener()->SetWeaponXY(Vector2(0, 0.2f));
+						world->GetListener()->SetWeaponXY(Vector2(0, 0.125f));
 				}
 				else
 				{

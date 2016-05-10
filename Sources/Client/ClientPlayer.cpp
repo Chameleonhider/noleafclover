@@ -1062,14 +1062,15 @@ namespace spades {
 				//Chameleon
 				Vector3 fixDim = MakeVector3(3, 7, 8);
 				Vector3 ModelDim = MakeVector3(model->GetDimensions());
-				Vector3 scale = MakeVector3(fixDim.x/ModelDim.x, fixDim.y/ModelDim.y, fixDim.z/ModelDim.z);
+				Vector3 scale = fixDim / ModelDim;
 				ModelRenderParam paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 				
 				paramTMP.matrix = leg1 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				paramTMP.matrix = leg2 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				
 				torso = Matrix4::Translate(0.f,0.f,-0.55f);
@@ -1082,12 +1083,12 @@ namespace spades {
 				//Chameleon
 				fixDim = MakeVector3(8, 8, 7);
 				ModelDim = MakeVector3(model->GetDimensions());
-				scale = MakeVector3(fixDim.x/ModelDim.x, fixDim.y/ModelDim.y, fixDim.z/ModelDim.z);
+				scale = fixDim / ModelDim;
 				paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 
 				paramTMP.matrix = torso * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				
 				head = Matrix4::Translate(0.f,0.f,-0.0f);
@@ -1120,14 +1121,15 @@ namespace spades {
 				//Chameleon
 				Vector3 fixDim = MakeVector3(3, 5, 12);
 				Vector3 ModelDim = MakeVector3(model->GetDimensions());
-				Vector3 scale = ModelDim / fixDim;
+				Vector3 scale = fixDim / ModelDim;
 				ModelRenderParam paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 
 				paramTMP.matrix = leg1 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				paramTMP.matrix = leg2 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				
 				torso = Matrix4::Translate(0.f,0.f,-1.0f);
@@ -1140,12 +1142,12 @@ namespace spades {
 				//Chameleon
 				fixDim = MakeVector3(8, 4, 9);
 				ModelDim = MakeVector3(model->GetDimensions());
-				scale = MakeVector3(fixDim.x/ModelDim.x, fixDim.y/ModelDim.y, fixDim.z/ModelDim.z);
+				scale = fixDim / ModelDim;
 				paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 
 				paramTMP.matrix = torso * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
 				
 				head = Matrix4::Translate(0.f,0.f,-0.0f);
@@ -1186,12 +1188,12 @@ namespace spades {
 				fixDim = MakeVector3(12, 10, 7);
 
 			Vector3 ModelDim = MakeVector3(model->GetDimensions());
-			Vector3 scale = ModelDim / fixDim;
+			Vector3 scale = fixDim / ModelDim;
 			paramTMP = param;
-			paramTMP.matrix *= Matrix4::Scale(scale);
 			//Chameleon
 
 			paramTMP.matrix = arms * scaler;
+			paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 			renderer->RenderModel(model, paramTMP);
 			
 			
@@ -1202,14 +1204,15 @@ namespace spades {
 				renderer->RegisterModel("Models/PlayerB/Head.kv6");
 
 			//Chameleon
-			fixDim = MakeVector3(6, 6, 6);
+			fixDim = MakeVector3(5, 5, 5);
 			ModelDim = MakeVector3(model->GetDimensions());
-			scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
+			scale = fixDim / ModelDim;
+			//scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
 			paramTMP = param;
-			paramTMP.matrix *= Matrix4::Scale(scale);
 			//Chameleon
 
 			paramTMP.matrix = head * scaler;
+			paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 			if (world->GetLocalPlayer())
 			{
 				//if (!client->IsFollowing() && (world->GetLocalPlayer()->GetPosition() - p->GetPosition()).GetLength() > 0.75f)
@@ -1265,12 +1268,12 @@ namespace spades {
 						//Chameleon
 						Vector3 fixDim = MakeVector3(10, 3, 8);
 						Vector3 ModelDim = MakeVector3(model->GetDimensions());
-						Vector3 scale = ModelDim / fixDim;
+						Vector3 scale = fixDim / ModelDim;
 						ModelRenderParam paramTMP = param;
-						paramTMP.matrix *= Matrix4::Scale(scale);
 						//Chameleon
 
 						paramTMP.matrix = mIntel * scaler;
+						paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 						renderer->RenderModel(model, paramTMP);
 						//param.customColor = MakeVector3(col.x/255.f, col.y/255.f, col.z/255.f);
 					}
@@ -1342,14 +1345,15 @@ namespace spades {
 				//Chameleon
 				Vector3 fixDim = MakeVector3(3, 7, 8);
 				Vector3 ModelDim = MakeVector3(model->GetDimensions());
-				Vector3 scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
+				Vector3 scale = fixDim / ModelDim;
 				ModelRenderParam paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 
 				paramTMP.matrix = leg1 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);
 				renderer->RenderModel(model, paramTMP);
 				paramTMP.matrix = leg2 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);
 				renderer->RenderModel(model, paramTMP);
 
 				torso = Matrix4::Translate(0.f, 0.f, -0.55f);
@@ -1397,14 +1401,15 @@ namespace spades {
 				//Chameleon
 				Vector3 fixDim = MakeVector3(3, 5, 12);
 				Vector3 ModelDim = MakeVector3(model->GetDimensions());
-				Vector3 scale = ModelDim / fixDim;
+				Vector3 scale = fixDim / ModelDim;
 				ModelRenderParam paramTMP = param;
-				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
 
 				paramTMP.matrix = leg1 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);
 				renderer->RenderModel(model, paramTMP);
 				paramTMP.matrix = leg2 * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);
 				renderer->RenderModel(model, paramTMP);
 
 				//torso = Matrix4::Translate(0.f, 0.f, -1.0f);

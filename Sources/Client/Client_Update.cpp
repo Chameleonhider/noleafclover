@@ -570,33 +570,52 @@ namespace spades {
 			}
 
 			//Chameleon: spreadAdd. if more than 0, make weapon lag behind some more. if less than 0, reduce spread but increase recoil?
-			if (!player->IsOnGroundOrWade() || player->GetVelocity().GetLength() > 0.01f || (inp.moveBackward || inp.moveForward || inp.moveLeft || inp.moveRight))
+			//falling spread
+			if (!player->IsOnGroundOrWade())
 			{
-				if (player->spreadAdd < 0)
-					player->spreadAdd = 0;
-
-				if (player->crouching && player->spreadAdd < player->GetVelocity().GetLength()*12)
-					player->spreadAdd = player->GetVelocity().GetLength()*12;
-				if (!player->crouching && player->spreadAdd < player->GetVelocity().GetLength()*4)
-					player->spreadAdd = player->GetVelocity().GetLength()*4;
-
-				if (!player->IsOnGroundOrWade())
-					player->spreadAdd += dt;
+				player->spreadAdd += dt;
 			}
+			//moving spread
+			else if (inp.moveBackward || inp.moveForward || inp.moveLeft || inp.moveRight)
+			{
+				if (player->crouching || inp.sneak || weapInput.secondary) 
+				{
+					if (player->spreadAdd < player->GetVelocity().GetLength() * 8)
+						player->spreadAdd = player->GetVelocity().GetLength() * 8;
+					if (player->spreadAdd > player->GetVelocity().GetLength() * 8)
+						player->spreadAdd -= dt;
+				}
+				else if (!inp.sprint)
+				{
+					if (player->spreadAdd < player->GetVelocity().GetLength() * 4)
+						player->spreadAdd = player->GetVelocity().GetLength() * 4;
+					if (player->spreadAdd > player->GetVelocity().GetLength() * 4)
+						player->spreadAdd -= dt;
+				}
+				else
+				{
+					if (player->spreadAdd < player->GetVelocity().GetLength() * 4)
+						player->spreadAdd = player->GetVelocity().GetLength() * 4;
+					if (player->spreadAdd < player->GetVelocity().GetLength() * 8)
+						player->spreadAdd += dt/10.f;
+				}
+				
+			}
+			//spread decrease when stationary
 			else
 			{
 				if (player->spreadAdd > 1)
 					player->spreadAdd -= dt;
-				else if (player->spreadAdd > 0)
-					player->spreadAdd -= dt/3.f;
-				else if (player->spreadAdd > -0.5f)
-					player->spreadAdd -= dt/6.f;
+				else if (player->spreadAdd > 0.5f)
+					player->spreadAdd -= dt/2.f;
+				else if (player->spreadAdd > 0.0f)
+					player->spreadAdd -= dt/4.f;
 			}
 
-			if (player->spreadAdd < -0.5)
-				player->spreadAdd = -0.5;
-			else if (player->spreadAdd > 5)
-				player->spreadAdd = 5;
+			if (player->spreadAdd < 0)
+				player->spreadAdd = 0;
+			else if (player->spreadAdd > 4)
+				player->spreadAdd = 4;
 
 			// don't allow to stand up when ceilings are too low
 			if(inp.crouch == false)
@@ -1467,11 +1486,11 @@ namespace spades {
 			switch(player->GetWeapon()->GetWeaponType()) 
 			{
 				case RIFLE_WEAPON:
-					vel = 800.f;
+					vel = 600.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					break;
 				case SMG_WEAPON:
-					vel = 400.f;
+					vel = 300.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					if (player->GetWeapon()->GetAmmo() % 2 == 0)
 						return;

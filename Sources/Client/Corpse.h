@@ -64,6 +64,8 @@ namespace spades {
 			IRenderer *renderer;
 			GameMap *map;
 			Vector3 color;
+			//Chameleon
+			int teamId;
 			
 			Node nodes[NodeCount];
 			Edge edges[8];

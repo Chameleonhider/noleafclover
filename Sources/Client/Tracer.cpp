@@ -43,8 +43,35 @@ namespace spades {
 			firstUpdate = true;
 			
 			image = client->GetRenderer()->RegisterImage("Gfx/WhitePixel.tga");
+
 			//Chameleon: .wav sounds for tracers
-			snd = client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/Tracer.wav");			
+			int x = GetRandom()*4;
+			switch (x % 4)
+			{
+				case 0:
+					snd = bulletVel > 400 ?
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP1.wav") :
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB1.wav");
+					break;
+				case 1:
+					snd = bulletVel > 400 ?
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP2.wav") :
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB2.wav");
+					break;
+				case 2:
+					snd = bulletVel > 400 ?
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP3.wav") :
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB3.wav");
+					break;
+				case 3:
+					snd = bulletVel > 400 ?
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP4.wav") :
+						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB4.wav");
+					break;
+				default:
+					break;
+			}
+
 			if (player && (p1 - player->GetPosition()).GetLength() < 8)
 				flyByDist = -1;
 			else
@@ -59,7 +86,7 @@ namespace spades {
 			matrix = Matrix4::FromAxis(right, dir, up, startPos);
 
 			//Chameleon: teamCol tracers
-			int colFac = (int)opt_tracers;
+			//int colFac = (int)opt_tracers;
 			colour = Vector3(teamCol.x / 255.f, teamCol.y / 255.f, teamCol.z / 255.f);
 			colour = (colour + Vector3(2, 2, 2)) / 2.9f;
 		}
@@ -93,7 +120,7 @@ namespace spades {
 				Vector3 pos1 = startPos + dir * curDistance;
 
 				//if tracer is heading outbound
-				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 5 < client->soundDistance)
+				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 4 < client->soundDistance)
 				{
 					IAudioDevice *audio = client->GetAudioDevice();
 					AudioParam param = AudioParam();
@@ -155,7 +182,7 @@ namespace spades {
 			else if ((int)opt_tracers == 2)
 			{
 				ModelRenderParam param;
-				param.matrix = matrix * Matrix4::Scale(.05f);
+				param.matrix = matrix * Matrix4::Scale(0.1f);
 				param.customColor = colour;
 				r->RenderModel(model, param);
 			}
