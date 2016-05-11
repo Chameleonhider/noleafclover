@@ -88,7 +88,8 @@ namespace spades {
 			//Chameleon: teamCol tracers
 			//int colFac = (int)opt_tracers;
 			colour = Vector3(teamCol.x / 255.f, teamCol.y / 255.f, teamCol.z / 255.f);
-			colour = (colour + Vector3(2, 2, 2)) / 2.9f;
+			colour = Vector3(colour.x / colour.GetLength(), colour.y / colour.GetLength(), colour.z / colour.GetLength());
+			colour = (colour + Vector3(1, 1, 1)) / 1.9f;
 		}
 		
 		bool Tracer::Update(float dt) 
@@ -120,12 +121,12 @@ namespace spades {
 				Vector3 pos1 = startPos + dir * curDistance;
 
 				//if tracer is heading outbound
-				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 4 < client->soundDistance)
+				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 2 < client->soundDistance)
 				{
 					IAudioDevice *audio = client->GetAudioDevice();
 					AudioParam param = AudioParam();
-					param.volume = 10.f;
-					param.referenceDistance = flyByDist;
+					param.volume = 100.f / flyByDist;
+					param.referenceDistance = flyByDist/2;
 					audio->Play(snd, pos1, param);
 					flyByDist = -1;
 				}

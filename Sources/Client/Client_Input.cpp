@@ -170,6 +170,11 @@ namespace spades {
 				float aimDownState = GetAimDownState();
 				if(p->IsAlive())
 				{
+					float rollFac = 1;
+					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2
+					rollFac *= fmax(1.f, 2.f - soundDistance*0.0625f); //from 1 to 2
+					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2
+
 					x /= GetAimDownZoomScale();
 					y /= GetAimDownZoomScale();
 
@@ -189,8 +194,8 @@ namespace spades {
 					{
 						/*weapX -= x*0.00025f*(1.f - aimDownState);
 						weapY -= y*0.00025f*(1.f - aimDownState);*/
-						weapX += x*0.000125f*(GetAimDownZoomScale()+1);
-						weapY += y*0.000125f*(GetAimDownZoomScale()+1);
+						weapX += x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
 					float rad = x * x + y * y;
@@ -233,12 +238,17 @@ namespace spades {
 						y *= (float)cg_mouseCrouchScale;
 					}
 					
+					
+					
 					//Chameleon: drunk cam, affected by health and soundDistance
-					//so: input * health(from 1 to 0.25, as health goes 100 to 0) * soundDistance(from 3 to 1, as soundDistance goes 0 to >16)
-					if (3-soundDistance*0.125f > 1)
+					//old one; the new one is "rollfac"
+					//so: input * health(from 1 to 0.25, as health goes 0 to 100) * soundDistance(from 3 to 1, as soundDistance goes 0 to >16)
+					/*if (3-soundDistance*0.125f > 1)
 						mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f)*(3-soundDistance*0.125f);
 					else
-						mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f); 
+						mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f); */
+
+					mouseRoll += x*0.0005f*rollFac;
 
 					//Chameleon: freeaim
 					mouseYaw -= x*0.003f;
@@ -274,13 +284,17 @@ namespace spades {
 				float aimDownState = GetAimDownState();
 				if (p->IsAlive())
 				{
+					float rollFac = 1;
+					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2
+					rollFac *= fmax(1.f, 2.f - soundDistance*0.0625f); //from 1 to 2
+					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2
 
 					//Chameleon: weapon visual lag
 					{
-						/*weapX -= x*0.0005f*(1.f - aimDownState);
-						weapY -= y*0.0005f*(1.f - aimDownState);*/
-						weapX += x*0.000125f*(GetAimDownZoomScale()+1);
-						weapY += y*0.000125f*(GetAimDownZoomScale()+1);
+						/*weapX -= x*0.00025f*(1.f - aimDownState);
+						weapY -= y*0.00025f*(1.f - aimDownState);*/
+						weapX += x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
 					//SPLog("MouseEventInertia: %f, %f", x, y);
@@ -329,11 +343,14 @@ namespace spades {
 					}
 
 					//Chameleon: drunk cam, affected by health and soundDistance
-					//so: input * health(from 1 to 0.25, as health goes 100 to 0) * soundDistance(from 2 to 1, as soundDistance goes 0 to >16)
-					if (3-soundDistance*0.125f > 1)
-						mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f)*(3-soundDistance*0.125f);
+					//old one; the new one is "rollfac"
+					//so: input * health(from 1 to 0.25, as health goes 0 to 100) * soundDistance(from 3 to 1, as soundDistance goes 0 to >16)
+					/*if (3-soundDistance*0.125f > 1)
+					mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f)*(3-soundDistance*0.125f);
 					else
-						mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f);
+					mouseRoll += x*0.001f*(1.f - world->GetLocalPlayer()->GetHealth()*0.0075f); */
+
+					mouseRoll += x*0.0005f*rollFac;
 
 					//Chameleon: freeaim
 					mouseYaw -= x*0.003f;

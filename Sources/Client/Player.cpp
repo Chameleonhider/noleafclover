@@ -969,20 +969,23 @@ namespace spades {
 				}
 				else if (velocity.GetLength() > 0.01f)
 				{
-					rec += rec * velocity.GetLength() * 4;
+					rec += rec * velocity.GetLength() * 2;
 				}
 				if (!crouching)
 				{
 					rec *= 2;
-				}
-
-				
+				}				
 			}
 
 			float upLimit = Vector3::Dot(GetFront2D(), o);
 			upLimit -= 0.03f;
-			o += GetUp() * std::min(rec.y, std::max(0.f, upLimit));
-			o += GetRight() * rec.x * sinf(world->GetTime() * 2.f);
+			o += GetUp() * std::min(rec.y, std::max(0.f, upLimit));			
+			
+			//Chameleon: new recoil that adds more horizontal velocity to existing one
+			if (world->GetListener()->GetWeaponX() != 0)
+				o += GetRight() * rec.x * world->GetListener()->GetWeaponX() / abs(world->GetListener()->GetWeaponX());
+			else
+				o += GetRight() * rec.x * sinf(world->GetTime() * 2.f);
 
 			//Chameleon: freeaim recoil + horizontal mouse velocity
 			if (IsLocalPlayer())

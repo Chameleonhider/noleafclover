@@ -973,7 +973,7 @@ namespace spades {
 				if (world->GetLocalPlayer())
 				{
 					Player *p = world->GetLocalPlayer();
-					sprintf(buf, ", mouseXY: %.2f:%.2f, Inertia: %.2f, Drunk: %.2f", mouseX, mouseY, mouseInertia, mouseRoll);
+					sprintf(buf, ", mouseXY: %.2f:%.2f, Inertia: %.2f, Drunk: %.2f, SpreadAdd %.2f", mouseX, mouseY, mouseInertia, mouseRoll, p->spreadAdd);
 					str += buf;
 				}
 			}

@@ -54,6 +54,8 @@ SPADES_SETTING(v_playerDlines, "1"); //0 disabled 1 enabled some 2 enabled all
 SPADES_SETTING(v_defaultSprintBob, "0");
 //maximum distance of models
 SPADES_SETTING(opt_modelMaxDist, "130");
+//configureable freeaim
+SPADES_SETTING(v_freeAim, "1");
 
 static float nextRandom() {
 	return (float)rand() / (float)RAND_MAX;
@@ -361,7 +363,6 @@ namespace spades {
 					scale /= GetAimDownZoomScale();
 
 					// add view (independent movement from crosshair) for both 1st/3rd person view
-					// MAKE CROSSHAIR & HITS INDEPENDENT, RIGHT NOW IT CAN BE CONSIDERED AS A BUG
 					{
 						// add grenade vibration
 						float grenVib = grenadeVibration;
@@ -410,7 +411,7 @@ namespace spades {
 					}
 
 					{
-						float faScale = 1.f / (GetAimDownZoomScale() + 1);
+						float faScale = float(v_freeAim) / (GetAimDownZoomScale() + 1);
 						if (mousePitch > 0.3f*faScale)
 							mousePitch = 0.3f*faScale;
 						if (mousePitch < -0.3f*faScale)

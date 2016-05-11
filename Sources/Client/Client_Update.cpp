@@ -309,8 +309,8 @@ namespace spades {
 					//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
 					//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
 					//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
-					float inertiaX = mouseX / (25 * (2 - health));
-					float inertiaY = mouseY / (25 * (2 - health));
+					float inertiaX = mouseX / (20 * (2 - health));
+					float inertiaY = mouseY / (20 * (2 - health));
 					{
 						if (inertiaX < 0)
 							inertiaX *= (-1);
@@ -327,7 +327,7 @@ namespace spades {
 					//inertia mouseX
 					if (mouseX != 0)
 					{
-						inertiaX = 25*dt / (2 - health);
+						inertiaX = 20*dt / (2 - health);
 						if (abs(mouseX) < inertiaX)
 							inertiaX = abs(mouseX);
 
@@ -336,7 +336,7 @@ namespace spades {
 					//inertia mouseY
 					if (mouseY != 0)
 					{
-						inertiaY = 25*dt / (2 - health);
+						inertiaY = 20*dt / (2 - health);
 						if (abs(mouseY) < inertiaY)
 							inertiaY = abs(mouseY);
 
@@ -358,11 +358,11 @@ namespace spades {
 			//needs changing
 			if (walkProgress > 0.7f)
 			{
-				stepVibration += dt*0.25f;
+				stepVibration += dt*0.125f;
 			}
 			else if (stepVibration > 0.f)
 			{
-				stepVibration -= dt*0.5f;
+				stepVibration -= dt*0.25f;
 				if (stepVibration < 0.f)
 				{
 					stepVibration = 0;
@@ -578,25 +578,28 @@ namespace spades {
 			//moving spread
 			else if (inp.moveBackward || inp.moveForward || inp.moveLeft || inp.moveRight)
 			{
+				//sneaking
 				if (player->crouching || inp.sneak || weapInput.secondary) 
 				{
 					if (player->spreadAdd < player->GetVelocity().GetLength() * 8)
 						player->spreadAdd = player->GetVelocity().GetLength() * 8;
 					if (player->spreadAdd > player->GetVelocity().GetLength() * 8)
-						player->spreadAdd -= dt;
+						player->spreadAdd -= dt/2.f;
 				}
+				//running
 				else if (!inp.sprint)
 				{
 					if (player->spreadAdd < player->GetVelocity().GetLength() * 4)
 						player->spreadAdd = player->GetVelocity().GetLength() * 4;
 					if (player->spreadAdd > player->GetVelocity().GetLength() * 4)
-						player->spreadAdd -= dt;
+						player->spreadAdd -= dt/4.f;
 				}
+				//sprinting
 				else
 				{
 					if (player->spreadAdd < player->GetVelocity().GetLength() * 4)
 						player->spreadAdd = player->GetVelocity().GetLength() * 4;
-					if (player->spreadAdd < player->GetVelocity().GetLength() * 8)
+					if (player->spreadAdd < player->GetVelocity().GetLength() * 6)
 						player->spreadAdd += dt/10.f;
 				}
 				
@@ -969,10 +972,10 @@ namespace spades {
 					addGV = 0.08f;
 					break;
 				case (SMG_WEAPON) :
-					addGV = 0.04f;
+					addGV = 0.03f;
 					break;
 				case (SHOTGUN_WEAPON) :
-					addGV = 0.12f;
+					addGV = 0.10f;
 					break;
 				default:
 					break;
@@ -1486,7 +1489,7 @@ namespace spades {
 			switch(player->GetWeapon()->GetWeaponType()) 
 			{
 				case RIFLE_WEAPON:
-					vel = 600.f;
+					vel = 500.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					break;
 				case SMG_WEAPON:
@@ -1728,13 +1731,21 @@ namespace spades {
 			//freaim
 			mousePitch -= rec.x;
 
+			if (world->GetLocalPlayer()->crouching)
+				rec *= 0.5f;
+
+			mouseY -= rec.y * 300000;
 			//mouse inertia
 			if (mouseY > 0)
 				mouseY = 0;
-			if (sinf(world->GetTime() * 2.f) > 0)
-				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*100;
+			/*if (sinf(world->GetTime() * 2.f) > 0)
+				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*1000;
 			if (sinf(world->GetTime() * 2.f) < 0)
-				mouseX -= rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*100;
+				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*1000;*/
+			if (weapX != 0)
+				mouseX += rec.x * 3000 * weapX / abs(weapX);
+			else
+				mouseX += rec.x * sinf(world->GetTime() * 2.f);
 		}
 
 		//Chameleon: set weapon muzzle direction
