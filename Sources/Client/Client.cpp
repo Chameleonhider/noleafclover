@@ -103,6 +103,7 @@ namespace spades {
 		weapY(0.f),
 		FOV(90),
 		scopeOn(true),
+		scopeView(true),
 		scopeZoom(0),
 		mouseInertia(0.f),
 		mouseX(0.f),

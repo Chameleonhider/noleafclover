@@ -97,7 +97,6 @@ SPADES_SETTING(cg_keyAutoFocus, "MiddleMouseButton");
 
 //Chameleon: absolute maximum sound distance. footstep&other sound limit is 0.75 times this
 SPADES_SETTING(snd_maxDistance, "150");
-//SPADES_SETTING(cg_mouseInertia, "0");
 
 namespace spades {
 	namespace client {
@@ -614,6 +613,10 @@ namespace spades {
 									MaxShots = -1;
 								}
 								//SPLog("MaxShots: toggle %i", MaxShots);
+							}
+							if (p->GetWeaponType() == RIFLE_WEAPON && p->IsToolWeapon())
+							{
+								scopeView = !scopeView;
 							}
 						}
 

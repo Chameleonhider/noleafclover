@@ -56,6 +56,8 @@ SPADES_SETTING(v_defaultSprintBob, "0");
 SPADES_SETTING(opt_modelMaxDist, "130");
 //configureable freeaim
 SPADES_SETTING(v_freeAim, "1");
+//for making zoomed in SW renderer work faster
+SPADES_SETTING(r_swUTMP, "0");
 
 static float nextRandom() {
 	return (float)rand() / (float)RAND_MAX;
@@ -96,7 +98,8 @@ namespace spades {
 			float delta = GetAimDownZoomDelta();			
 			float aimDownState = GetAimDownState();
 
-			return 1.f + powf(aimDownState, 5.f) * delta;
+			r_swUTMP = 1.f + powf(aimDownState, 3.f) * delta;
+			return 1.f + powf(aimDownState, 3.f) * delta;			
 		}
 		
 		float Client::GetAimDownZoomDelta()
@@ -108,7 +111,7 @@ namespace spades {
 				//delta = .8f;
 				break;
 			case RIFLE_WEAPON:
-				if (scopeOn)
+				if (scopeOn && scopeView)
 					return scopeZoom;
 				return 0.f;
 				//delta = 1.4f;
@@ -359,8 +362,10 @@ namespace spades {
 						
 						
 					}
-					//Making this for 3rd person too
+					//Making this for both 1st and 3rd person
 					scale /= GetAimDownZoomScale();
+
+					
 
 					// add view (independent movement from crosshair) for both 1st/3rd person view
 					{

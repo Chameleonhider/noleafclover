@@ -42,6 +42,10 @@ namespace spades {
 			//Chameleon
 			virtual float GetWeaponY() = 0;
 			//Chameleon
+			virtual float GetWeaponViewX() = 0;
+			//Chameleon
+			virtual float GetWeaponViewY() = 0;
+			//Chameleon
 			virtual void SetWalkProgress(float) = 0;
 			//Chameleon
 			virtual void SwitchBFootSide() = 0;

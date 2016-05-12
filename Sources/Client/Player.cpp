@@ -41,6 +41,13 @@ SPADES_SETTING(opt_tracers, "2");
 //SPADES_SETTING(d_b, "1");
 //SPADES_SETTING(d_c, "1");
 
+SPADES_SETTING(d_xa, "1");
+SPADES_SETTING(d_ya, "1");
+SPADES_SETTING(d_xd, "1");
+SPADES_SETTING(d_yd, "1");
+SPADES_SETTING(d_xd1, "1");
+SPADES_SETTING(d_xd2, "1");
+
 namespace spades {
 	namespace client {
 		
@@ -729,21 +736,43 @@ namespace spades {
 			for(int i = 0; i < pellets; i++)
 			{
 				//Chameleon: sync visual weapon with hit location.
-				//synced when weapXY -> 0
+				//synced when lim(weapXY -> 0)
 				if (IsLocalPlayer())
 				{
 					if (weapInput.secondary)
 					{
-						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x*0.667f;
-						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y*0.667f;
-						dir2.z -= world->GetListener()->GetWeaponY()*0.667f;
+						dir2.x -= (float)d_xa;
+						dir2.y -= (float)d_xa;
+						dir2.z -= (float)d_ya;
+
+						d_xd = world->GetListener()->GetWeaponViewX();
+						d_yd = world->GetListener()->GetWeaponViewY();
+
+						d_xd1 = world->GetListener()->GetWeaponViewX()*GetRight().x;
+						d_xd2 = world->GetListener()->GetWeaponViewY()*GetRight().z;
+
+						//output (through stats) player's orientation (GetRight() and GetFront())
+						//find out right constants, by first testing d_xa, then make out the required constants by evaluating d_x and d_xd
 					}
 					else
 					{
-						dir2.x -= world->GetListener()->GetWeaponX()*GetRight().x*0.15f;
-						dir2.y -= world->GetListener()->GetWeaponX()*GetRight().y*0.15f;
-						dir2.z -= world->GetListener()->GetWeaponY()*0.15f;
+						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.15f;
+						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.15f;
+						dir2.z -= world->GetListener()->GetWeaponViewY()*0.15f;
 					}
+
+					/*if (weapInput.secondary)
+					{
+						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.667f;
+						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.667f;
+						dir2.z -= world->GetListener()->GetWeaponViewY()*0.667f;
+					}
+					else
+					{
+						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.15f;
+						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.15f;
+						dir2.z -= world->GetListener()->GetWeaponViewY()*0.15f;
+					}*/
 				}
 
 				// AoS 0.75's way (dir2 shouldn't be normalized!)

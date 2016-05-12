@@ -173,6 +173,8 @@ namespace spades {
 			float FOV;
 			//Chameleon: scope on/off
 			bool scopeOn;
+			//Chameleon: scope viewing on/off
+			bool scopeView;
 			//Chameleon: scope magnification
 			int scopeZoom;
 			//Chameleon: mouse inertia factor, 0-1
@@ -396,6 +398,10 @@ namespace spades {
 			virtual float GetWeaponX();
 			//Chameleon
 			virtual float GetWeaponY();
+			//Chameleon
+			virtual float GetWeaponViewX();
+			//Chameleon
+			virtual float GetWeaponViewY();
 			//Chameleon
 			virtual void SetWalkProgress(float);
 			//Chameleon

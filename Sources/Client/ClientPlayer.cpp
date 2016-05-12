@@ -491,49 +491,59 @@ namespace spades {
 			if (player->IsLocalPlayer())
 			{
 				float scale = dt;
-				Vector3 vel = player->GetVelocity();
-				Vector3 front = player->GetFront();
-				Vector3 right = player->GetRight();
-				Vector3 up = player->GetUp();
-				viewWeaponOffset.x += Vector3::Dot(vel, right) * scale*2;
-				viewWeaponOffset.y -= Vector3::Dot(vel, front) * scale;
-				viewWeaponOffset.z += Vector3::Dot(vel, up) * scale;
+				//Vector3 vel = player->GetVelocity();
+				//Vector3 front = player->GetFront();
+				//Vector3 right = player->GetRight();
+				//Vector3 up = player->GetUp();
+				//viewWeaponOffset.x += Vector3::Dot(vel, right) * scale*2;
+				//viewWeaponOffset.y -= Vector3::Dot(vel, front) * scale;
+				//viewWeaponOffset.z += Vector3::Dot(vel, up) * scale;
 
-				//Chameleon: weapon visual lag
+				////Chameleon: weapon visual lag
+				//{
+				//	//viewWeaponOffset.x -= (float)d_x; //for debugging
+				//	//viewWeaponOffset.z += (float)d_y; //for debugging
+				//	//client->weapX = (float)d_x; //for debugging
+				//	//client->weapY = (float)d_y; //for debugging
+
+				//	//reverse it when not aiming down
+				//	viewWeaponOffset.x -= client->weapX*dt*5 * (2*GetAimDownState() - 1);
+				//	viewWeaponOffset.z += client->weapY*dt*5 * (2*GetAimDownState() - 1);
+
+				//	client->weapX -= client->weapX*dt*5;
+				//	client->weapY -= client->weapY*dt*5;
+				//}
+
+				//if(dt > 0.f)
+				//	viewWeaponOffset *= powf(.02f, dt);
+ 
+				//if(currentTool == Player::ToolWeapon &&
+				//   player->GetWeaponInput().secondary) 
+				//{
+				//	
+				//	if(dt > 0.f)
+				//		viewWeaponOffset *= powf(.01f, dt);
+				//	
+				//	const float limitX = 0.0025f;
+				//	const float limitY = 0.0025f;
+				//	if(viewWeaponOffset.x < -limitX)
+				//		viewWeaponOffset.x = Mix(viewWeaponOffset.x, -limitX, 0.5f);
+				//	if(viewWeaponOffset.x > limitX)
+				//		viewWeaponOffset.x = Mix(viewWeaponOffset.x, limitX, 0.5f);
+				//	if(viewWeaponOffset.z < 0.f)
+				//		viewWeaponOffset.z = Mix(viewWeaponOffset.z, 0.f, 0.5f);
+				//	if(viewWeaponOffset.z > limitY)
+				//		viewWeaponOffset.z = Mix(viewWeaponOffset.z, limitY, 0.5f);
+				//}
+
+				//testing
 				{
-					//viewWeaponOffset.x -= (float)d_x; //for debugging
-					//viewWeaponOffset.z += (float)d_y; //for debugging
-					//client->weapX = (float)d_x; //for debugging
-					//client->weapY = (float)d_y; //for debugging
+					client->weapX = (float)d_x;
+					client->weapY = (float)d_y;
 
-					//reverse it when not aiming down
-					viewWeaponOffset.x -= client->weapX*dt*10 * (2*GetAimDownState() - 1);
-					viewWeaponOffset.z += client->weapY*dt*10 * (2*GetAimDownState() - 1);
-
-					client->weapX -= client->weapX*dt*10;
-					client->weapY -= client->weapY*dt*10;
-				}
-
-				if(dt > 0.f)
-					viewWeaponOffset *= powf(.02f, dt);
-				
-				if(currentTool == Player::ToolWeapon &&
-				   player->GetWeaponInput().secondary) 
-				{
-					
-					if(dt > 0.f)
-						viewWeaponOffset *= powf(.01f, dt);
-					
-					const float limitX = 0.0025f;
-					const float limitY = 0.0025f;
-					if(viewWeaponOffset.x < -limitX)
-						viewWeaponOffset.x = Mix(viewWeaponOffset.x, -limitX, 0.5f);
-					if(viewWeaponOffset.x > limitX)
-						viewWeaponOffset.x = Mix(viewWeaponOffset.x, limitX, 0.5f);
-					if(viewWeaponOffset.z < 0.f)
-						viewWeaponOffset.z = Mix(viewWeaponOffset.z, 0.f, 0.5f);
-					if(viewWeaponOffset.z > limitY)
-						viewWeaponOffset.z = Mix(viewWeaponOffset.z, limitY, 0.5f);
+					viewWeaponOffset.x = client->weapX* (2 * GetAimDownState() - 1);
+					viewWeaponOffset.z = client->weapY* (2 * GetAimDownState() - 1);
+					viewWeaponOffset.y = 0;
 				}
 			}
 			
@@ -843,10 +853,12 @@ namespace spades {
 
 				if (currentTool == Player::ToolWeapon)
 				{
-					if (client->scopeOn)				
+					if (client->scopeOn && client->scopeView)
 						interface.SetScopeZoom(client->scopeZoom);
-					else
+					else if (client->scopeOn && !client->scopeView)
 						interface.SetScopeZoom(-1);
+					else
+						interface.SetScopeZoom(0);
 				}
 			}
 			{

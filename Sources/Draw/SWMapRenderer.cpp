@@ -35,10 +35,10 @@ using namespace std;
 
 SPADES_SETTING(r_swUndersampling, "0");
 
+SPADES_SETTING(r_swUTMP, "0");
+
 namespace spades {
 	namespace draw {
-		
-		
 		
 		// special tan function whose value is finite.
 		static inline float SpecialTan(float v) {
@@ -1142,14 +1142,15 @@ namespace spades {
 				}
 				
 				numLines = static_cast<size_t>((yawMax - yawMin) / interval);
-				
-				int under = r_swUndersampling;
-				under = std::max(std::min(under, 4), 1);
+
+				int under = (int)r_swUndersampling * (int)r_swUTMP;
+				under = std::max(std::min(under, 10), 1);
 				numLines /= under;
 				
 				if(numLines < 8) numLines = 8;
-				if(numLines > 65536) {
-					numLines = 65536; // SPRaise("Too many lines emit: %d", static_cast<int>(numLines));
+				//could be replaced by 32768*2
+				if (numLines > 32768) {
+					numLines = 32768; // SPRaise("Too many lines emit: %d", static_cast<int>(numLines));
 				}
 				lines.resize(std::max(numLines, lines.size()));
 				/*

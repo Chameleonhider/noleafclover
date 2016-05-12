@@ -970,10 +970,16 @@ namespace spades {
 			//Chameleon: velocity of mouse
 			if (world)
 			{
-				if (world->GetLocalPlayer())
+				if (false && world->GetLocalPlayer())
 				{
 					Player *p = world->GetLocalPlayer();
 					sprintf(buf, ", mouseXY: %.2f:%.2f, Inertia: %.2f, Drunk: %.2f, SpreadAdd %.2f", mouseX, mouseY, mouseInertia, mouseRoll, p->spreadAdd);
+					str += buf;
+				}
+				if (world->GetLocalPlayer())
+				{
+					Player *p = world->GetLocalPlayer();
+					sprintf(buf, ", p.r: %.2f, %.2f, %.2f; p.f: %.2f, %.2f, %.2f;", p->GetRight().x, p->GetRight().y, p->GetRight().z, p->GetFront().x, p->GetFront().y, p->GetFront().z);
 					str += buf;
 				}
 			}

@@ -37,7 +37,7 @@
 #include <Core/Strings.h>
 #include "../Core/Settings.h"
 
-//SPADES_SETTING(cg_Minimap_Player_Color,"1"); NOT CURRENTLY WORKING
+//SPADES_SETTING(cg_Minimap_Player_Color,"1"); //NOT CURRENTLY WORKING
 
 namespace spades {
 	namespace client {
@@ -272,15 +272,15 @@ namespace spades {
 				sprintf(buf, "#%d", ent.id); // FIXME: 1-base?
 				size = font->Measure(buf);	
 				//NOT WORKING - "1 unresolved externals"
-				//if ( colormode=="1")
-				//{
-					//int i = palette[0][ent.id];
-					//IntVector3 Colorplayer = IntVector3::Make(palette[ent.id][0], palette[ent.id][1], palette[ent.id][2]);
-					// Vector4 ColorplayerF = ModifyColor(Colorplayer);
-					// ColorplayerF *=1.0f;
-					// font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, ColorplayerF);
-				//}	
-				//else {
+				/*if ( colormode=="1")
+				{
+					int i = palette[0][ent.id];
+					IntVector3 Colorplayer = IntVector3::Make(palette[ent.id][0], palette[ent.id][1], palette[ent.id][2]);
+					 Vector4 ColorplayerF = ModifyColor(Colorplayer);
+					 ColorplayerF *=1.0f;
+					 font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, ColorplayerF);
+				}	
+				else {*/
 				font->Draw(buf, MakeVector2(colX + 35.f - size.x,rowY),1.f, color);
 				//}
 				

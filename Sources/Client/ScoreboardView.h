@@ -48,6 +48,7 @@ namespace spades {
 							 float left, float top,
 							 float width, float height);
 		public:
+			//int palette[32][3];
 			ScoreboardView(Client *);
 			~ScoreboardView();
 			

@@ -266,7 +266,7 @@ namespace spades {
 					cg_fov = "175";
 
 				scopeOn = (bool)weap_scope;
-				scopeZoom = (int)weap_scopeZoom;
+				scopeZoom = abs((int)weap_scopeZoom);
 				FOV = (int)cg_fov;
 			}
 			else if (!player)
@@ -281,7 +281,7 @@ namespace spades {
 					cg_fov = "175";
 
 				scopeOn = (bool)weap_scope;
-				scopeZoom = (int)weap_scopeZoom;
+				scopeZoom = abs((int)weap_scopeZoom);
 				FOV = (int)cg_fov;
 			}
 
@@ -1055,7 +1055,7 @@ namespace spades {
 				{
 					//update weapon scope and scope magnification
 					scopeOn = (bool)weap_scope;
-					scopeZoom = (int)weap_scopeZoom;
+					scopeZoom = abs((int)weap_scopeZoom);
 
 					Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Restock.wav");
 					audioDevice->PlayLocal(c, MakeVector3(.4f, -.3f, .5f),
@@ -1734,7 +1734,7 @@ namespace spades {
 			if (world->GetLocalPlayer()->crouching)
 				rec *= 0.5f;
 
-			mouseY -= rec.y * 300000;
+			mouseY -= rec.y * 100000;
 			//mouse inertia
 			if (mouseY > 0)
 				mouseY = 0;
@@ -1743,7 +1743,7 @@ namespace spades {
 			if (sinf(world->GetTime() * 2.f) < 0)
 				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*1000;*/
 			if (weapX != 0)
-				mouseX += rec.x * 3000 * weapX / abs(weapX);
+				mouseX += rec.x * 1000 * weapX / abs(weapX);
 			else
 				mouseX += rec.x * sinf(world->GetTime() * 2.f);
 		}
@@ -1764,7 +1764,17 @@ namespace spades {
 		{
 			return weapY;
 		}
-
+		//Chameleon: return visual weapon muzzle direction
+		float Client::GetWeaponViewX()
+		{
+			return clientPlayers[world->GetLocalPlayerIndex()]->viewWeaponOffset.x;
+		}
+		//Chameleon: return visual weapon muzzle direction
+		float Client::GetWeaponViewY()
+		{
+			return clientPlayers[world->GetLocalPlayerIndex()]->viewWeaponOffset.y;
+		}
+		
 		//Chameleon: walking stuff
 		void Client::SetWalkProgress(float fWalkProgress)
 		{

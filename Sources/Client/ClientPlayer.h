@@ -50,7 +50,7 @@ namespace spades {
 			float localFireVibrationTime;
 			float time;
 			
-			Vector3 viewWeaponOffset;
+		public: Vector3 viewWeaponOffset;
 			
 			asIScriptObject *spadeSkin;
 			asIScriptObject *blockSkin;
