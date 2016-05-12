@@ -1493,7 +1493,7 @@ namespace spades {
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					break;
 				case SMG_WEAPON:
-					vel = 300.f;
+					vel = 400.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					if (player->GetWeapon()->GetAmmo() % 2 == 0)
 						return;
@@ -1772,7 +1772,7 @@ namespace spades {
 		//Chameleon: return visual weapon muzzle direction
 		float Client::GetWeaponViewY()
 		{
-			return clientPlayers[world->GetLocalPlayerIndex()]->viewWeaponOffset.y;
+			return clientPlayers[world->GetLocalPlayerIndex()]->viewWeaponOffset.z;
 		}
 		
 		//Chameleon: walking stuff

@@ -41,12 +41,12 @@ SPADES_SETTING(opt_tracers, "2");
 //SPADES_SETTING(d_b, "1");
 //SPADES_SETTING(d_c, "1");
 
-SPADES_SETTING(d_xa, "1");
-SPADES_SETTING(d_ya, "1");
-SPADES_SETTING(d_xd, "1");
-SPADES_SETTING(d_yd, "1");
-SPADES_SETTING(d_xd1, "1");
-SPADES_SETTING(d_xd2, "1");
+//SPADES_SETTING(d_xa, "1");
+//SPADES_SETTING(d_ya, "1");
+//SPADES_SETTING(d_xd, "1");
+//SPADES_SETTING(d_yd, "1");
+//SPADES_SETTING(d_xd1, "1");
+//SPADES_SETTING(d_xd2, "1");
 
 namespace spades {
 	namespace client {
@@ -741,15 +741,18 @@ namespace spades {
 				{
 					if (weapInput.secondary)
 					{
-						dir2.x -= (float)d_xa;
-						dir2.y -= (float)d_xa;
-						dir2.z -= (float)d_ya;
+						/*dir2.x -= GetRight().x*(float)d_xa;
+						dir2.y -= GetRight().y*(float)d_xa;
+						dir2.z -= (float)d_ya*(abs(GetFront().z) + 1) / 2.f;*/
+						dir2.x -= GetRight().x*world->GetListener()->GetWeaponViewX();
+						dir2.y -= GetRight().y*world->GetListener()->GetWeaponViewX();
+						dir2.z -= world->GetListener()->GetWeaponViewY()*(abs(GetFront().z) + 1) / 2.f;
 
-						d_xd = world->GetListener()->GetWeaponViewX();
+						/*d_xd = world->GetListener()->GetWeaponViewX();
 						d_yd = world->GetListener()->GetWeaponViewY();
 
 						d_xd1 = world->GetListener()->GetWeaponViewX()*GetRight().x;
-						d_xd2 = world->GetListener()->GetWeaponViewY()*GetRight().z;
+						d_xd2 = world->GetListener()->GetWeaponViewX()*GetRight().y;*/
 
 						//output (through stats) player's orientation (GetRight() and GetFront())
 						//find out right constants, by first testing d_xa, then make out the required constants by evaluating d_x and d_xd

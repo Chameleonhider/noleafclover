@@ -979,7 +979,9 @@ namespace spades {
 				if (world->GetLocalPlayer())
 				{
 					Player *p = world->GetLocalPlayer();
-					sprintf(buf, ", p.r: %.2f, %.2f, %.2f; p.f: %.2f, %.2f, %.2f;", p->GetRight().x, p->GetRight().y, p->GetRight().z, p->GetFront().x, p->GetFront().y, p->GetFront().z);
+					sprintf(buf, ", p.r: %.2f, %.2f, %.2f;", p->GetRight().x, p->GetRight().y, p->GetRight().z);
+					str += buf;
+					sprintf(buf, " p.f: %.2f, %.2f, %.2f;", p->GetFront().x, p->GetFront().y, p->GetFront().z);
 					str += buf;
 				}
 			}
