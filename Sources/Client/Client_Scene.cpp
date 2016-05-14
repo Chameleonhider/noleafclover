@@ -47,9 +47,9 @@ SPADES_SETTING(cg_depthOfFieldAmount, "0");
 //switches between default fire vibration and Chameleon's
 //SPADES_SETTING(v_defaultFireVibration, "0");
 //enables block "debug" lines
-SPADES_SETTING(v_blockDlines, "1"); //0 disabled 1 enabled white 2 enabled all
+SPADES_SETTING(hud_blockDlines, "1"); //0 disabled 1 enabled white 2 enabled all
 //enables player "debug" lines
-SPADES_SETTING(v_playerDlines, "1"); //0 disabled 1 enabled some 2 enabled all
+SPADES_SETTING(hud_playerDlines, "1"); //0 disabled 1 enabled some 2 enabled all
 //switches between default sprint bob and Chameleon's
 SPADES_SETTING(v_defaultSprintBob, "0");
 //maximum distance of models
@@ -783,7 +783,7 @@ namespace spades {
 						for(size_t i = 0; i < blocks.size(); i++){
 							IntVector3& v = blocks[i];
 							
-							if(active && int(v_blockDlines) > 0)
+							if(active && int(hud_blockDlines) > 0)
 							{
 								
 								renderer->AddDebugLine(MakeVector3(v.x, v.y, v.z),
@@ -828,7 +828,7 @@ namespace spades {
 													   MakeVector3(v.x+1, v.y+1, v.z+1),
 													   color);
 							}
-							else if (int(v_blockDlines) == 2)
+							else if (int(hud_blockDlines) == 2)
 							{
 								// not active
 								
@@ -900,19 +900,19 @@ namespace spades {
 			{
 				hitTag_t tag = hit_None;
 				Player *hottracked = HotTrackedPlayer( &tag );
-				if(hottracked && int(v_playerDlines) != 0)
+				if(hottracked && int(hud_playerDlines) != 0)
 				{
 					IntVector3 col = world->GetTeam(hottracked->GetTeamId()).color;
 					Vector4 color = Vector4::Make( col.x / 255.f, col.y / 255.f, col.z / 255.f, 1.f );
 					Vector4 color2 = Vector4::Make( 1, 1, 1, 1);
 					
 					Player::HitBoxes hb = hottracked->GetHitBoxes();
-					if (int(v_playerDlines) == 1)
+					if (int(hud_playerDlines) == 1)
 					{
 						AddDebugObjectToScene(hb.head, (tag & hit_Head) ? color2 : color);
 						AddDebugObjectToScene(hb.torso, (tag & hit_Torso) ? color2 : color);
 					}
-					else if (int(v_playerDlines) == 2)
+					else if (int(hud_playerDlines) == 2)
 					{
 						AddDebugObjectToScene(hb.head, (tag & hit_Head) ? color2 : color);
 						AddDebugObjectToScene(hb.torso, (tag & hit_Torso) ? color2 : color);

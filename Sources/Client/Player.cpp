@@ -741,41 +741,16 @@ namespace spades {
 				{
 					if (weapInput.secondary)
 					{
-						/*dir2.x -= GetRight().x*(float)d_xa;
-						dir2.y -= GetRight().y*(float)d_xa;
-						dir2.z -= (float)d_ya*(abs(GetFront().z) + 1) / 2.f;*/
 						dir2.x -= GetRight().x*world->GetListener()->GetWeaponViewX();
 						dir2.y -= GetRight().y*world->GetListener()->GetWeaponViewX();
 						dir2.z -= world->GetListener()->GetWeaponViewY()*(abs(GetFront().z) + 1) / 2.f;
-
-						/*d_xd = world->GetListener()->GetWeaponViewX();
-						d_yd = world->GetListener()->GetWeaponViewY();
-
-						d_xd1 = world->GetListener()->GetWeaponViewX()*GetRight().x;
-						d_xd2 = world->GetListener()->GetWeaponViewX()*GetRight().y;*/
-
-						//output (through stats) player's orientation (GetRight() and GetFront())
-						//find out right constants, by first testing d_xa, then make out the required constants by evaluating d_x and d_xd
 					}
 					else
 					{
-						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.15f;
-						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.15f;
-						dir2.z -= world->GetListener()->GetWeaponViewY()*0.15f;
+						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.1f;
+						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.1f;
+						dir2.z -= world->GetListener()->GetWeaponViewY()*0.1f;
 					}
-
-					/*if (weapInput.secondary)
-					{
-						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.667f;
-						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.667f;
-						dir2.z -= world->GetListener()->GetWeaponViewY()*0.667f;
-					}
-					else
-					{
-						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.15f;
-						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.15f;
-						dir2.z -= world->GetListener()->GetWeaponViewY()*0.15f;
-					}*/
 				}
 
 				// AoS 0.75's way (dir2 shouldn't be normalized!)
@@ -997,7 +972,7 @@ namespace spades {
 			{
 				if (airborne)
 				{
-					rec *= 4;
+					rec *= 2;
 				}
 				else if (velocity.GetLength() > 0.01f)
 				{
@@ -1013,9 +988,9 @@ namespace spades {
 			upLimit -= 0.03f;
 			o += GetUp() * std::min(rec.y, std::max(0.f, upLimit));			
 			
-			//Chameleon: new recoil that adds more horizontal velocity to existing one
+			//Chameleon: recoil now tries to run away from target
 			if (world->GetListener()->GetWeaponX() != 0)
-				o += GetRight() * rec.x * world->GetListener()->GetWeaponX() / abs(world->GetListener()->GetWeaponX());
+				o += GetRight() * rec.x * world->GetListener()->GetWeaponX() / abs(world->GetListener()->GetWeaponX()*1.5f);
 			else
 				o += GetRight() * rec.x * sinf(world->GetTime() * 2.f);
 

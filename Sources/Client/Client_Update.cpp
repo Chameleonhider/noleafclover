@@ -299,7 +299,7 @@ namespace spades {
 				{
 					float health = world->GetLocalPlayer()->GetHealth()*0.01f;
 					//mouseInertia is used in Client_Input(), but not here
-					mouseInertia = 0.50f - health*0.4f;
+					mouseInertia = 0.3f - health*0.2f;
 					if (mouseInertia > 1.f)
 						mouseInertia = 1.f;
 					if (mouseInertia < 0.f)

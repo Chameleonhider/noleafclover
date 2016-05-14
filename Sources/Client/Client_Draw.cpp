@@ -63,9 +63,9 @@ SPADES_SETTING(cg_screenshotFormat, "jpeg");
 SPADES_SETTING(cg_stats, "0");
 SPADES_SETTING(cg_hideHud, "0");
 //Chameleon
-SPADES_SETTING(v_playerNames, "2");
-SPADES_SETTING(v_playerNameX, "0");
-SPADES_SETTING(v_playerNameY, "0");
+SPADES_SETTING(hud_playerNames, "2");
+SPADES_SETTING(hud_playerNameX, "0");
+SPADES_SETTING(hud_playerNameY, "0");
 
 namespace spades {
 	namespace client {
@@ -305,7 +305,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			//Chameleon
-			if ((int)v_playerNames == 0)
+			if ((int)hud_playerNames == 0)
 				return;
 
 			Player *p = GetWorld()->GetLocalPlayer();			
@@ -317,7 +317,7 @@ namespace spades {
 				Vector2 pos = {posxyz.x, posxyz.y};
 				char buf[64];
 				//Chameleon
-				if ((int)v_playerNames == 1)
+				if ((int)hud_playerNames == 1)
 				{
 					float dist = (hottracked->GetEye() - p->GetEye()).GetLength();
 					int idist = (int)floorf(dist + .5f);
@@ -327,8 +327,8 @@ namespace spades {
 				{
 					sprintf(buf, "%s", hottracked->GetName().c_str());
 				}				
-				pos.y += (int)v_playerNameY;
-				pos.x += (int)v_playerNameX;
+				pos.y += (int)hud_playerNameY;
+				pos.x += (int)hud_playerNameX;
 
 				IFont *font = textFont;
 				Vector2 size = font->Measure(buf);
@@ -976,7 +976,7 @@ namespace spades {
 					sprintf(buf, ", mouseXY: %.2f:%.2f, Inertia: %.2f, Drunk: %.2f, SpreadAdd %.2f", mouseX, mouseY, mouseInertia, mouseRoll, p->spreadAdd);
 					str += buf;
 				}
-				if (world->GetLocalPlayer())
+				if (false && world->GetLocalPlayer())
 				{
 					Player *p = world->GetLocalPlayer();
 					sprintf(buf, ", p.r: %.2f, %.2f, %.2f;", p->GetRight().x, p->GetRight().y, p->GetRight().z);

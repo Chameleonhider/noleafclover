@@ -55,7 +55,16 @@ SPADES_SETTING(opt_particleNiceDist, "");
 //maximum distance of models, not really useful, just default values were shit
 SPADES_SETTING(opt_modelMaxDist, "");
 
-//SPADES_SETTING(d_x, "0");
+//draw 1st person torso+intel?
+SPADES_SETTING(v_drawTorso, "0");
+//draw 1st person arms (like in 3rd person)?
+SPADES_SETTING(v_drawArms, "0");
+//draw 1st person legs?
+SPADES_SETTING(v_drawLegs, "0");
+
+//SPADES_SETTING(d_a, "0");
+//SPADES_SETTING(d_b, "0");
+//SPADES_SETTING(d_c, "0");
 //SPADES_SETTING(d_y, "0");
 
 namespace spades {
@@ -732,7 +741,6 @@ namespace spades {
 				interface.SetSprintState(sprint);
 				interface.SetMuted(client->IsMuted());
 
-				//int distance = (origin - lastSceneDef.viewOrigin).GetLength();
 				if (client->GetWorld()->GetLocalPlayer())
 					interface.SetClientDistance((player->GetPosition() - client->GetWorld()->GetLocalPlayer()->GetPosition()).GetLength());
 				else
@@ -759,13 +767,13 @@ namespace spades {
 			{
 				float brightness;
 				brightness = client->time - client->flashlightOnTime;
-				brightness = 1.f - expf(-brightness * 5.f);
+				brightness = 1.f - expf(-brightness * 3.f);
 				
 				// add flash light
 				DynamicLightParam light;
-				light.origin = (eyeMatrix * MakeVector3(0, -0.05f, -0.1f)).GetXYZ();
-				light.color = MakeVector3(1, .7f, .5f) * 1.5f * brightness;
-				light.radius = 40.f;
+				light.origin = (eyeMatrix * MakeVector3(0, -0.1f, -0.5f)).GetXYZ();
+				light.color = MakeVector3(1, .8f, .5f) * 1.5f * brightness;
+				light.radius = 50.f;
 				light.type = DynamicLightTypeSpotlight;
 				light.spotAngle = 30.f * M_PI / 180.f;
 				light.spotAxis[0] = p->GetRight();
@@ -774,15 +782,15 @@ namespace spades {
 				light.image = renderer->RegisterImage("Gfx/Spotlight.tga");
 				renderer->AddLight(light);
 				
-				light.color *= .3f;
-				light.radius = 10.f;
+				light.color *= 0.2f;
+				light.radius = 5.f;
 				light.type = DynamicLightTypePoint;
 				light.image = NULL;
 				renderer->AddLight(light);
 				
 				// add glare
-				renderer->SetColorAlphaPremultiplied(MakeVector4(1, .7f, .5f, 0) * brightness * .3f);
-				renderer->AddSprite(renderer->RegisterImage("Gfx/Glare.tga"), (eyeMatrix * MakeVector3(0, 0.3f, -0.3f)).GetXYZ(), .8f, 0.f);
+				//renderer->SetColorAlphaPremultiplied(MakeVector4(1, .7f, .5f, 0) * brightness * .3f);
+				//renderer->AddSprite(renderer->RegisterImage("Gfx/Glare.tga"), (eyeMatrix * MakeVector3(0, 0.3f, -0.3f)).GetXYZ(), .8f, 0.f);
 			}
 			
 			Vector3 leftHand, rightHand;
@@ -1168,11 +1176,15 @@ namespace spades {
 				armPitch -= .5f;
 			}
 			armPitch += pitchBias;
+
+			if (p->GetTool() == Player::ToolWeapon && !p->GetWeaponInput().secondary)
+				armPitch -= 0.2f;
+
 			if(armPitch < 0.f) {
-				armPitch = std::max(armPitch, -(float)M_PI * .5f);
-				armPitch *= .9f;
+				armPitch = std::max(armPitch, -(float)M_PI * 0.5f);
+				armPitch *= 0.9f;
 			}
-			
+
 			arms = arms * Matrix4::Rotate(MakeVector3(1,0,0), armPitch);
 			
 			if (p->GetTool() != Player::ToolWeapon)
@@ -1213,28 +1225,21 @@ namespace spades {
 			fixDim = MakeVector3(5, 5, 5);
 			ModelDim = MakeVector3(model->GetDimensions());
 			scale = fixDim / ModelDim;
-			//scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
 			paramTMP = param;
 			//Chameleon
 
 			paramTMP.matrix = head * scaler;
 			paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
+			if (p->GetWeaponInput().secondary) //when aiming, player tilts head to right
+			{
+				paramTMP.matrix *= Matrix4::Rotate(Vector3(0, 1, 0), 0.15f);//Chameleon
+			}
 			if (world->GetLocalPlayer())
 			{
-				//if (!client->IsFollowing() && (world->GetLocalPlayer()->GetPosition() - p->GetPosition()).GetLength() > 0.75f)
 				if (!client->IsFollowing() && (world->GetLocalPlayer()->GetPosition() - p->GetPosition()).GetLength() > 0.5f)
 					renderer->RenderModel(model, paramTMP);
 				else if (client->IsFollowing() && player->GetId() != client->followingPlayerId)
 					renderer->RenderModel(model, paramTMP);
-
-				
-
-				/*if (world->GetLocalPlayer()->IsAlive())
-					renderer->RenderModel(model, paramTMP);
-				else if (client->IsFollowing() && player == world->GetPlayer(client->followingPlayerId))
-					renderer->RenderModel(model, paramTMP);
-				if ((world->GetLocalPlayer()->GetPosition() - p->GetPosition()).GetLength() > 0.75f)
-					renderer->RenderModel(model, paramTMP);*/
 			}
 			else
 			{
@@ -1243,6 +1248,12 @@ namespace spades {
 
 			// draw tool
 			{
+				//hipped weapons are drawn lower
+				if (p->GetTool() == Player::ToolWeapon && !p->GetWeaponInput().secondary)
+				{
+					arms = arms * Matrix4::Rotate(MakeVector3(1, 0, 0), 0.2f);
+					arms = arms * Matrix4::Translate(0, 0, 0.2f);
+				}
 				ScriptIThirdPersonToolSkin interface(skin);
 				interface.SetOriginMatrix(arms);
 			}
@@ -1264,7 +1275,7 @@ namespace spades {
 					{						
 						IntVector3 col2 = world->GetTeam(1-p->GetTeamId()).color;
 						param.customColor = MakeVector3(col2.x/255.f, col2.y/255.f, col2.z/255.f);
-						Matrix4 mIntel = torso * Matrix4::Translate(0,0.6f,0.5f);
+						Matrix4 mIntel = torso * Matrix4::Translate(0,0.4f,0.5f);
 						
 						//you carry other team's intel, not yours
 						model = (p->GetTeamId() == 0) ?
@@ -1329,113 +1340,238 @@ namespace spades {
 			Matrix4 torso, arms;
 			if (inp.crouch)
 			{
-				Matrix4 leg1 = Matrix4::Translate(-0.25f, 0.2f, -0.1f);
-				Matrix4 leg2 = Matrix4::Translate(0.25f, 0.2f, -0.1f);
+				//Legs
+				if (v_drawLegs) // || ((int)v_drawLegs == 2 && p->GetFront().z < 0.9)
+				{
+					Matrix4 leg1 = Matrix4::Translate(-0.25f, 0.2f, -0.1f);
+					Matrix4 leg2 = Matrix4::Translate(0.25f, 0.2f, -0.1f);
 
-				float ang = sinf(p->GetWalkAnimationProgress() * M_PI * 2.f) * 0.6f;
-				float walkVel = Vector3::Dot(p->GetVelocity(), p->GetFront2D()) * 4.f;
-				leg1 = leg1 * Matrix4::Rotate(MakeVector3(1, 0, 0), ang * walkVel);
-				leg2 = leg2 * Matrix4::Rotate(MakeVector3(1, 0, 0), -ang * walkVel);
+					if ((int)v_drawLegs == 2 && p->GetFront().z > -0.2f)
+					{
+						float move = (p->GetFront().z+0.2f)/1.2f;
+						leg1 *= Matrix4::Translate(0.f, move, 0.f);
+						leg2 *= Matrix4::Translate(0.f, move, 0.f);
+					}
 
-				walkVel = Vector3::Dot(p->GetVelocity(), p->GetRight()) * 3.f;
-				leg1 = leg1 * Matrix4::Rotate(MakeVector3(0, 1, 0), ang * walkVel);
-				leg2 = leg2 * Matrix4::Rotate(MakeVector3(0, 1, 0), -ang * walkVel);
+					float ang = sinf(p->GetWalkAnimationProgress() * M_PI * 2.f) * 0.6f;
+					float walkVel = Vector3::Dot(p->GetVelocity(), p->GetFront2D()) * 4.f;
+					leg1 = leg1 * Matrix4::Rotate(MakeVector3(1, 0, 0), ang * walkVel);
+					leg2 = leg2 * Matrix4::Rotate(MakeVector3(1, 0, 0), -ang * walkVel);
 
-				leg1 = lower * leg1;
-				leg2 = lower * leg2;
+					walkVel = Vector3::Dot(p->GetVelocity(), p->GetRight()) * 3.f;
+					leg1 = leg1 * Matrix4::Rotate(MakeVector3(0, 1, 0), ang * walkVel);
+					leg2 = leg2 * Matrix4::Rotate(MakeVector3(0, 1, 0), -ang * walkVel);
 
-				model = (p->GetTeamId() == 0) ?
-					renderer->RegisterModel("Models/PlayerA/LegCrouch.kv6") :
-					renderer->RegisterModel("Models/PlayerB/LegCrouch.kv6");
+					leg1 = lower * leg1;
+					leg2 = lower * leg2;
 
-				//Chameleon
-				Vector3 fixDim = MakeVector3(3, 7, 8);
-				Vector3 ModelDim = MakeVector3(model->GetDimensions());
-				Vector3 scale = fixDim / ModelDim;
-				ModelRenderParam paramTMP = param;
-				//Chameleon
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/LegCrouch.kv6") :
+						renderer->RegisterModel("Models/PlayerB/LegCrouch.kv6");
 
-				paramTMP.matrix = leg1 * scaler;
-				paramTMP.matrix *= Matrix4::Scale(scale);
-				renderer->RenderModel(model, paramTMP);
-				paramTMP.matrix = leg2 * scaler;
-				paramTMP.matrix *= Matrix4::Scale(scale);
-				renderer->RenderModel(model, paramTMP);
+					//Chameleon
+					Vector3 fixDim = MakeVector3(3, 7, 8);
+					Vector3 ModelDim = MakeVector3(model->GetDimensions());
+					Vector3 scale = fixDim / ModelDim;
+					ModelRenderParam paramTMP = param;
+					//Chameleon
 
+					paramTMP.matrix = leg1 * scaler;
+					paramTMP.matrix *= Matrix4::Scale(scale);
+					renderer->RenderModel(model, paramTMP);
+					paramTMP.matrix = leg2 * scaler;
+					paramTMP.matrix *= Matrix4::Scale(scale);
+					renderer->RenderModel(model, paramTMP);
+				}
+				//Legs done
+
+				//Torso
 				torso = Matrix4::Translate(0.f, 0.f, -0.55f);
 				torso = lower * torso;
 
-				//model = (p->GetTeamId() == 0) ?
-				//	renderer->RegisterModel("Models/PlayerA/TorsoCrouch.kv6") :
-				//	renderer->RegisterModel("Models/PlayerB/TorsoCrouch.kv6");
+				if (v_drawTorso) // || ((int)v_drawTorso == 2 && p->GetFront().z < 0.7)
+				{
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/TorsoCrouch.kv6") :
+						renderer->RegisterModel("Models/PlayerB/TorsoCrouch.kv6");
 
-				////Chameleon
-				//fixDim = MakeVector3(8, 8, 7);
-				//ModelDim = MakeVector3(model->GetDimensions());
-				//scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
-				//paramTMP = param;
-				//paramTMP.matrix *= Matrix4::Scale(scale);
-				////Chameleon
+					//Chameleon
+					Vector3 fixDim = MakeVector3(8, 8, 5);
+					Vector3 ModelDim = MakeVector3(model->GetDimensions());
+					Vector3 scale = fixDim / ModelDim;
+					ModelRenderParam paramTMP = param;
+					//Chameleon
 
-				//paramTMP.matrix = torso * scaler;
-				//renderer->RenderModel(model, paramTMP);
+					paramTMP.matrix = torso;
+					if ((int)v_drawTorso == 2 && p->GetFront().z > -0.2f)
+					{
+						float move = (p->GetFront().z+0.2f)/1.2f;
+						paramTMP.matrix *= Matrix4::Translate(0.f, move, 0.f);
+					}					
+					paramTMP.matrix *= Matrix4::Scale(scale) * scaler;
+					renderer->RenderModel(model, paramTMP);
+				}
 
-				//arms = Matrix4::Translate(0.f, 0.f, -0.0f);
-				//arms = torso * arms;
+				arms = Matrix4::Translate(-viewWeaponOffset.x-0.25f, -viewWeaponOffset.y-p->GetFront().z*0.25f, viewWeaponOffset.z+0.2f);
+				arms = torso * arms;
+				//Torso done
 			}
 			else
 			{
-				Matrix4 leg1 = Matrix4::Translate(-0.25f, 0.f, -0.1f);
-				Matrix4 leg2 = Matrix4::Translate(0.25f, 0.f, -0.1f);
+				//Legs
+				if (v_drawLegs) // || ((int)v_drawLegs == 2 && p->GetFront().z < 0.95)
+				{
+					Matrix4 leg1 = Matrix4::Translate(-0.25f, 0.f, -0.1f);
+					Matrix4 leg2 = Matrix4::Translate(0.25f, 0.f, -0.1f);
 
-				float ang = sinf(p->GetWalkAnimationProgress() * M_PI * 2.f) * 0.6f;
-				float walkVel = Vector3::Dot(p->GetVelocity(), p->GetFront2D()) * 4.f;
-				leg1 = leg1 * Matrix4::Rotate(MakeVector3(1, 0, 0), ang * walkVel);
-				leg2 = leg2 * Matrix4::Rotate(MakeVector3(1, 0, 0), -ang * walkVel);
+					if ((int)v_drawLegs == 2 && p->GetFront().z > -0.2f)
+					{
+						float move = (p->GetFront().z+0.2f)/1.2f;
+						leg1 *= Matrix4::Translate(0.f, move, 0.f);
+						leg2 *= Matrix4::Translate(0.f, move, 0.f);
+					}
 
-				walkVel = Vector3::Dot(p->GetVelocity(), p->GetRight()) * 3.f;
-				leg1 = leg1 * Matrix4::Rotate(MakeVector3(0, 1, 0), ang * walkVel);
-				leg2 = leg2 * Matrix4::Rotate(MakeVector3(0, 1, 0), -ang * walkVel);
+					float ang = sinf(p->GetWalkAnimationProgress() * M_PI * 2.f) * 0.6f;
+					float walkVel = Vector3::Dot(p->GetVelocity(), p->GetFront2D()) * 4.f;
+					leg1 = leg1 * Matrix4::Rotate(MakeVector3(1, 0, 0), ang * walkVel);
+					leg2 = leg2 * Matrix4::Rotate(MakeVector3(1, 0, 0), -ang * walkVel);
 
-				leg1 = lower * leg1;
-				leg2 = lower * leg2;
+					walkVel = Vector3::Dot(p->GetVelocity(), p->GetRight()) * 3.f;
+					leg1 = leg1 * Matrix4::Rotate(MakeVector3(0, 1, 0), ang * walkVel);
+					leg2 = leg2 * Matrix4::Rotate(MakeVector3(0, 1, 0), -ang * walkVel);
 
-				model = (p->GetTeamId() == 0) ?
-					renderer->RegisterModel("Models/PlayerA/Leg.kv6") :
-					renderer->RegisterModel("Models/PlayerB/Leg.kv6");
+					leg1 = lower * leg1;
+					leg2 = lower * leg2;
+
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/Leg.kv6") :
+						renderer->RegisterModel("Models/PlayerB/Leg.kv6");
+
+					//Chameleon
+					Vector3 fixDim = MakeVector3(3, 5, 12);
+					Vector3 ModelDim = MakeVector3(model->GetDimensions());
+					Vector3 scale = fixDim / ModelDim;
+					ModelRenderParam paramTMP = param;
+					//Chameleon
+
+					paramTMP.matrix = leg1 * scaler;
+					paramTMP.matrix *= Matrix4::Scale(scale);
+					renderer->RenderModel(model, paramTMP);
+					paramTMP.matrix = leg2 * scaler;
+					paramTMP.matrix *= Matrix4::Scale(scale);
+					renderer->RenderModel(model, paramTMP);
+				}
+				//Legs done
+
+				//Torso
+				torso = Matrix4::Translate(0.f, 0.f, -1.0f);
+				torso = lower * torso;
+
+				if (v_drawTorso) // || ((int)v_drawTorso == 2 && p->GetFront().z < 0.7)
+				{
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/Torso.kv6") :
+						renderer->RegisterModel("Models/PlayerB/Torso.kv6");
+
+					//Chameleon
+					Vector3 fixDim = MakeVector3(8, 4, 6);
+					Vector3 ModelDim = MakeVector3(model->GetDimensions());
+					Vector3 scale = fixDim / ModelDim;
+					ModelRenderParam paramTMP = param;
+					//Chameleon
+
+					paramTMP.matrix = torso;
+					if ((int)v_drawTorso == 2 && p->GetFront().z > -0.2f)
+					{
+						float move = (p->GetFront().z+0.2f)/1.2f;
+						paramTMP.matrix *= Matrix4::Translate(0.f, move, 0.f);
+					}
+					paramTMP.matrix *= Matrix4::Scale(scale) * scaler;
+					renderer->RenderModel(model, paramTMP);
+				}
+				//Torso done
+
+				arms = Matrix4::Translate(-viewWeaponOffset.x-0.225f, -viewWeaponOffset.y-p->GetFront().z*0.25f, viewWeaponOffset.z+0.2f);
+				arms = torso * arms;
+			}
+
+			//Arms
+			if ((int)v_drawArms == 1 || ((int)v_drawArms == 2 && p->GetFront().z < 0.9 && p->GetFront().z > -0.9))
+			{
+				float armPitch = pitch;
+				if (inp.sprint) {
+					armPitch -= 1.0f;
+				}
+				if (armPitch < 0.f) {
+					armPitch = std::max(armPitch, -(float)M_PI * .5f);
+					armPitch *= 0.9f;
+				}
+
+				arms = arms * Matrix4::Rotate(MakeVector3(1, 0, 0), armPitch);
+
+				if (p->GetTool() != Player::ToolWeapon && (int)v_drawArms != 1)
+				{
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/ArmsTool.kv6") :
+						renderer->RegisterModel("Models/PlayerB/ArmsTool.kv6");
+				}
+				else
+				{
+					model = (p->GetTeamId() == 0) ?
+						renderer->RegisterModel("Models/PlayerA/ArmsWeap.kv6") :
+						renderer->RegisterModel("Models/PlayerB/ArmsWeap.kv6");
+				}
 
 				//Chameleon
-				Vector3 fixDim = MakeVector3(3, 5, 12);
+				Vector3 fixDim = MakeVector3(12, 14, 7);
+				if (p->GetTool() != Player::ToolWeapon)
+					fixDim = MakeVector3(12, 10, 7);
+
 				Vector3 ModelDim = MakeVector3(model->GetDimensions());
 				Vector3 scale = fixDim / ModelDim;
-				ModelRenderParam paramTMP = param;
+				paramTMP = param;
 				//Chameleon
 
-				paramTMP.matrix = leg1 * scaler;
-				paramTMP.matrix *= Matrix4::Scale(scale);
+				paramTMP.matrix = arms * scaler;
+				paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
 				renderer->RenderModel(model, paramTMP);
-				paramTMP.matrix = leg2 * scaler;
-				paramTMP.matrix *= Matrix4::Scale(scale);
-				renderer->RenderModel(model, paramTMP);
-
-				//torso = Matrix4::Translate(0.f, 0.f, -1.0f);
-				//torso = lower * torso;
-
-				//model = (p->GetTeamId() == 0) ?
-				//	renderer->RegisterModel("Models/PlayerA/Torso.kv6") :
-				//	renderer->RegisterModel("Models/PlayerB/Torso.kv6");
-
-				////Chameleon
-				//fixDim = MakeVector3(8, 4, 9);
-				//ModelDim = MakeVector3(model->GetDimensions());
-				//scale = MakeVector3(fixDim.x / ModelDim.x, fixDim.y / ModelDim.y, fixDim.z / ModelDim.z);
-				//paramTMP = param;
-				//paramTMP.matrix *= Matrix4::Scale(scale);
-				////Chameleon
-
-				//paramTMP.matrix = torso * scaler;
-				//renderer->RenderModel(model, paramTMP);
 			}
+			//Arms done
+
+			//Intel
+			IGameMode* mode = world->GetMode();
+			if (mode && IGameMode::m_CTF == mode->ModeType()){
+				CTFGameMode *ctfMode = static_cast<CTFGameMode *>(world->GetMode());
+				int tId = p->GetTeamId();
+				if (tId < 3){
+					CTFGameMode::Team& team = ctfMode->GetTeam(p->GetTeamId());
+					if (team.hasIntel && team.carrier == p->GetId())
+					{
+						IntVector3 col2 = world->GetTeam(1 - p->GetTeamId()).color;
+						param.customColor = MakeVector3(col2.x / 255.f, col2.y / 255.f, col2.z / 255.f);
+						Matrix4 mIntel = torso * Matrix4::Translate(0, 0.4f, 0.5f);
+
+						//you carry other team's intel, not yours
+						model = (p->GetTeamId() == 0) ?
+							renderer->RegisterModel("Models/MapObjects/IntelB.kv6") :
+							renderer->RegisterModel("Models/MapObjects/IntelA.kv6");
+
+						//Chameleon
+						Vector3 fixDim = MakeVector3(10, 3, 8);
+						Vector3 ModelDim = MakeVector3(model->GetDimensions());
+						Vector3 scale = fixDim / ModelDim;
+						ModelRenderParam paramTMP = param;
+						//Chameleon
+
+						paramTMP.matrix = mIntel * scaler;
+						paramTMP.matrix *= Matrix4::Scale(scale);//Chameleon
+						renderer->RenderModel(model, paramTMP);
+						//param.customColor = MakeVector3(col.x/255.f, col.y/255.f, col.z/255.f);
+					}
+				}
+			}
+			//Intel done
+
 			// mixed person player rendering done
 		}
 

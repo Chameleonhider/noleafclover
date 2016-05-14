@@ -48,7 +48,7 @@ namespace spades {
 		fb(nullptr),
 		inited(false),
 		sceneUsedInThisFrame(false),
-		fogDistance(129.f),
+		fogDistance(128.f),
 		fogColor(MakeVector3(0.f, 0.f, 0.f)),
 		drawColorAlphaPremultiplied(MakeVector4(1,1,1,1)),
 		legacyColorPremultiply(false),
@@ -427,7 +427,8 @@ namespace spades {
 							for(int bx = 0; bx < 4; bx++) {
 								
 								float dist = *db3 * depthScale;
-								int factor = std::min(static_cast<int>(dist),
+								dist *= dist;
+								int factor = std::min(static_cast<int>(dist/256),
 													  256);
 								factor = std::max(0, factor);
 								int factor2 = 256 - factor;
@@ -513,11 +514,12 @@ namespace spades {
 							auto color = _mm_load_si128(reinterpret_cast<__m128i*>(fb3));
 							
 							dist = _mm_mul_ps(dist, depthScale4);
+							dist = _mm_mul_ps(dist, dist);
 							dist = _mm_max_ps(dist,
 											  _mm_set1_ps(0.f));
 							dist = _mm_min_ps(dist,
-											  _mm_set1_ps(256.f));
-							auto factorX = _mm_cvtps_epi32(dist);
+											  _mm_set1_ps(256*256));
+							auto factorX = _mm_cvtps_epi32(_mm_div_ps(dist, _mm_set1_ps(256)));
 							
 							auto factorY = _mm_sub_epi32(_mm_set1_epi32(0x100),
 														 factorX);
