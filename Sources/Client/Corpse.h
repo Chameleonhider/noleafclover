@@ -116,6 +116,7 @@ namespace spades {
 			bool IsVisibleFrom(Vector3 eye);
 			
 			void AddImpulse(Vector3);
+			void AddBodyImpulse(Vector3);
 		};
 	}
 }

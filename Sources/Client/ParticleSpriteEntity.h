@@ -32,7 +32,8 @@ namespace spades {
 			enum BlockHitAction {
 				Delete,
 				Ignore,
-				BounceWeak
+				BounceWeak,
+				Stick
 			};
 		private:
 			IRenderer *renderer;

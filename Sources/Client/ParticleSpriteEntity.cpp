@@ -103,11 +103,16 @@ namespace spades {
 			velocity.z += 32.f * dt * gravityScale;
 			
 			// TODO: control clip action
-			if(blockHitAction != Ignore && map){
-				if(map->ClipWorld(position.x, position.y, position.z)){
-					if(blockHitAction == Delete){
+			if(blockHitAction != Ignore && map)
+			{
+				if(map->ClipWorld(position.x, position.y, position.z))
+				{
+					if(blockHitAction == Delete)
+					{
 						return false;
-					}else{
+					}
+					else if (blockHitAction == BounceWeak)
+					{
 						IntVector3 lp2 = lastPos.Floor();
 						IntVector3 lp = position.Floor();
 						if (lp.z != lp2.z && ((lp.x == lp2.x && lp.y == lp2.y) ||
@@ -121,6 +126,26 @@ namespace spades {
 							velocity.y = -velocity.y;
 						velocity *= .36f;
 						position = lastPos;
+					}
+					//Chameleon: blood and leaks colour the landscape
+					else if (blockHitAction == Stick)
+					{
+						if (GetRandom() > 0.5f)
+						{
+							uint32_t col = map->GetColor(position.x, position.y, position.z);
+
+							if (color.x > color.y && color.x > color.z)
+								col &= 0x3f3fff;
+							else if (color.x <= color.y && color.x > color.z)
+								col &= 0x3fffff;
+
+							if (map->IsSolid(position.x, position.y, position.z))
+								map->Set(position.x, position.y, position.z, true, col);
+						}
+
+						position = lastPos;
+						velocity *= 0;
+						gravityScale *= 0.1f*GetRandom();
 					}
 				}
 			}

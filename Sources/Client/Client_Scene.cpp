@@ -59,6 +59,9 @@ SPADES_SETTING(v_freeAim, "1");
 //for making zoomed in SW renderer work faster
 SPADES_SETTING(r_swUTMP, "0");
 
+//grenade binocs zoom
+SPADES_SETTING(v_binocsZoom, "2");
+
 static float nextRandom() {
 	return (float)rand() / (float)RAND_MAX;
 }
@@ -91,8 +94,12 @@ namespace spades {
 		{
 			if(world == nullptr ||
 			   world->GetLocalPlayer() == nullptr ||
-			   world->GetLocalPlayer()->IsToolWeapon() == false ||
 			   world->GetLocalPlayer()->IsAlive() == false)
+				return 1.f;
+
+			if(world->GetLocalPlayer()->IsToolWeapon() == false &&
+			  (world->GetLocalPlayer()->GetTool() != Player::ToolGrenade ||
+			  (int)v_binocsZoom == -1))
 				return 1.f;
 
 			float delta = GetAimDownZoomDelta();			
@@ -104,21 +111,21 @@ namespace spades {
 		
 		float Client::GetAimDownZoomDelta()
 		{
+			if (world->GetLocalPlayer()->GetTool() == Player::ToolGrenade)
+				return (int)v_binocsZoom;
+
 			switch (world->GetLocalPlayer()->GetWeapon()->GetWeaponType())
 			{
 			case SMG_WEAPON:
-				return 0.f;
-				//delta = .8f;
+				return 0.f; //delta = .8f;				
 				break;
 			case RIFLE_WEAPON:
 				if (scopeOn && scopeView)
 					return scopeZoom;
-				return 0.f;
-				//delta = 1.4f;
+				return 0.f; //delta = 1.4f;				
 				break;
 			case SHOTGUN_WEAPON:
-				return 0.f;
-				//delta = 0.4f;
+				return 0.f; //delta = 0.4f;				
 				break;
 			}
 		}

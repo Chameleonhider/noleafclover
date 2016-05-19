@@ -649,7 +649,7 @@ namespace spades {
 					node.vel.z -= dt * 6.f; // buoyancy
 					node.vel *= damp;
 				}
-				else{
+				else if (node.vel.z != 0){
 					node.vel.z += dt * 32.f; // gravity
 					node.vel.z *= damp2;
 				}
@@ -686,7 +686,7 @@ namespace spades {
 						node.pos.y,
 						node.pos.z)){
 						node.vel.z = -node.vel.z * .2f;
-						if (fabsf(node.vel.z) < .3f)
+						if (fabsf(node.vel.z) < .4f)
 							node.vel.z = 0.f;
 						node.pos.z = oldPos.z;
 
@@ -900,7 +900,7 @@ namespace spades {
 				param.matrix = Matrix4::FromAxis(aX, aY, aZ, arm2Base) * scaler;
 
 				//Chameleon
-				fixDim = MakeVector3(5, 5, 5);
+				fixDim = MakeVector3(3, 3, 12);
 				ModelDim = MakeVector3(model->GetDimensions());
 				scale = fixDim / ModelDim;
 				paramTMP = param;
@@ -948,7 +948,7 @@ namespace spades {
 				param.matrix = Matrix4::FromAxis(aX, aY, aZ, leg2Base) * scaler;
 
 				//Chameleon
-				fixDim = MakeVector3(5, 5, 5);
+				fixDim = MakeVector3(3, 5, 12);
 				ModelDim = MakeVector3(model->GetDimensions());
 				scale = fixDim / ModelDim;
 				paramTMP = param;
@@ -972,18 +972,24 @@ namespace spades {
 			if ((eye - GetCenter()).GetLength() > 150.f)
 				return false;
 
-			for (int i = 0; i < NodeCount; i++){
-				IntVector3 outBlk;
-				if (map->CastRay(eye, nodes[i].pos,
-					256.f, outBlk))
-					return true;
-			}
+			IntVector3 outBlk;
+			if (map->CastRay(eye, nodes[Head].pos, 196.f, outBlk))
+				return true;
+
 			return false;
 		}
 
 		void Corpse::AddImpulse(spades::Vector3 v){
 			for (int i = 0; i < NodeCount; i++)
 				nodes[i].vel += v;
+		}
+
+		void Corpse::AddBodyImpulse(spades::Vector3 v){
+			nodes[Torso1].vel += v*GetRandom();
+			nodes[Torso2].vel += v*GetRandom();
+			nodes[Torso3].vel += v*GetRandom();
+			nodes[Torso4].vel += v*GetRandom();
+			nodes[Head].vel += v*GetRandom();
 		}
 	}
 }

@@ -98,6 +98,9 @@ SPADES_SETTING(cg_keyAutoFocus, "MiddleMouseButton");
 //Chameleon: absolute maximum sound distance. footstep&other sound limit is 0.75 times this
 SPADES_SETTING(snd_maxDistance, "150");
 
+//bincoulars zoom. used with nades
+SPADES_SETTING(v_binocsZoom, "2");
+
 namespace spades {
 	namespace client {
 		
@@ -193,7 +196,7 @@ namespace spades {
 					{
 						/*weapX -= x*0.00025f*(1.f - aimDownState);
 						weapY -= y*0.00025f*(1.f - aimDownState);*/
-						weapX += x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapX -= x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
 						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
@@ -292,7 +295,7 @@ namespace spades {
 					{
 						/*weapX -= x*0.00025f*(1.f - aimDownState);
 						weapY -= y*0.00025f*(1.f - aimDownState);*/
-						weapX += x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapX -= x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
 						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
@@ -569,7 +572,7 @@ namespace spades {
 						playerInput.sprint = down;
 						if(down)
 						{
-							if(world->GetLocalPlayer()->IsToolWeapon())
+							//if(world->GetLocalPlayer()->IsToolWeapon())
 							{
 								weapInput.secondary = false;
 							}
@@ -650,6 +653,21 @@ namespace spades {
 								weapInput.secondary = !weapInput.secondary;
 							}
 						}
+						//grenade binocs
+						else if (world->GetLocalPlayer()->GetTool() == Player::ToolGrenade)
+						{
+							if (down && !playerInput.sprint && (int)v_binocsZoom != -1)
+							{
+								if (!cg_holdAimDownSight)
+									weapInput.secondary = !weapInput.secondary;
+								else
+									weapInput.secondary = down;
+							}
+							else if (!playerInput.sprint && (int)v_binocsZoom == -1)
+							{
+								weapInput.secondary = down;
+							}
+						}
 						else
 						{
 							if(!playerInput.sprint)
@@ -658,7 +676,7 @@ namespace spades {
 							}
 							else
 							{
-								weapInput.secondary = down;
+								weapInput.secondary = down; //changed from "down" to "false"
 							}
 						}
 						if(world->GetLocalPlayer()->IsToolWeapon() && weapInput.secondary && !lastVal &&

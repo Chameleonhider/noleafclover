@@ -155,6 +155,31 @@ namespace spades {
 			return time < worldSetTime + .05f;
 		}
 		
+//PLAYER LEAK------------------------------------------------------------------------------------------
+		void Client::Leak(spades::Vector3 p, spades::Vector3 v){
+			SPADES_MARK_FUNCTION();
+
+			//basic 1x1 pixel (>64 blocks)
+			Handle<IImage> img = renderer->RegisterImage("Gfx/WhitePixel.tga");
+
+			Vector4 color = { 0.9f, 0.9f, 0.4f, 0.4f };
+			//limit for particles opt_particleNumScale
+			{
+				ParticleSpriteEntity *ent = new ParticleSpriteEntity(this, img, color);
+
+				v.x *= GetRandom() + 4;
+				v.y *= GetRandom() + 4;
+				v.z *= GetRandom() + 4;
+
+				ent->SetTrajectory(p, v*3.f, 1.f, 0.75f);
+				ent->SetRotation(GetRandom() * 6.48f);
+				ent->SetRadius(0.1f+GetRandom()*0.1f, 0.01f);
+				ent->SetLifeTime(3.f+3.f*GetRandom(), 0.1f, 3.f);
+				ent->SetBlockHitAction(ParticleSpriteEntity::Stick);
+				localEntities.emplace_back(ent);
+			}
+		}
+
 //PLAYER HIT------------------------------------------------------------------------------------------
 		void Client::Bleed(spades::Vector3 v){
 			SPADES_MARK_FUNCTION();
@@ -182,10 +207,10 @@ namespace spades {
 			//16x16 round blob (5<x<96 blocks) NOT USING IT
 			//Handle<IImage> img3 = renderer->RegisterImage("Gfx/WhiteSmoke.tga");
 
-			if (transparency < 0.01f)
-				transparency = 0.01;
+			if (transparency < 0.1f)
+				transparency = 0.1;
 
-			Vector4 color = { 0.5f, 0.02f, 0.04f, transparency*0.5f};
+			Vector4 color = { 0.6f, 0.1f, 0.1f, transparency*0.8f};
 			//limit for particles opt_particleNumScale
 			if (distance <= distLimit*0.5f)
 			{
@@ -197,33 +222,14 @@ namespace spades {
 					ent->SetTrajectory(v,
 									   MakeVector3(GetRandom()-GetRandom(),
 												   GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom()) * 10.f,
+												   GetRandom()-GetRandom()) * 8.f,
 									   0.5f, 0.7f);
 					ent->SetRotation(GetRandom() * 6.48f);
-					ent->SetRadius(0.2f + GetRandom()*0.1f, 0.1f);
-					ent->SetLifeTime(3.f, 0.f, 2.f);
-					ent->SetBlockHitAction(ParticleSpriteEntity::Delete);
+					ent->SetRadius(0.2f + GetRandom()*0.2f, 0.05f);
+					ent->SetLifeTime(8.f, 0.f, 4.f);
+					ent->SetBlockHitAction(ParticleSpriteEntity::Stick);
 					localEntities.emplace_back(ent);
 				}
-				//smoke - nah
-				/*
-				//color = MakeVector4(.7f, .35f, .37f, transparency);
-				if (float(opt_particleNumScale) > 0.49f && !bool(cg_reduceSmoke))
-				{
-					ParticleSpriteEntity *ent =
-						new ParticleSpriteEntity(this, img3, color);
-					ent->SetTrajectory(v,
-									   MakeVector3(GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom()) * 2.0f,
-									   0.3f, 0.5f);
-					ent->SetRotation(GetRandom() * 6.48f); //two times pi
-					ent->SetRadius(0.5f + GetRandom()*0.5f, 1.f);
-					ent->SetBlockHitAction(ParticleSpriteEntity::Ignore);
-					ent->SetLifeTime(1.0f + GetRandom() * 0.5f, 0.0f, 0.5f);
-					localEntities.emplace_back(ent);
-				}
-				*/
 			}
 			else
 			{
@@ -235,12 +241,12 @@ namespace spades {
 					ent->SetTrajectory(v,
 									   MakeVector3(GetRandom()-GetRandom(),
 												   GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom()) * 10.f,
+												   GetRandom()-GetRandom()) * 8.f,
 									   0.5f, 0.7f);
 					ent->SetRotation(GetRandom() * 6.48f);
-					ent->SetRadius(0.3f, 0.1f);
-					ent->SetLifeTime(3.f, 0.f, 2.f);
-					ent->SetBlockHitAction(ParticleSpriteEntity::Delete);
+					ent->SetRadius(0.4f, 0.05f);
+					ent->SetLifeTime(4.f, 0.f, 2.f);
+					ent->SetBlockHitAction(ParticleSpriteEntity::Stick);
 					localEntities.emplace_back(ent);
 				}
 			}			

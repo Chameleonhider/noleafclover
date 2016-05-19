@@ -716,16 +716,14 @@ namespace spades {
 			float spread = weapon->GetSpread();
 			GameMap *map = world->GetMap();
 			//Chameleon
-			//make spread slowly reduce to half when >completely< stationary. +
 			//also make spread depend on weapon movement itself --- and weapon movement depend on mouse input.
 			//for example, if mouse moves to right, weapon stays to left side and gradually goes to right side. Represent real weapon's barrel.
 			if (IsLocalPlayer())
 			{
 				if (weapon->GetWeaponType() != SHOTGUN_WEAPON)
 					spread += spread * spreadAdd;
-
-				if (spreadAdd < 0)
-					spreadAdd = 0;
+				else
+					spread *= 0.75f; //is more fun, mkay???
 			}
 
 			// pyspades takes destroying more than one block as a
@@ -743,7 +741,7 @@ namespace spades {
 					{
 						dir2.x -= GetRight().x*world->GetListener()->GetWeaponViewX();
 						dir2.y -= GetRight().y*world->GetListener()->GetWeaponViewX();
-						dir2.z -= world->GetListener()->GetWeaponViewY()*(abs(GetFront().z) + 1) / 2.f;
+						dir2.z -= world->GetListener()->GetWeaponViewY()*(abs(GetFront().z) + 1);
 					}
 					else
 					{
@@ -983,6 +981,8 @@ namespace spades {
 					rec *= 2;
 				}				
 			}
+
+			//rec *= 0;
 
 			float upLimit = Vector3::Dot(GetFront2D(), o);
 			upLimit -= 0.03f;

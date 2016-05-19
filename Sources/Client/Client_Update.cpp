@@ -1228,16 +1228,17 @@ namespace spades {
 						dir *= 6.f;
 					}else{
 						if(killer->GetWeapon()->GetWeaponType() == SMG_WEAPON){
-							dir *= 2.8f;
+							dir *= 8.f;
 						}else if(killer->GetWeapon()->GetWeaponType() == SHOTGUN_WEAPON){
-							dir *= 4.5f;
+							dir *= 32.f;
 						}else{
-							dir *= 3.5f;
+							dir *= 16.f;
 						}
 					}
-					corp->AddImpulse(dir);
+					dir.z -= 0.1f;
+					corp->AddBodyImpulse(dir);
 				}else if(kt == KillTypeGrenade){
-					corp->AddImpulse(MakeVector3(0, 0, -4.f - GetRandom() * 4.f));
+					corp->AddImpulse(MakeVector3(0, 0, -8.f-GetRandom()*8.f));
 				}
 				corp->AddImpulse(victim->GetVelocity() * 32.f);
 				corpses.emplace_back(corp);
@@ -1489,11 +1490,11 @@ namespace spades {
 			switch(player->GetWeapon()->GetWeaponType()) 
 			{
 				case RIFLE_WEAPON:
-					vel = 500.f;
+					vel = 600.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					break;
 				case SMG_WEAPON:
-					vel = 400.f;
+					vel = 300.f;
 					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
 					if (player->GetWeapon()->GetAmmo() % 2 == 0)
 						return;
@@ -1738,12 +1739,8 @@ namespace spades {
 			//mouse inertia
 			if (mouseY > 0)
 				mouseY = 0;
-			/*if (sinf(world->GetTime() * 2.f) > 0)
-				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*1000;
-			if (sinf(world->GetTime() * 2.f) < 0)
-				mouseX += rec.x*(world->GetLocalPlayer()->spreadAdd+1.f)*1000;*/
 			if (weapX != 0)
-				mouseX += rec.x * 1000 * weapX / abs(weapX);
+				mouseX -= rec.x * 1000 * weapX / abs(weapX);
 			else
 				mouseX += rec.x * sinf(world->GetTime() * 2.f);
 		}

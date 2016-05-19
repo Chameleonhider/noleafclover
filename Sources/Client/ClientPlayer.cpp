@@ -55,16 +55,20 @@ SPADES_SETTING(opt_particleNiceDist, "");
 //maximum distance of models, not really useful, just default values were shit
 SPADES_SETTING(opt_modelMaxDist, "");
 
-//draw 1st person torso+intel?
+//draw 1st person torso
 SPADES_SETTING(v_drawTorso, "0");
-//draw 1st person arms (like in 3rd person)?
+//draw 1st person arms (like in 3rd person)
 SPADES_SETTING(v_drawArms, "0");
-//draw 1st person legs?
+//draw 1st person legs
 SPADES_SETTING(v_drawLegs, "0");
+
+//grenade binocs zoom
+SPADES_SETTING(v_binocsZoom, "2");
 
 //SPADES_SETTING(d_a, "0");
 //SPADES_SETTING(d_b, "0");
 //SPADES_SETTING(d_c, "0");
+//SPADES_SETTING(d_x, "0");
 //SPADES_SETTING(d_y, "0");
 
 namespace spades {
@@ -427,11 +431,29 @@ namespace spades {
 				if(aimDownState > 1.f)
 					aimDownState = 1.f;
 			}
+			else if (actualWeapInput.secondary && player->GetTool() == Player::ToolGrenade && (int)v_binocsZoom != -1 && player->IsAlive())
+			{
+				aimDownState += dt * 20.f;
+				if (aimDownState > 1.f)
+					aimDownState = 1.f;
+			}
 			else
 			{
 				aimDownState -= dt * 10.f;
 				if(aimDownState < 0.f)
 					aimDownState = 0.f;
+			}
+
+			//drunk mode
+			if (actualWeapInput.secondary && player->GetTool() == Player::ToolGrenade && (int)v_binocsZoom == -1)
+			{
+				if (GetRandom() > 0.3f)
+					client->Leak(player->GetPosition()+Vector3(0,0,1), player->GetVelocity()*0.2f+player->GetFront()+Vector3(0,0,-0.3f));
+
+				if (client->mouseRoll < 10.f)
+					client->mouseRoll += client->mouseRoll*dt*5.f;
+				else
+					client->mouseRoll += client->mouseRoll*dt;
 			}
 			
 			if(currentTool == player->GetTool()) 
@@ -541,13 +563,13 @@ namespace spades {
 				}
 
 				//testing
-				//{
-				//	/*client->weapX = (float)d_x;
-				//	client->weapY = (float)d_y;*/
-				//	/*viewWeaponOffset.x = client->weapX* (2 * GetAimDownState() - 1);
-				//	viewWeaponOffset.z = client->weapY* (2 * GetAimDownState() - 1);
-				//	viewWeaponOffset.y = 0;*/
-				//}
+				/*{
+					client->weapX = (float)d_x;
+					client->weapY = (float)d_y;
+					viewWeaponOffset.x = client->weapX* (2 * GetAimDownState() - 1);
+					viewWeaponOffset.z = client->weapY* (2 * GetAimDownState() - 1);
+					viewWeaponOffset.y = 0;
+				}*/
 			}
 			
 			// FIXME: should do for non-active skins?
@@ -1275,7 +1297,7 @@ namespace spades {
 					{						
 						IntVector3 col2 = world->GetTeam(1-p->GetTeamId()).color;
 						param.customColor = MakeVector3(col2.x/255.f, col2.y/255.f, col2.z/255.f);
-						Matrix4 mIntel = torso * Matrix4::Translate(0,0.4f,0.5f);
+						Matrix4 mIntel = torso * Matrix4::Translate(0,0.5f,0.5f);
 						
 						//you carry other team's intel, not yours
 						model = (p->GetTeamId() == 0) ?
@@ -1549,7 +1571,7 @@ namespace spades {
 					{
 						IntVector3 col2 = world->GetTeam(1 - p->GetTeamId()).color;
 						param.customColor = MakeVector3(col2.x / 255.f, col2.y / 255.f, col2.z / 255.f);
-						Matrix4 mIntel = torso * Matrix4::Translate(0, 0.4f, 0.5f);
+						Matrix4 mIntel = torso * Matrix4::Translate(0, 0.5f, 0.5f);
 
 						//you carry other team's intel, not yours
 						model = (p->GetTeamId() == 0) ?
