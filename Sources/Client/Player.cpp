@@ -346,7 +346,7 @@ namespace spades {
 			}
 			else if(IsToolWeapon())
 			{
-				//not working - called, but does nothing. //does it really NIOT work?
+				//not working - called, but does nothing. //does it really NOT work?
 				//maybe transfer to player.cpp or clientPlayer.cpp
 				if (IsLocalPlayer())
 				{
@@ -1761,10 +1761,9 @@ namespace spades {
 				case ToolBlock:
 					return blockStocks > 0;
 				case ToolWeapon:
-					return weapon->GetAmmo() > 0 ||
-					weapon->GetStock() > 0;
+					return true;
 				case ToolGrenade:
-					return grenades > 0;
+					return true;
 				default:
 					SPAssert(false);
 			}

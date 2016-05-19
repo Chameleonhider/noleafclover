@@ -603,39 +603,28 @@ namespace spades {
 								Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Weapons/WeaponMode.wav");
 								audioDevice->PlayLocal(chunk, AudioParam());
 
-								if (MaxShots == -1 && down)
+								if (MaxShots == -1)
 								{
 									MaxShots = 1;
 								}
-								else if (MaxShots == 1 && down && (bool)weap_burstFire)
+								else if (MaxShots == 1 && (bool)weap_burstFire)
 								{
 									MaxShots = (int)weap_burstRounds;
 								}
-								else if (down)
+								else
 								{
 									MaxShots = -1;
 								}
-								//SPLog("MaxShots: toggle %i", MaxShots);
 							}
 							if (p->GetWeaponType() == RIFLE_WEAPON && p->IsToolWeapon())
 							{
 								scopeView = !scopeView;
 							}
 						}
-
-						if (p->GetWeaponType() != SMG_WEAPON)
-						{
-							MaxShots = 1;
-						}
 					}
 					else if(CheckKey(cg_keyAttack, name))
 					{
 						//Chameleon: semi auto fire
-						//world->GetLocalPlayer()->GetWeaponType() != SMG_WEAPON //SPLog("CHECK 3--------------t");
-						/*if (p->IsToolWeapon() && semiAuto != -1)
-						{
-							heldTriggerAfterLastShot = down;
-						}*/
 						if (!down)
 						{
 							world->GetListener()->SetShotsFired(0);

@@ -64,8 +64,8 @@ SPADES_SETTING(opt_particleMaxDist, "125");
 SPADES_SETTING(opt_particleNiceDist, "1.0");
 //Scales the amount of particles produced
 SPADES_SETTING(opt_particleNumScale, "1.0");
-//Sets the muzzleflash on or off
-SPADES_SETTING(opt_muzzleFlash, "0");
+//Sets the muzzleflash on or off, 0 off, 1 on cheap, 2 on default
+SPADES_SETTING(opt_muzzleFlash, "1");
 //Sets the muzzleflash on or off
 SPADES_SETTING(r_dlights, "0");
 //switches between default fire vibration and Chameleon's
@@ -508,36 +508,6 @@ namespace spades {
 		{
 			int distance = (origin - lastSceneDef.viewOrigin).GetLength();
 
-			//moved to Client_Update
-			/*if (local)
-			{
-				float addGV;
-				if (weapon == "Rifle")
-					addGV = 0.10f;
-				else if (weapon == "SMG")
-					addGV = 0.05f;
-				else if (weapon == "Shotgun")
-					addGV = 0.15f;
-
-				if (!v_defaultFireVibration)
-				{
-					if (Client::GetAimDownState() > 0.5f && grenadeVibration < 0.15f)
-						grenadeVibration = addGV * 0.75f;
-					else if (grenadeVibration < 0.15f)
-						grenadeVibration += addGV;
-
-					if (grenadeVibration > 0.25f)
-						grenadeVibration = 0.25f;
-				}
-				soundDistance = (100 * addGV + soundDistance)/2.f;
-			}*/
-			//confirm; confirmed;
-			/*if (distance < soundDistance)
-			{
-				soundDistance = (distance + soundDistance)/2.f;
-			}*/
-			//soundDistance of grenades is done elsewhere
-
 			if (r_dlights)
 			{
 				DynamicLightParam l;
@@ -548,7 +518,7 @@ namespace spades {
 				flashDlights.push_back(l);
 			}
 		
-			if (bool(opt_muzzleFlash) && !bool(cg_reduceSmoke))
+			if (int(opt_muzzleFlash) == 2 && !bool(cg_reduceSmoke))
 			{
 				//16x16 round blob (5<x<96 blocks)
 				Handle<IImage> img3 = renderer->RegisterImage("Gfx/WhiteSmoke.tga");
@@ -660,39 +630,20 @@ namespace spades {
 			else
 			{
 				//display only fire particle
-				Vector4 color = MakeVector4(1.f, 1.f, .5f, transparency + 0.25f);
+				Vector4 color = MakeVector4(1.f, 0.9f, .5f, transparency + 0.25f);
 				ParticleSpriteEntity *ent =
 					new ParticleSpriteEntity(this, img2, color);
 				ent->SetTrajectory(origin,
 					MakeVector3(0, 0, 0),
 					1.f, 0.f);
 				ent->SetRotation(GetRandom() * 6.48f);
-				ent->SetRadius(1.0f, 10.f, 1.f);
+				ent->SetRadius(1.0f, 4.f, 25.f);
 				ent->SetBlockHitAction(ParticleSpriteEntity::Ignore);
 				ent->SetLifeTime(0.2f, 0.f, 0.1f);
 				localEntities.emplace_back(ent);
 
 				return; //grenade is inside a block, which is performance loss when displaying other particles
 			}
-				
-			// rapid smoke
-			/*for (int i = 0; i < 4 * float(opt_particleNumScale); i++)
-			{
-				ParticleSpriteEntity *ent =
-					new ParticleSpriteEntity(this, img3, color);
-				ent->SetTrajectory(origin,
-								   (MakeVector3(GetRandom()-GetRandom(),
-												GetRandom()-GetRandom(),
-												GetRandom()-GetRandom())+velBias*1.0f) * 5.f,
-								   1.f, 0.25f);
-				ent->SetRotation(GetRandom() * 6.48f);
-				ent->SetRadius(1.0f + GetRandom()*0.5f,
-							   2.f, 0.1f);
-				ent->SetBlockHitAction(ParticleSpriteEntity::Ignore);
-				ent->SetLifeTime(1.0f + GetRandom()*1.0f, 0.f, 0.5f);
-				localEntities.emplace_back(ent);
-			}
-			*/
 
 			Vector4 color;
 			color = MakeVector4(.5f, .5f, .5f, (transparency*0.25f) + 0.25f);
@@ -788,14 +739,14 @@ namespace spades {
 
 			// fire smoke
 			// one particle only
-			color = MakeVector4(1.f, 1.f, .5f, (transparency/2.f)+0.5f);
+			color = MakeVector4(1.f, 0.9f, 0.5f, (transparency/2.f)+0.5f);
 			ParticleSpriteEntity *ent =
 				new ParticleSpriteEntity(this, img3, color);
 			ent->SetTrajectory(origin,
 								MakeVector3(0,0,0),
 								1.f, 0.f);
 			ent->SetRotation(GetRandom() * 6.48f);
-			ent->SetRadius(1.0f, 10.f, 1.f);
+			ent->SetRadius(1.0f, 4.f, 25.f);
 			ent->SetBlockHitAction(ParticleSpriteEntity::Ignore);
 			ent->SetLifeTime(0.2f, 0.f, 0.1f);
 			localEntities.emplace_back(ent);

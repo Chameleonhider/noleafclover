@@ -245,20 +245,9 @@ namespace spades {
 			}
 
 			
-			//Chameleon weapon mode - resets weapon mode and resets shot count
+			//Chameleon FOV changes
 			if (player && (player->GetHealth() == 0 || player->GetTeamId() > 2))
 			{
-				if (player->GetWeaponType() != SMG_WEAPON)
-				{
-					MaxShots = 1;
-					ShotsFired = 0;
-				}
-				else
-				{
-					MaxShots = -1;
-					ShotsFired = 0;
-				}
-
 				//Checks for maximum/minimum FOV values
 				if ((int)cg_fov < 10)
 					cg_fov = "10";
@@ -268,90 +257,18 @@ namespace spades {
 				scopeOn = (bool)weap_scope;
 				scopeZoom = abs((int)weap_scopeZoom);
 				FOV = (int)cg_fov;
-			}
-			else if (!player)
-			{
-				MaxShots = -1;
-				ShotsFired = 0;
-
-				//Checks for maximum/minimum FOV values
-				if ((int)cg_fov < 10)
-					cg_fov = "10";
-				if ((int)cg_fov > 175)
-					cg_fov = "175";
-
-				scopeOn = (bool)weap_scope;
-				scopeZoom = abs((int)weap_scopeZoom);
-				FOV = (int)cg_fov;
-			}
-
-			//mouse inertia
-			if (player)
-			{
-				//if player is no longer alive, kill inertia
-				if (!world->GetLocalPlayer()->IsAlive())
-				{
-					MouseEventInertia(mouseX, mouseY);
-					mouseX = 0.f;
-					mouseY = 0.f;
-				}
-				else
-				{
-					float health = world->GetLocalPlayer()->GetHealth()*0.01f;
-					//mouseInertia is used in Client_Input(), but not here
-					mouseInertia = 0.3f - health*0.2f;
-					if (mouseInertia > 1.f)
-						mouseInertia = 1.f;
-					if (mouseInertia < 0.f)
-						mouseInertia = 0.f;
-
-					//smoothly reduces inertia
-					//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
-					//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
-					//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
-					float inertiaX = mouseX / (20 * (2 - health));
-					float inertiaY = mouseY / (20 * (2 - health));
-					{
-						if (inertiaX < 0)
-							inertiaX *= (-1);
-						if (inertiaY < 0)
-							inertiaY *= (-1);
-						MouseEventInertia(mouseX*dt*inertiaX, mouseY*dt*inertiaY);
-						mouseX -= mouseX*dt*inertiaX;
-						mouseY -= mouseY*dt*inertiaY;
-					}
-
-					//linear mouse velocity reduction, from 50 to 25 per second
-					inertiaX = 0;
-					inertiaY = 0;
-					//inertia mouseX
-					if (mouseX != 0)
-					{
-						inertiaX = 20*dt / (2 - health);
-						if (abs(mouseX) < inertiaX)
-							inertiaX = abs(mouseX);
-
-						inertiaX *= (mouseX / abs(mouseX));
-					}
-					//inertia mouseY
-					if (mouseY != 0)
-					{
-						inertiaY = 20*dt / (2 - health);
-						if (abs(mouseY) < inertiaY)
-							inertiaY = abs(mouseY);
-
-						inertiaY *= (mouseY / abs(mouseY));
-					}
-					MouseEventInertia(inertiaX, inertiaY);
-					mouseX -= inertiaX;
-					mouseY -= inertiaY;
-				}
 			}
 			else
 			{
-				mouseInertia = 0;
-				mouseX = 0;
-				mouseY = 0;
+				//Checks for maximum/minimum FOV values
+				if ((int)cg_fov < 10)
+					cg_fov = "10";
+				if ((int)cg_fov > 175)
+					cg_fov = "175";
+
+				scopeOn = (bool)weap_scope;
+				scopeZoom = abs((int)weap_scopeZoom);
+				FOV = (int)cg_fov;
 			}
 
 			//Chameleon: walk shake
@@ -372,25 +289,12 @@ namespace spades {
 
 			//Chameleon: drunk cam
 			//(1.f - world->GetLocalPlayer()->GetHealth() / 200.f);
-			if (player)
+			if (!player)
 			{
-				if (mouseRoll < 0)
-				{
-					mouseRoll -= mouseRoll*dt * 2 / (1.f - world->GetLocalPlayer()->GetHealth()*0.0075f);
+				mouseInertia = 0;
+				mouseX = 0;
+				mouseY = 0;
 
-					if (mouseRoll > -0.001f)
-						mouseRoll = 0;
-				}
-				if (mouseRoll > 0)
-				{
-					mouseRoll -= mouseRoll*dt * 2 / (1.f - world->GetLocalPlayer()->GetHealth()*0.0075f);
-
-					if (mouseRoll < 0.001f)
-						mouseRoll = 0;
-				}
-			}
-			else
-			{
 				if (mouseRoll < 0)
 				{
 					mouseRoll -= mouseRoll*dt*4;
@@ -620,6 +524,85 @@ namespace spades {
 			else if (player->spreadAdd > 4)
 				player->spreadAdd = 4;
 
+			//Chameleon: mouse inertia
+			{
+				//if player is no longer alive, kill inertia
+				if (!world->GetLocalPlayer()->IsAlive())
+				{
+					MouseEventInertia(mouseX, mouseY);
+					mouseX = 0.f;
+					mouseY = 0.f;
+				}
+				else
+				{
+					float health = world->GetLocalPlayer()->GetHealth()*0.01f;
+					//mouseInertia is used in Client_Input(), but not here
+					mouseInertia = 0.3f - health*0.2f;
+					if (mouseInertia > 1.f)
+						mouseInertia = 1.f;
+					if (mouseInertia < 0.f)
+						mouseInertia = 0.f;
+
+					//smoothly reduces inertia
+					//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
+					//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
+					//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
+					float inertiaX = mouseX / (20 * (2 - health));
+					float inertiaY = mouseY / (20 * (2 - health));
+					{
+						if (inertiaX < 0)
+							inertiaX *= (-1);
+						if (inertiaY < 0)
+							inertiaY *= (-1);
+						MouseEventInertia(mouseX*dt*inertiaX, mouseY*dt*inertiaY);
+						mouseX -= mouseX*dt*inertiaX;
+						mouseY -= mouseY*dt*inertiaY;
+					}
+
+					//linear mouse velocity reduction, from 50 to 25 per second
+					inertiaX = 0;
+					inertiaY = 0;
+					//inertia mouseX
+					if (mouseX != 0)
+					{
+						inertiaX = 20 * dt / (2 - health);
+						if (abs(mouseX) < inertiaX)
+							inertiaX = abs(mouseX);
+
+						inertiaX *= (mouseX / abs(mouseX));
+					}
+					//inertia mouseY
+					if (mouseY != 0)
+					{
+						inertiaY = 20 * dt / (2 - health);
+						if (abs(mouseY) < inertiaY)
+							inertiaY = abs(mouseY);
+
+						inertiaY *= (mouseY / abs(mouseY));
+					}
+					MouseEventInertia(inertiaX, inertiaY);
+					mouseX -= inertiaX;
+					mouseY -= inertiaY;
+				}
+
+			//Chameleon: drunk cam
+				if (mouseRoll < 0)
+				{
+					mouseRoll -= mouseRoll*dt * 2 / (1.f - world->GetLocalPlayer()->GetHealth()*0.0075f);
+
+					if (mouseRoll > -0.001f)
+						mouseRoll = 0;
+				}
+				if (mouseRoll > 0)
+				{
+					mouseRoll -= mouseRoll*dt * 2 / (1.f - world->GetLocalPlayer()->GetHealth()*0.0075f);
+
+					if (mouseRoll < 0.001f)
+						mouseRoll = 0;
+				}
+			}
+			//End of mouse inertia/drunk cam
+
 			// don't allow to stand up when ceilings are too low
 			if(inp.crouch == false)
 			{
@@ -661,8 +644,10 @@ namespace spades {
 			// FIXME: send only there are any changed?
 			net->SendPlayerInput(inp);
 			WeaponInput winpTMP = winp;
-			if (world->GetListener()->GetMaxShots() > 0 && world->GetListener()->GetShotsFired() >= world->GetListener()->GetMaxShots())
-				winpTMP.primary = false;
+
+			//if (world->GetListener()->GetMaxShots() > 0 && world->GetListener()->GetShotsFired() >= world->GetListener()->GetMaxShots())
+			winpTMP.primary = player->GetWeapon()->IsShooting();
+
 			net->SendWeaponInput(winpTMP);
 			
 			if(hasDelayedReload) 
@@ -682,39 +667,11 @@ namespace spades {
 				ShotsFired = 0;
 				weapInput.secondary = false;
 
-				if (player->GetWeaponType() != SMG_WEAPON)
-				{
-					MaxShots = 1;
-				}
-				else
-				{
+				if (player->GetWeaponType() == SMG_WEAPON)
 					MaxShots = -1;
-				}
+				else
+					MaxShots = 1;
 			}
-
-			if (world->GetLocalPlayer()->IsToolWeapon()) //does not work at all
-			{
-				//Unzoom when jumping
-				//if (world->GetLocalPlayer()->GetVelocity().z < -0.25f || world->GetLocalPlayer()->GetVelocity().z > 0.25f)
-				//	weapInput.secondary = false;
-			}
-
-			//if(actualWeapInput.secondary &&
-			//   player->IsToolWeapon() &&
-			//   player->IsAlive())
-			//{
-			//
-			//}
-			//else
-			//{
-			//	if(player->IsToolWeapon())
-			//	{
-			//		// Chameleon: useless!
-			//		// there is a possibility that player has respawned or something.
-			//		// stop aiming down
-			//		//weapInput.secondary = false;
-			//	}
-			//}
 			
 			// is the selected tool no longer usable (ex. out of ammo)?
 			if(!player->IsToolSelectable(player->GetTool())) 
@@ -994,18 +951,9 @@ namespace spades {
 		}
 		void Client::PlayerDryFiredWeapon(spades::client::Player *p) {
 			SPADES_MARK_FUNCTION();
-			
-			int distance = (p->GetOrigin() - lastSceneDef.viewOrigin).GetLength();
-			if (!IsMuted() && distance*2 < soundDistance)
-			{
-				bool isLocal = p == world->GetLocalPlayer();
-				Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/DryFire.wav");
-				if(isLocal)
-					audioDevice->PlayLocal(c, MakeVector3(.4f, -.3f, .5f),
-										   AudioParam());
-				else
-					audioDevice->Play(c, p->GetEye(), AudioParam());
-			}
+
+			Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/DryFire.wav");
+			audioDevice->Play(c, p->GetEye(), AudioParam());
 		}
 		
 		void Client::PlayerReloadingWeapon(spades::client::Player *p) {
@@ -1791,7 +1739,13 @@ namespace spades {
 		//Chameleon: get firemode
 		int Client::GetMaxShots()
 		{
-			return MaxShots;
+			if (world->GetLocalPlayer())
+			{
+				if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
+					return MaxShots;
+				else
+					return (MaxShots = 1);
+			}
 		}
 		//Chameleon: firemodes
 		void Client::SetShotsFired(int value)

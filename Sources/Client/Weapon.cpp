@@ -88,37 +88,27 @@ namespace spades {
 			bool fired = false;
 			bool dryFire = false;
 
-			//Chameleon: fix for fog range stupididty of sever-client relationships
-			if (world->GetLocalPlayer())
-				if ((owner->GetPosition() - world->GetLocalPlayer()->GetPosition()).GetLength() > 128 && owner != world->GetLocalPlayer())
-			{
-				int newStock;
-				newStock = std::max(0, stock - GetClipSize() + ammo);
-				ammo += stock - newStock;
-				stock = newStock;
-			}
-
-			if (world->GetListener()->GetMaxShots() > 0 && world->GetListener()->GetShotsFired() >= world->GetListener()->GetMaxShots())
-				shooting = false;
+			//if (world->GetListener()->GetMaxShots() > 0 && world->GetListener()->GetShotsFired() >= world->GetListener()->GetMaxShots())
+			//	shooting = false;
 
 			if(shooting && (!reloading || IsReloadSlow()))
 			{
 				// abort slow reload
 				reloading = false;
-				//Chameleon: adding deltaTime to compensate for shit //dont, makes it too fast
+
 				if(time >= nextShotTime && ammo > 0)
 				{
 					fired = true;
-					ammo--;
 					if(world->GetListener())
 						world->GetListener()->PlayerFiredWeapon(owner);
 					nextShotTime = time + GetDelay();
 
-					//firemodes
-					if (owner == world->GetLocalPlayer() && world->GetListener()->GetMaxShots() > 0)
+					//ShotsFired++
+					if (owner == world->GetLocalPlayer())
 					{
-						world->GetListener()->SetShotsFired(world->GetListener()->GetShotsFired() + 1);
-						//SPLog("GetShotsFired() %i", world->GetListener()->GetShotsFired());
+						if (world->GetListener()->GetMaxShots() > 0)
+							world->GetListener()->SetShotsFired(world->GetListener()->GetShotsFired() + 1);
+						ammo--;
 					}
 				}
 				else if(time >= nextShotTime)
@@ -128,20 +118,12 @@ namespace spades {
 			}
 			if(reloading)
 			{
-				if(time+dt >= reloadEndTime) 
+				if(time >= reloadEndTime) 
 				{
 					// reload done
 					reloading = false;
 					if(IsReloadSlow())
 					{
-						// for local player, server sends
-						// new ammo/stock value
-						if(ammo < GetClipSize() && stock > 0 &&
-						   owner != owner->GetWorld()->GetLocalPlayer()) 
-						{
-							ammo++;
-							stock--;
-						}
 						slowReloadLeftCount--;
 						if(slowReloadLeftCount > 0)
 							Reload(false);
@@ -151,23 +133,9 @@ namespace spades {
 					}
 					else
 					{
-						// for local player, server sends
-						// new ammo/stock value
-						//Chameleon: Sometimes ammo-- is skipped (probably lag caused)
-						if(owner != owner->GetWorld()->GetLocalPlayer())
-						{
-							//SPLog("Before Reload ammo: %i stock: %i", ammo, stock);
-							int newStock;
-							newStock = std::max(0, stock - GetClipSize() + ammo);
-							ammo += stock - newStock;
-							stock = newStock;
-							//SPLog("After Reload ammo: %i stock: %i", ammo, stock);
-						}
 						if(world->GetListener())
 							world->GetListener()->PlayerReloadedWeapon(owner);
 					}
-					
-					
 				}
 			}
 			time += dt;
@@ -393,6 +361,14 @@ namespace spades {
 		Weapon *Weapon::CreateWeapon(WeaponType type, Player *p) {
 			SPADES_MARK_FUNCTION();
 			
+			if (p->IsLocalPlayer())
+			{
+				if (type == SMG_WEAPON)
+					p->GetWorld()->GetListener()->SetMaxShots(-1);
+				else
+					p->GetWorld()->GetListener()->SetMaxShots(1);
+			}
+
 			if((int)cg_protocolVersion == 4) {
 				switch(type) {
 					case RIFLE_WEAPON:

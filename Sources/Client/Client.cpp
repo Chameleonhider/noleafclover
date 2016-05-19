@@ -544,19 +544,7 @@ namespace spades {
 					net->SendWeaponChange(weap);
 				}
 
-				if (weap == SMG_WEAPON)
-					world->GetLocalPlayer()->SetWeaponType(weap);
-
-				////Chameleon //transport this to Client_Update(); Check when health == 0
-				//if (weap != SMG_WEAPON)
-				//{
-				//	MaxShots = 1;
-				//}
-				//else
-				//{
-				//	world->GetLocalPlayer()->SetWeaponType(weap);
-				//	MaxShots = -1;
-				//}
+				world->GetLocalPlayer()->SetWeaponType(weap);
 			}			
 		}
 		

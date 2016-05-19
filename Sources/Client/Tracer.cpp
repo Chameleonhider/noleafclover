@@ -121,7 +121,7 @@ namespace spades {
 				Vector3 pos1 = startPos + dir * curDistance;
 
 				//if tracer is heading outbound
-				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 2 < client->soundDistance)
+				if ((pos1 - player->GetPosition()).GetLength() > flyByDist && flyByDist > 0 && flyByDist * 4 < client->soundDistance)
 				{
 					IAudioDevice *audio = client->GetAudioDevice();
 					AudioParam param = AudioParam();

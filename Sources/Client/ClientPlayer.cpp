@@ -450,10 +450,10 @@ namespace spades {
 				if (GetRandom() > 0.3f)
 					client->Leak(player->GetPosition()+Vector3(0,0,1), player->GetVelocity()*0.2f+player->GetFront()+Vector3(0,0,-0.3f));
 
-				if (client->mouseRoll < 10.f)
-					client->mouseRoll += client->mouseRoll*dt*5.f;
+				if (client->mouseRoll < 10)
+					client->mouseRoll += client->weapX*dt*10;
 				else
-					client->mouseRoll += client->mouseRoll*dt;
+					client->mouseRoll += client->weapX*dt*2;
 			}
 			
 			if(currentTool == player->GetTool()) 
@@ -688,9 +688,11 @@ namespace spades {
 			}
 			else if(currentTool == Player::ToolGrenade)
 			{
-				
 				ScriptIGrenadeSkin interface(skin);
-				interface.SetReadyState(1.f - p->GetTimeToNextGrenade() / 0.5f);
+				if (p->GetNumGrenades() > 0)
+					interface.SetReadyState(1.f - p->GetTimeToNextGrenade() / 0.5f);
+				else
+					interface.SetReadyState(0.f);
 
 				WeaponInput inp = p->GetWeaponInput();
 				if(inp.primary)
