@@ -246,7 +246,7 @@ namespace spades {
 
 			
 			//Chameleon FOV changes
-			if (player && (player->GetHealth() == 0 || player->GetTeamId() > 2))
+			if (player && (!player->IsAlive() || player->GetTeamId() > 2))
 			{
 				//Checks for maximum/minimum FOV values
 				if ((int)cg_fov < 10)
@@ -258,7 +258,7 @@ namespace spades {
 				scopeZoom = abs((int)weap_scopeZoom);
 				FOV = (int)cg_fov;
 			}
-			else
+			else if (!player)
 			{
 				//Checks for maximum/minimum FOV values
 				if ((int)cg_fov < 10)
@@ -352,7 +352,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			Vector3 lastPos = followPos;
-			followVel *= powf(.3f, dt);
+			followVel *= powf(0.3f, dt);
 			followPos += followVel * dt;
 			
 			if(followPos.x < 0.f) {
@@ -796,6 +796,131 @@ namespace spades {
 				lastHealth = player->GetHealth();
 			}
 			//inp.jump = false;
+
+			//Death camera movement
+			if (player->IsAlive())
+			{
+				if (player->GetVelocity().GetPoweredLength() > 0.1f)
+					followVel = player->GetVelocity();
+			}
+			if (!player->IsAlive() && followingPlayerId == world->GetLocalPlayerIndex())
+			{
+				float damp2 = 1;
+				if (dt > 0)
+					damp2 = powf(0.3f, dt);
+
+				Vector3 center = followPos + followVel*dt;
+
+				if (followVel.z != 0 || !map->IsSolid(followPos.x, followPos.y, center.z + 0.5f)){
+					followVel.z += dt * 32;
+					followVel.z *= damp2;
+					if (followVel.z > -1.f && followVel.z < 1.f){
+						followVel.z -= followVel.z*dt;
+					}
+				}
+
+				//center += followFront;
+				if (map->IsSolid(center.x-0.25f, followPos.y, followPos.z))
+				{
+					followVel.x *= -0.25f;
+					followVel.y *= 0.8f;
+					followVel.z *= 0.8f;
+
+					if (fabsf(followVel.x) < 0.25f)
+						followVel.x = 0;
+
+					center.x = followPos.x;
+
+					speedOfPRY.x += followVel.x*followFront.x*followVel.z*0.25f;
+					speedOfPRY.y += followVel.y*followFront.y*followVel.z*0.25f;
+				}
+				if (map->IsSolid(followPos.x, center.y-0.25f, followPos.z))
+				{
+					followVel.y *= -0.25f;
+					followVel.x *= 0.8f;
+					followVel.z *= 0.8f;
+
+					if (fabsf(followVel.y) < 0.25f)
+						followVel.y = 0;
+
+					center.y = followPos.y;
+
+					speedOfPRY.x += followVel.y*followFront.y*followVel.z*0.25f;
+					speedOfPRY.y -= followVel.x*followFront.x*followVel.z*0.25f;
+				}
+				if (map->IsSolid(center.x+0.25f, followPos.y, followPos.z))
+				{
+					followVel.x *= -0.25f;
+					followVel.y *= 0.8f;
+					followVel.z *= 0.8f;
+
+					if (fabsf(followVel.x) < 0.25f)
+						followVel.x = 0;
+
+					center.x = followPos.x;
+
+					speedOfPRY.x += followVel.x*followFront.x*followVel.z*0.25f;
+					speedOfPRY.y += followVel.y*followFront.y*followVel.z*0.25f;
+				}
+				if (map->IsSolid(followPos.x, center.y+0.25f, followPos.z))
+				{
+					followVel.y *= -0.25f;
+					followVel.x *= 0.8f;
+					followVel.z *= 0.8f;
+
+					if (fabsf(followVel.y) < 0.25f)
+						followVel.y = 0;
+
+					center.y = followPos.y;
+
+					speedOfPRY.x += followVel.y*followFront.y*followVel.z*0.05f;
+					speedOfPRY.y -= followVel.x*followFront.x*followVel.z*0.05f;
+				}
+				if (map->IsSolid(followPos.x, followPos.y, center.z+0.25f))
+				{
+					followVel.z *= -0.25f;
+					followVel.x *= 0.5f;
+					followVel.y *= 0.5f;
+
+					if (fabsf(followVel.x) < 0.25f)
+						followVel.x = 0;
+					if (fabsf(followVel.y) < 0.25f)
+						followVel.y = 0;
+					if (fabsf(followVel.z) < 0.4f)
+						followVel.z = 0;
+
+					center.z = followPos.z;
+					if (speedOfPRYdt.y != 0)
+						speedOfPRY.y -= 0.1f*speedOfPRYdt.y / fabsf(speedOfPRYdt.y);
+					else
+						speedOfPRY.y += 0.1f*(GetRandom()-GetRandom());
+				}
+				//center -= followFront;
+				followPos = center;
+
+				if (speedOfPRY.x > 0.25f)
+					speedOfPRY.x = 0.25f;
+				if (speedOfPRY.x < -0.25f)
+					speedOfPRY.x = -0.25f;
+				if (speedOfPRY.y > 0.25f)
+					speedOfPRY.y = 0.25f;
+				if (speedOfPRY.y < -0.25f)
+					speedOfPRY.y = -0.25f;
+				if (speedOfPRY.z > 0.25f)
+					speedOfPRY.z = 0.25f;
+				if (speedOfPRY.z < -0.25f)
+					speedOfPRY.z = -0.25f;
+
+				speedOfPRYdt += speedOfPRY*dt*2;
+				if (speedOfPRY.GetLength() > speedOfPRY.GetLength()*dt*2)
+					speedOfPRY -= speedOfPRY*dt*2;
+				else
+					speedOfPRY *= 0;
+			}
+			if (lastMyCorpse && player->IsAlive())
+			{
+				lastMyCorpse->local = false;
+			}
 		}
 		
 		
@@ -1140,6 +1265,9 @@ namespace spades {
 				}
 			}
 			
+			Vector3 dir = victim->GetPosition() - killer->GetPosition();
+			dir = dir.Normalize();
+
 			// begin following
 			if(victim == world->GetLocalPlayer()){
 				followingPlayerId = victim->GetId();
@@ -1147,6 +1275,24 @@ namespace spades {
 				Vector3 v = -victim->GetFront();
 				followYaw = atan2(v.y, v.x);
 				followPitch = 30.f * M_PI /180.f;
+
+				followPos = victim->GetEye();
+				followFront = victim->GetFront();
+
+				if (kt == KillTypeMelee)
+					dir *= 1.f;
+				else if (kt == KillTypeGrenade)
+					dir = MakeVector3(GetRandom()-GetRandom(), GetRandom()-GetRandom(), -2.f-GetRandom()*2.f);
+				else if (killer->GetWeapon()->GetWeaponType() == SMG_WEAPON)
+					dir *= 2.f;
+				else if (killer->GetWeapon()->GetWeaponType() == RIFLE_WEAPON)
+					dir *= 4.f;
+				else
+					dir *= 8.f;
+				
+				followVel = victim->GetVelocity()*32.f+dir;
+				speedOfPRY *= 0;
+				speedOfPRYdt *= 0;
 			}
 			
 			// emit blood (also for local player)
@@ -1154,10 +1300,16 @@ namespace spades {
 			// client-side or server-side hit?
 			switch(kt){
 				case KillTypeGrenade:
-				case KillTypeHeadshot:
-				case KillTypeMelee:
-				case KillTypeWeapon:
 					Bleed(victim->GetEye());
+					break;
+				case KillTypeHeadshot:
+					Bleed(victim->GetEye(), dir*2);
+					break;
+				case KillTypeMelee:
+					Bleed(victim->GetEye());
+					break;
+				case KillTypeWeapon:
+					Bleed(victim->GetEye(), dir);
 					break;
 				default:
 					break;
@@ -1173,20 +1325,20 @@ namespace spades {
 					Vector3 dir = victim->GetPosition() - killer->GetPosition();
 					dir = dir.Normalize();
 					if(kt == KillTypeMelee){
-						dir *= 6.f;
+						dir *= 4.f;
 					}else{
 						if(killer->GetWeapon()->GetWeaponType() == SMG_WEAPON){
 							dir *= 8.f;
-						}else if(killer->GetWeapon()->GetWeaponType() == SHOTGUN_WEAPON){
-							dir *= 32.f;
-						}else{
+						}else if(killer->GetWeapon()->GetWeaponType() == RIFLE_WEAPON){
 							dir *= 16.f;
+						}else{
+							dir *= 32.f;
 						}
 					}
 					dir.z -= 0.1f;
 					corp->AddBodyImpulse(dir);
 				}else if(kt == KillTypeGrenade){
-					corp->AddImpulse(MakeVector3(0, 0, -8.f-GetRandom()*8.f));
+					corp->AddImpulse(MakeVector3(GetRandom()-GetRandom(), GetRandom()-GetRandom(), -8.f-GetRandom()*8.f));
 				}
 				corp->AddImpulse(victim->GetVelocity() * 32.f);
 				corpses.emplace_back(corp);
@@ -1199,6 +1351,11 @@ namespace spades {
 				{
 					RemoveInvisibleCorpses();
 				}
+				/*if (lastMyCorpse)
+				{
+					followPos = lastMyCorpse->GetHead();
+					followVel = lastMyCorpse->GetVelocity();
+				}*/
 			}
 			
 			// add chat message
@@ -1275,9 +1432,9 @@ namespace spades {
 			//   ShouldRenderInThirdPersonView()){
 			//	Bleed(hitPos);
 			//}
-			if (hurtPlayer != world->GetLocalPlayer())
+			if (hurtPlayer != world->GetLocalPlayer() && type != HitTypeMelee)
 			{
-				Bleed(hitPos);
+				Bleed(hitPos, (hitPos - by->GetEye()).Normalize());
 			}
 			
 			if(hurtPlayer == world->GetLocalPlayer())
@@ -1289,6 +1446,7 @@ namespace spades {
 			}
 
 			int distance = (hitPos - lastSceneDef.viewOrigin).GetLength();
+
 			if (!IsMuted() && distance*2 < soundDistance)
 			{
 				if(type == HitTypeMelee)
@@ -1687,8 +1845,10 @@ namespace spades {
 			//mouse inertia
 			if (mouseY > 0)
 				mouseY = 0;
-			if (weapX != 0)
-				mouseX -= rec.x * 1000 * weapX / abs(weapX);
+			if (weapX != 0 && GetAimDownState() > 0.5f)
+				mouseX += rec.x * 1000 * weapX / abs(weapX);
+			else if (weapX != 0)
+				mouseX += rec.x * 1000 * weapX / abs(weapX);
 			else
 				mouseX += rec.x * sinf(world->GetTime() * 2.f);
 		}

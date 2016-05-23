@@ -526,7 +526,7 @@ namespace spades {
 				Vector3 front = player->GetFront();
 				Vector3 right = player->GetRight();
 				Vector3 up = player->GetUp();
-				viewWeaponOffset.x += Vector3::Dot(vel, right) * scale*2;
+				viewWeaponOffset.x += Vector3::Dot(vel, right) * scale;
 				viewWeaponOffset.y -= Vector3::Dot(vel, front) * scale;
 				viewWeaponOffset.z += Vector3::Dot(vel, up) * scale;
 

@@ -155,7 +155,7 @@ namespace spades {
 					// or removed,
 					// choose next player.
 					while(!world->GetPlayer(followingPlayerId) ||
-						  world->GetPlayer(followingPlayerId)->GetFront().GetLength() < .001f)
+						  world->GetPlayer(followingPlayerId)->GetFront().GetLength() < 0.0001f)
 					{
 						FollowNextPlayer(false);
 						if((limit--) <= 0)
@@ -172,101 +172,56 @@ namespace spades {
 					float vibPitch = 0.f;
 					float vibYaw = 0.f;
 
-					if(ShouldRenderInThirdPersonView() || (IsFollowing() && player != world->GetLocalPlayer()))
+					if (ShouldRenderInThirdPersonView() || (IsFollowing() && !player->IsAlive()))
 					{
 						Vector3 center = player->GetEye();
-						Vector3 playerFront = player->GetFront2D();
+						Vector3 right = player->GetRight();
+						Vector3 front = player->GetFront();						
 						Vector3 up = MakeVector3(0,0,-1);
 						
-						if((!player->IsAlive()) && lastMyCorpse &&
-						   player == world->GetLocalPlayer())
+						//if(lastMyCorpse && followingPlayerId == world->GetLocalPlayerIndex())
+						//{
+						//	center = followPos;
+						//	front = followFront;
+						//	//
+						//	front.Normalize();
+						//	right = Vector3::Cross(MakeVector3(0, 0, 1), MakeVector3(front.x, front.y, 0.f).Normalize()).Normalize();
+						//	up = Vector3::Cross(right, front).Normalize();
+
+						//	def.viewOrigin = center;
+						//	def.viewAxis[0] = right;
+						//	def.viewAxis[1] = up;
+						//	def.viewAxis[2] = front;
+						//}
+						if (followingPlayerId == world->GetLocalPlayerIndex())
 						{
-							center = lastMyCorpse->GetCenter();
-						}
-						if(map->IsSolidWrapped((int)floorf(center.x),
-											   (int)floorf(center.y),
-											   (int)floorf(center.z)))
-						{
-							float z = center.z;
-							//while (z > center.z)
-							while (z > center.z - 3.f)							
-							{
-								if(!map->IsSolidWrapped((int)floorf(center.x),
-														(int)floorf(center.y),
-														(int)floorf(z)))
-								{
-									center.z = z;
-									break;
-								}
-								else
-								{
-									z -= 1.f;
-								}
-							}
-						}
-						
-						float distance = 5.f;
-						if(player == world->GetLocalPlayer() &&
-						   world->GetLocalPlayer()->GetTeamId() < 2 &&
-						   !world->GetLocalPlayer()->IsAlive())
-						{
-							// deathcam.
-							float elapsedTime = time - lastAliveTime;
-							distance -= 3.f * expf(-elapsedTime * 1.f);
-						}
-						
-						Vector3 eye = center;
-						//eye -= playerFront * 5.f;
-						//eye += up * 2.0f;
-						eye.x += cosf(followYaw) * cosf(followPitch) * distance;
-						eye.y += sinf(followYaw) * cosf(followPitch) * distance;
-						eye.z -= sinf(followPitch) * distance;
-						
-						if(false)
-						{
-							// settings for making limbo stuff
-							eye = center;
-							eye += playerFront * 3.f;
-							eye += up * -.1f;
-							eye += player->GetRight() *2.f;
-							scale *= .6f;
-						}
-						
-						// try ray casting
-						GameMap::RayCastResult result;
-						result = map->CastRay2(center, (eye - center).Normalize(), 256);
-						if(result.hit)
-						{
-							float dist = (result.hitPos - center).GetLength();
-							float curDist = (eye - center).GetLength();
-							dist -= 0.3f; // near clip plane
-							if(curDist > dist)
-							{
-								float diff = curDist - dist;
-								eye += (center - eye).Normalize() * diff;
-							}
-						}
-						
-						Vector3 front = center - eye;
-						front = front.Normalize();
-						
-						/*if(FirstPersonSpectate == false)
-						{
-							def.viewOrigin = eye;
-							def.viewAxis[0] = -Vector3::Cross(up, front).Normalize();
-							def.viewAxis[1] = -Vector3::Cross(front, def.viewAxis[0]).Normalize();
+							center = followPos;
+							front = followFront;
+							//
+							front.Normalize();
+							right = Vector3::Cross(MakeVector3(0, 0, 1), MakeVector3(front.x, front.y, 0.f).Normalize()).Normalize();
+							up = Vector3::Cross(right, front).Normalize();
+
+							def.viewOrigin = center;
+							def.viewAxis[0] = right;
+							def.viewAxis[1] = up;
 							def.viewAxis[2] = front;
+
+							vibPitch += speedOfPRYdt.x;
+							roll += speedOfPRYdt.y;
+							vibYaw += speedOfPRYdt.z;
 						}
-						else*/
-						//Chameleon: spectating is possible only in 1st person
+						else
 						{
 							def.viewOrigin = player->GetEye();
 							def.viewAxis[0] = player->GetRight();
 							def.viewAxis[1] = player->GetUp();
 							def.viewAxis[2] = player->GetFront();
 
-							//player-> DontDrawHead();
+							followPos = def.viewOrigin;
+							followVel = player->GetVelocity();
 						}
+
 
 						def.fovY = FOV * static_cast<float>(M_PI) /180.f;
 						def.fovX = atanf(tanf(def.fovY * .5f) *
@@ -277,9 +232,6 @@ namespace spades {
 						// this is not used now, but if the local player is
 						// is spectating, this is used when he/she's no
 						// longer following
-						followPos = def.viewOrigin;
-						followVel = MakeVector3(0, 0, 0);
-						
 					}
 					else if(player->GetTeamId() >= 2)
 					{
@@ -564,7 +516,9 @@ namespace spades {
 				def.depthOfFieldNearBlurStrength = cg_depthOfFieldAmount;
 				def.depthOfFieldFarBlurStrength = 0.f;
 			}
-			
+			//Save new followFront
+			//followFront = def.viewAxis[2];
+
 			return def;
 		}
 		

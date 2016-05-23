@@ -178,16 +178,6 @@ namespace spades {
 			else if (input.sprint)
 			{
 				newInput.primary = false;
-
-				if (this->IsLocalPlayer())
-				{
-					newInput.peeking = true;
-				}
-			}
-			//not sprinting or holding sprint, reset view to normal
-			else if(this->IsLocalPlayer())
-			{
-				newInput.peeking = false;
 			}
 
 			if(tool == ToolSpade)

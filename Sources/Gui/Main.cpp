@@ -594,8 +594,8 @@ int main(int argc, char ** argv)
 		// we want to show splash window at least for some time...
 		pumpEvents();
 		auto ticks = SDL_GetTicks();
-		if(ticks < showSplashWindowTime + 1500) {
-			SDL_Delay(showSplashWindowTime + 1500 - ticks);
+		if(ticks < showSplashWindowTime + 2000) {
+			SDL_Delay(showSplashWindowTime + 2000 - ticks);
 		}
 		pumpEvents();
 
@@ -605,7 +605,8 @@ int main(int argc, char ** argv)
 				 splashWindow->IsStartupScreenRequested())) {
 				splashWindow.reset();
 
-				SPLog("Starting main screen");
+				SPLog("Starting main screen...");
+				SPLog("To see startup window, press SPACEBAR during when loading or enable it from settings.");
 				spades::StartMainScreen();
 			}else{
 				splashWindow.reset();
@@ -632,12 +633,12 @@ int main(int argc, char ** argv)
 		}
 
 		std::string msg = ex.what();
-		msg = _Tr("Main", "A serious error caused OpenSpades to stop working:\n\n{0}\n\nSee SystemMessages.log for more details.", msg);
+		msg = _Tr("Main", "A serious error caused OpenSpades to stop working:\n\n{0}\n\nSee C:\\Users\\USERNAME\\AppData\\Roaming\\OpenSpades\\SystemMessages.log for more USEFUL details.", msg);
 
 		SPLog("[!] Terminating due to the fatal error: %s", ex.what());
 
 		SDL_InitSubSystem(SDL_INIT_VIDEO);
-		if(SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, _Tr("Main", "OpenSpades Fatal Error").c_str(), msg.c_str(), nullptr)) {
+		if(SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, _Tr("Main", "OpenSpades Fatal Error. See SystemMessages.log!").c_str(), msg.c_str(), nullptr)) {
 			// showing dialog failed.
 			// TODO: do appropriate action
 		}

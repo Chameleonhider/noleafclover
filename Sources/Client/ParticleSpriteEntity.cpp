@@ -130,14 +130,21 @@ namespace spades {
 					//Chameleon: blood and leaks colour the landscape
 					else if (blockHitAction == Stick)
 					{
-						if (GetRandom() > 0.5f)
+						if (GetRandom() > 0.6f)
 						{
 							uint32_t col = map->GetColor(position.x, position.y, position.z);
+
+							uint32_t health = col >> 24;
 
 							if (color.x > color.y && color.x > color.z)
 								col &= 0x3f3fff;
 							else if (color.x <= color.y && color.x > color.z)
 								col &= 0x3fffff;
+
+							if (health == 100)
+								health--;
+
+							col = col | (health << 24);
 
 							if (map->IsSolid(position.x, position.y, position.z))
 								map->Set(position.x, position.y, position.z, true, col);

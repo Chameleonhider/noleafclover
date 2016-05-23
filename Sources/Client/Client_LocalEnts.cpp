@@ -181,7 +181,7 @@ namespace spades {
 		}
 
 //PLAYER HIT------------------------------------------------------------------------------------------
-		void Client::Bleed(spades::Vector3 v){
+		void Client::Bleed(spades::Vector3 v, spades::Vector3 dir){
 			SPADES_MARK_FUNCTION();
 			
 			if(!cg_blood)
@@ -211,6 +211,8 @@ namespace spades {
 				transparency = 0.1;
 
 			Vector4 color = { 0.6f, 0.1f, 0.1f, transparency*0.8f};
+			
+			Vector3 vDir;
 			//limit for particles opt_particleNumScale
 			if (distance <= distLimit*0.5f)
 			{
@@ -219,14 +221,15 @@ namespace spades {
 					ParticleSpriteEntity *ent =
 					new ParticleSpriteEntity(this, img2, color);
 
-					ent->SetTrajectory(v,
-									   MakeVector3(GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom()) * 8.f,
-									   0.5f, 0.7f);
+					if (dir.GetPoweredLength() != 0)
+						vDir = MakeVector3(GetRandom() - GetRandom(), GetRandom() - GetRandom(), GetRandom() - GetRandom())*4.f + dir*4.f;
+					else
+						vDir = MakeVector3(GetRandom() - GetRandom(), GetRandom() - GetRandom(), GetRandom() - GetRandom())*8.f;
+					
+					ent->SetTrajectory(v, vDir, 0.5f, 0.7f);
 					ent->SetRotation(GetRandom() * 6.48f);
 					ent->SetRadius(0.2f + GetRandom()*0.2f, 0.05f);
-					ent->SetLifeTime(8.f, 0.f, 4.f);
+					ent->SetLifeTime(6.f, 0.f, 4.f);
 					ent->SetBlockHitAction(ParticleSpriteEntity::Stick);
 					localEntities.emplace_back(ent);
 				}
@@ -238,13 +241,14 @@ namespace spades {
 					ParticleSpriteEntity *ent =
 					new ParticleSpriteEntity(this, img, color);
 
-					ent->SetTrajectory(v,
-									   MakeVector3(GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom(),
-												   GetRandom()-GetRandom()) * 8.f,
-									   0.5f, 0.7f);
+					if (dir.GetPoweredLength() != 0)
+						vDir = MakeVector3(GetRandom() - GetRandom(), GetRandom() - GetRandom(), GetRandom() - GetRandom())*4.f + dir*4.f;
+					else
+						vDir = MakeVector3(GetRandom() - GetRandom(), GetRandom() - GetRandom(), GetRandom() - GetRandom())*8.f;
+
+					ent->SetTrajectory(v, vDir, 0.5f, 0.7f);
 					ent->SetRotation(GetRandom() * 6.48f);
-					ent->SetRadius(0.4f, 0.05f);
+					ent->SetRadius(0.4f);
 					ent->SetLifeTime(4.f, 0.f, 2.f);
 					ent->SetBlockHitAction(ParticleSpriteEntity::Stick);
 					localEntities.emplace_back(ent);

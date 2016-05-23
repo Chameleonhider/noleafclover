@@ -36,8 +36,8 @@
 #include "GLProfiler.h"
 #include "../Core/Settings.h"
 
-SPADES_SETTING(r_water, "1");
-SPADES_SETTING(r_maxAnisotropy, "2");
+SPADES_SETTING(r_water, "");
+SPADES_SETTING(r_maxAnisotropy, "0");
 SPADES_SETTING(r_occlusionQuery, "0");
 
 namespace spades {

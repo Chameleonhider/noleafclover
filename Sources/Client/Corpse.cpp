@@ -41,6 +41,7 @@ namespace spades {
 
 			//Chameleon
 			teamId = p->GetTeamId();
+			local = p->IsLocalPlayer();
 
 			IntVector3 col = p->GetWorld()->GetTeam(p->GetTeamId()).color;
 			color = MakeVector3(col.x / 255.f,
@@ -82,36 +83,32 @@ namespace spades {
 					torso*MakeVector3(0.2f, -.4f, .2f));
 				SetNode(Arm2,
 					torso*MakeVector3(-0.2f, -.4f, .2f));
-
 			}
 			else{
 				torso = lower * Matrix4::Translate(0, 0, -1.1f);
 
-				SetNode(Torso1,
-					torso*MakeVector3(0.4f, 0.f, 0.1f));
-				SetNode(Torso2,
-					torso*MakeVector3(-0.4f, 0.f, 0.1f));
-				SetNode(Torso3,
-					torso*MakeVector3(-0.4f, .0f, 1.f));
-				SetNode(Torso4,
-					torso*MakeVector3(0.4f, .0f, 1.f));
+					SetNode(Torso1,
+						torso*MakeVector3(0.4f, 0.f, 0.1f));
+					SetNode(Torso2,
+						torso*MakeVector3(-0.4f, 0.f, 0.1f));
+					SetNode(Torso3,
+						torso*MakeVector3(-0.4f, .0f, 1.f));
+					SetNode(Torso4,
+						torso*MakeVector3(0.4f, .0f, 1.f));
 
-				SetNode(Leg1,
-					lower*MakeVector3(-0.4f, .0f, 1.f));
-				SetNode(Leg2,
-					lower*MakeVector3(0.4f, .0f, 1.f));
+					SetNode(Leg1,
+						lower*MakeVector3(-0.4f, .0f, 1.f));
+					SetNode(Leg2,
+						lower*MakeVector3(0.4f, .0f, 1.f));
 
-				SetNode(Arm1,
-					torso*MakeVector3(0.2f, -.4f, .2f));
-				SetNode(Arm2,
-					torso*MakeVector3(-0.2f, -.4f, .2f));
-
+					SetNode(Arm1,
+						torso*MakeVector3(0.2f, -.4f, .2f));
+					SetNode(Arm2,
+						torso*MakeVector3(-0.2f, -.4f, .2f));
 			}
 
 			SetNode(Head, (nodes[Torso1].pos + nodes[Torso2].pos)
 				* .5f + MakeVector3(0, 0, -0.6f));
-
-
 		}
 
 		static float VelNoise() {
@@ -126,6 +123,7 @@ namespace spades {
 				0.f);
 			nodes[n].lastPos = v;
 			nodes[n].lastForce = MakeVector3(0, 0, 0);
+			nodes[n].frozen = false;
 
 		}
 		void Corpse::SetNode(NodeType n, spades::Vector4 v){
@@ -177,7 +175,7 @@ namespace spades {
 			Vector3 diff = b.pos - (x.pos + y.pos) * .5f;
 			float dist = diff.GetLength();
 			Vector3 force = diff.Normalize() * (distance - dist);
-			force *= dt * 50.f;
+			force *= dt * 100.f;
 
 			b.vel += force;
 			force *= .5f;
@@ -527,7 +525,6 @@ namespace spades {
 		void Corpse::ApplyConstraint(float dt) {
 			SPADES_MARK_FUNCTION();
 
-
 			AngularMomentum(0,
 				Torso1, Torso2);
 			AngularMomentum(1,
@@ -607,23 +604,7 @@ namespace spades {
 			LineCollision(Torso3, Leg1, dt);
 			LineCollision(Torso4, Leg2, dt);
 
-
 			return;
-			AngleSpring(Torso4,
-				Torso1, Head,
-				0.5f, 1.f, dt);
-
-			AngleSpring(Torso3,
-				Torso2, Head,
-				0.5f, 1.f, dt);
-
-			AngleSpring(Torso4,
-				Torso2, Head,
-				0.5f, 1.f, dt);
-
-			AngleSpring(Torso3,
-				Torso1, Head,
-				0.5f, 1.f, dt);
 		}
 
 		void Corpse::Update(float dt) {
@@ -636,9 +617,13 @@ namespace spades {
 			}
 			//dt *= 0.1f;
 
-			for (int i = 0; i <NodeCount; i++){
+			for (int i = 0; i < NodeCount; i++){
 				Node& node = nodes[i];
 				Vector3 oldPos = node.lastPos;
+
+				if (node.frozen)
+					node.vel *= damp2;
+
 				node.pos += node.vel * dt;
 
 				SPAssert(!isnan(node.pos.x));
@@ -646,15 +631,15 @@ namespace spades {
 				SPAssert(!isnan(node.pos.z));
 
 				if (node.pos.z > 63.f){
-					node.vel.z -= dt * 6.f; // buoyancy
+					node.vel.z -= dt * 5; // buoyancy
 					node.vel *= damp;
 				}
 				else if (node.vel.z != 0){
-					node.vel.z += dt * 32.f; // gravity
+					node.vel.z += dt * 32; // gravity
 					node.vel.z *= damp2;
 				}
-
-				//node.vel *= damp;
+				/*if (local && node.vel.z > 6.4f)
+					node.frozen = false;*/
 
 				if (!map->ClipBox(oldPos.x, oldPos.y, oldPos.z)){
 
@@ -684,20 +669,36 @@ namespace spades {
 
 					if (map->ClipBox(node.pos.x,
 						node.pos.y,
-						node.pos.z)){
-						node.vel.z = -node.vel.z * .2f;
-						if (fabsf(node.vel.z) < .4f)
+						node.pos.z))
+					{
+						node.vel.z = -node.vel.z * 0.2f;
+						if (fabsf(node.vel.z) < 0.3f)
 							node.vel.z = 0.f;
 						node.pos.z = oldPos.z;
 
 						node.vel.x *= .5f;
 						node.vel.y *= .5f;
+
+						/*node.frozen = local;*/
 					}
 
-					if (map->ClipBox(node.pos.x, node.pos.y, node.pos.z)){
-						// TODO: getting out block
-						//node.pos = oldPos;
-						//node.vel *= .5f;
+					if (map->ClipBox(node.pos.x, node.pos.y, node.pos.z) && local)
+					{
+						/*node.frozen = true;*/
+						if (!map->IsSolid(node.pos.x, node.pos.y + 1, node.pos.z))
+							node.pos.y += 1;
+						if (!map->IsSolid(node.pos.x + 1, node.pos.y, node.pos.z))
+							node.pos.x += 1;
+						if (!map->IsSolid(node.pos.x, node.pos.y - 1, node.pos.z))
+							node.pos.y -= 1;
+						if (!map->IsSolid(node.pos.x - 1, node.pos.y, node.pos.z))
+							node.pos.x -= 1;
+						if (!map->IsSolid(node.pos.x, node.pos.y, node.pos.z + 1))
+							node.pos.z += 1;
+						if (!map->IsSolid(node.pos.x, node.pos.y, node.pos.z - 1))
+							node.pos.z -= 1;
+						while (map->ClipBox(node.pos.x, node.pos.y, node.pos.z))
+								node.pos.z -= 1;
 					}
 				}
 
@@ -745,10 +746,11 @@ namespace spades {
 			for (int i = 0; i <NodeCount; i++){
 				nodes[i].lastForce = nodes[i].vel - nodes[i].lastForce;
 			}
-
 		}
 
 		void Corpse::AddToScene() {
+			if (local)
+				return;
 			if (false){
 				// debug line only
 				Vector4 col = { 1, 1, 0, 0 };
@@ -828,18 +830,17 @@ namespace spades {
 				ModelRenderParam paramTMP = param;
 				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
-				
+
 				renderer->RenderModel(model, paramTMP);
 			}
 			// draw Head
 			{
-				Vector3 headBase =
-					(torso * MakeVector3(0.0f, 0.f, 0.f)).GetXYZ();
+				Vector3 headBase = (torso * MakeVector3(0.f, 0.f, 0.f)).GetXYZ();
 
 				Vector3 aX, aY, aZ;
 				Vector3 center = (nodes[Torso1].pos + nodes[Torso2].pos) * .5f;
 
-				aZ = nodes[Head].pos - center;
+				//aZ = nodes[Head].pos - center;
 				aZ = -torso.GetAxis(2);
 				aZ = aZ.Normalize();
 				aY = nodes[Torso2].pos - nodes[Torso1].pos;
@@ -965,6 +966,22 @@ namespace spades {
 				v += nodes[i].pos;
 			v *= 1.f / (float)NodeCount;
 			return v;
+		}
+		Vector3 Corpse::GetVelocity() {
+			Vector3 v = { 0, 0, 0 };
+			for (int i = 0; i < NodeCount; i++)
+				v += nodes[i].vel;
+			v *= 1.f / (float)NodeCount;
+			return v;
+		}
+
+		Vector3 Corpse::GetHead() {
+			return nodes[Head].pos;
+		}
+		Vector3 Corpse::GetFront() {
+			Vector3 tX = nodes[Head].pos - nodes[Torso1].pos;
+			Vector3 tY = nodes[Head].pos - nodes[Torso2].pos;
+			return Vector3::Cross(tX, tY).Normalize();
 		}
 
 		bool Corpse::IsVisibleFrom(spades::Vector3 eye){

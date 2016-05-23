@@ -222,6 +222,13 @@ namespace spades {
 			bool autoFocusEnabled;
 			
 			// when dead...
+			//Chameleon: death camera physics
+			/** speed of death camera Pitch Roll Yaw  */
+			Vector3 speedOfPRY;
+			/** speed of death camera Pitch Roll Yaw mutliplied by dt*/
+			Vector3 speedOfPRYdt;
+			/** only for when spectating */
+			Vector3 followFront;
 			/** Following player ID, which may be local player itself */
 			int followingPlayerId;
 			float followYaw, followPitch;
@@ -246,7 +253,7 @@ namespace spades {
 			std::vector<DynamicLightParam> flashDlights;
 			std::vector<DynamicLightParam> flashDlightsOld;
 			void Leak(Vector3, Vector3);
-			void Bleed(Vector3);
+			void Bleed(Vector3, Vector3 = MakeVector3(0,0,0));
 			void EmitBlockFragments(Vector3, IntVector3 color, bool local);
 			void EmitBlockDestroyFragments(IntVector3, IntVector3 color);
 			void GrenadeExplosion(Vector3);

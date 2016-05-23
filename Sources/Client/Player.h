@@ -55,12 +55,10 @@ namespace spades {
 		struct WeaponInput {
 			bool primary: 1;
 			bool secondary: 1;
-			bool peeking : 1;
 
 			WeaponInput():
 			primary(false),
-			secondary(false),
-			peeking(false){}
+			secondary(false){}
 		};
 		
 		

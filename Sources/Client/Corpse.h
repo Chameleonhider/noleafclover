@@ -50,6 +50,8 @@ namespace spades {
 				Vector3 lastPos;
 				
 				Vector3 lastForce;
+
+				bool frozen;
 			};
 			
 			struct Edge {
@@ -108,11 +110,19 @@ namespace spades {
 				   Player *p);
 			~Corpse();
 			
+			/** if just died, don't draw corpse */
+			bool local;
+
 			void Update(float dt);
 			
 			void AddToScene();
 			
 			Vector3 GetCenter();
+			Vector3 GetVelocity();
+
+			Vector3 GetHead();
+			Vector3 GetFront();
+
 			bool IsVisibleFrom(Vector3 eye);
 			
 			void AddImpulse(Vector3);
