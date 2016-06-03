@@ -54,8 +54,14 @@ namespace spades {
 			weapInput = WeaponInput();
 			playerInput = PlayerInput();
 			keypadInput = KeypadInput();
-			
+
 			toolRaiseState = .0f;
+
+			if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
+				MaxShots = -1;
+			else
+				MaxShots = 1;
+			//SPLog("Local player created");
 		}
 		
 		void Client::JoinedGame() {

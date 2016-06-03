@@ -794,10 +794,10 @@ namespace spades {
 										p->SetOrientation(front);
 										
 										PosRecord& rec = playerPosRecords[idx];
-										if(rec.valid) 
+										if(rec.valid && front.z != 0 && front.y != 0) 
 										{
 											float timespan = GetWorld()->GetTime() - rec.time;
-											timespan = std::max(0.16f, timespan);
+											timespan = std::max(0.12f, timespan);
 											Vector3 vel = (pos - rec.pos) / timespan;
 											vel *= 1.f / 32.f;
 											p->SetVelocity(vel);
@@ -1522,6 +1522,7 @@ namespace spades {
 				case PacketTypeChangeWeapon:
 				{
 					reader.ReadByte();
+					//SPLog("Received invalid weapon: %i", reader.ReadByte());
 					WeaponType wType;
 					int weapon = reader.ReadByte();
 					switch(weapon){
@@ -1539,7 +1540,7 @@ namespace spades {
 					}
 					// maybe this command is intended to change local player's
 					// weapon...
-					//p->SetWeaponType(wType);
+					//GetLocalPlayer()->SetWeaponType(wType);
 				}
 					break;
 				case PacketTypeHandShakeInit:

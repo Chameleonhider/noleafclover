@@ -68,8 +68,8 @@ SPADES_SETTING(v_binocsZoom, "2");
 //SPADES_SETTING(d_a, "0");
 //SPADES_SETTING(d_b, "0");
 //SPADES_SETTING(d_c, "0");
-//SPADES_SETTING(d_x, "0");
-//SPADES_SETTING(d_y, "0");
+SPADES_SETTING(d_x, "0");
+SPADES_SETTING(d_y, "0");
 
 namespace spades {
 	namespace client {
@@ -450,10 +450,10 @@ namespace spades {
 				if (GetRandom() > 0.3f)
 					client->Leak(player->GetPosition()+Vector3(0,0,1), player->GetVelocity()*0.2f+player->GetFront()+Vector3(0,0,-0.3f));
 
-				if (client->mouseRoll < 10)
-					client->mouseRoll += client->weapX*dt*10;
+				if (client->mouseRoll < 2)
+					client->mouseRoll += client->weapX*dt*5;
 				else
-					client->mouseRoll += client->weapX*dt*2;
+					client->mouseRoll += client->weapX*dt;
 			}
 			
 			if(currentTool == player->GetTool()) 
@@ -533,11 +533,11 @@ namespace spades {
 				//Chameleon: weapon visual lag
 				{
 					//reverse it when not aiming down
-					viewWeaponOffset.x -= client->weapX*dt*5 * (2*GetAimDownState() - 1);
-					viewWeaponOffset.z += client->weapY*dt*5 * (2*GetAimDownState() - 1);
+					viewWeaponOffset.x -= client->weapX*dt*10*(2*GetAimDownState() - 1);
+					viewWeaponOffset.z += client->weapY*dt*10*(2*GetAimDownState() - 1);
 
-					client->weapX -= client->weapX*dt*5;
-					client->weapY -= client->weapY*dt*5;
+					client->weapX -= client->weapX*dt*15;
+					client->weapY -= client->weapY*dt*15;
 				}
 
 				if(dt > 0.f)
@@ -562,14 +562,14 @@ namespace spades {
 						viewWeaponOffset.z = Mix(viewWeaponOffset.z, limitY, 0.5f);
 				}
 
-				//testing
-				/*{
-					client->weapX = (float)d_x;
-					client->weapY = (float)d_y;
-					viewWeaponOffset.x = client->weapX* (2 * GetAimDownState() - 1);
-					viewWeaponOffset.z = client->weapY* (2 * GetAimDownState() - 1);
-					viewWeaponOffset.y = 0;
-				}*/
+				////testing
+				//{
+				//	client->weapX = (float)d_x;
+				//	client->weapY = (float)d_y;
+				//	viewWeaponOffset.x = client->weapX* (2 * GetAimDownState() - 1);
+				//	viewWeaponOffset.z = client->weapY* (2 * GetAimDownState() - 1);
+				//	viewWeaponOffset.y = 0;
+				//}
 			}
 			
 			// FIXME: should do for non-active skins?
@@ -806,11 +806,11 @@ namespace spades {
 				light.image = renderer->RegisterImage("Gfx/Spotlight.tga");
 				renderer->AddLight(light);
 				
-				light.color *= 0.2f;
+				/*light.color *= 0.2f;
 				light.radius = 5.f;
 				light.type = DynamicLightTypePoint;
 				light.image = NULL;
-				renderer->AddLight(light);
+				renderer->AddLight(light);*/
 				
 				// add glare
 				//renderer->SetColorAlphaPremultiplied(MakeVector4(1, .7f, .5f, 0) * brightness * .3f);
@@ -879,8 +879,10 @@ namespace spades {
 
 				if (currentTool == Player::ToolWeapon)
 				{
-					if (client->scopeOn && client->scopeView)
+					if (world->GetLocalPlayer()->GetWeaponType() == RIFLE_WEAPON && client->scopeOn && client->scopeView)
 						interface.SetScopeZoom(client->scopeZoom);
+					else if (client->scopeOn && client->scopeView)
+						interface.SetScopeZoom(1);
 					else if (client->scopeOn && !client->scopeView)
 						interface.SetScopeZoom(-1);
 					else
@@ -1372,7 +1374,7 @@ namespace spades {
 
 					if ((int)v_drawLegs == 2 && p->GetFront().z > -0.2f)
 					{
-						float move = (p->GetFront().z+0.2f)/1.2f;
+						float move = (p->GetFront().z+0.2f)/2.4f;
 						leg1 *= Matrix4::Translate(0.f, move, 0.f);
 						leg2 *= Matrix4::Translate(0.f, move, 0.f);
 					}
@@ -1450,7 +1452,7 @@ namespace spades {
 
 					if ((int)v_drawLegs == 2 && p->GetFront().z > -0.2f)
 					{
-						float move = (p->GetFront().z+0.2f)/1.2f;
+						float move = (p->GetFront().z+0.2f)/2.4f;
 						leg1 *= Matrix4::Translate(0.f, move, 0.f);
 						leg2 *= Matrix4::Translate(0.f, move, 0.f);
 					}

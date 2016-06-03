@@ -127,6 +127,9 @@ namespace spades {
 			case SHOTGUN_WEAPON:
 				return 0.f; //delta = 0.4f;				
 				break;
+			default:
+				return 0.f;
+				break;
 			}
 		}
 

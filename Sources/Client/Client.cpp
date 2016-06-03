@@ -544,7 +544,9 @@ namespace spades {
 					net->SendWeaponChange(weap);
 				}
 
-				world->GetLocalPlayer()->SetWeaponType(weap);
+				//world->GetLocalPlayer()->SetWeaponType(weap);
+				//if (weap == SMG_WEAPON)
+				//	MaxShots = -1; //doesn't work
 			}			
 		}
 		

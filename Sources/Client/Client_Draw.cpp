@@ -352,17 +352,6 @@ namespace spades {
 			
 			//Chameleon: shows the new spread too
 			spread += spread * p->spreadAdd;
-			/*if (!p->IsOnGroundOrWade())
-			{
-				spread += spread * 2;
-			}
-			else if (p->GetVelocity().GetLength() > 0.01f && w->GetWeaponType() != SHOTGUN_WEAPON)
-			{
-				if (p->crouching)
-					spread += spread * p->GetVelocity().GetLength() * 4;
-				else
-					spread += spread * p->GetVelocity().GetLength() * 2;
-			}*/
 
 			AABB2 boundary(0,0,0,0);
 			for(int i = 0; i < 8; i++){

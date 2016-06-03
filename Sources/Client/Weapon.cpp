@@ -361,13 +361,14 @@ namespace spades {
 		Weapon *Weapon::CreateWeapon(WeaponType type, Player *p) {
 			SPADES_MARK_FUNCTION();
 			
-			if (p->IsLocalPlayer())
+			//does not work
+			/*if (p->IsLocalPlayer())
 			{
 				if (type == SMG_WEAPON)
 					p->GetWorld()->GetListener()->SetMaxShots(-1);
 				else
 					p->GetWorld()->GetListener()->SetMaxShots(1);
-			}
+			}*/
 
 			if((int)cg_protocolVersion == 4) {
 				switch(type) {

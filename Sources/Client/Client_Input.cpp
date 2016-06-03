@@ -173,9 +173,9 @@ namespace spades {
 				if(p->IsAlive())
 				{
 					float rollFac = 1;
-					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2
-					rollFac *= fmax(1.f, 2.f - soundDistance*0.0625f); //from 1 to 2
-					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2
+					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2 as HP goes from 100 to 0
+					rollFac *= fmax(0.5f, 2.f - soundDistance*0.0625f); //from 0.5 to 2 as SDST goes from 48 to 0
+					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2 as SADD goes from 0 to 4
 
 					x /= GetAimDownZoomScale();
 					y /= GetAimDownZoomScale();
@@ -196,8 +196,8 @@ namespace spades {
 					{
 						/*weapX -= x*0.00025f*(1.f - aimDownState);
 						weapY -= y*0.00025f*(1.f - aimDownState);*/
-						weapX -= x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
-						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapX -= x*0.000015f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
+						weapY += y*0.000015f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
 					float rad = x * x + y * y;
@@ -287,16 +287,16 @@ namespace spades {
 				if (p->IsAlive())
 				{
 					float rollFac = 1;
-					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2
-					rollFac *= fmax(1.f, 2.f - soundDistance*0.0625f); //from 1 to 2
-					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2
+					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2 as HP goes from 100 to 0
+					rollFac *= fmax(0.5f, 2.f - soundDistance*0.0625f); //from 0.5 to 2 as SDST goes from 48 to 0
+					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2 as SADD goes from 0 to 4
 
 					//Chameleon: weapon visual lag
 					{
 						/*weapX -= x*0.00025f*(1.f - aimDownState);
 						weapY -= y*0.00025f*(1.f - aimDownState);*/
-						weapX -= x*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
-						weapY += y*0.000015625f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
+						weapX -= x*0.0000075f*(GetAimDownZoomScale() + 1)*(rollFac + 4)*(aimDownState*2 - 1);
+						weapY += y*0.0000075f*(GetAimDownZoomScale() + 1)*(rollFac + 4);
 					}
 
 					//SPLog("MouseEventInertia: %f, %f", x, y);
@@ -616,7 +616,7 @@ namespace spades {
 									MaxShots = -1;
 								}
 							}
-							if (p->GetWeaponType() == RIFLE_WEAPON && p->IsToolWeapon())
+							else if (p->IsToolWeapon())
 							{
 								scopeView = !scopeView;
 							}
@@ -625,7 +625,7 @@ namespace spades {
 					else if(CheckKey(cg_keyAttack, name))
 					{
 						//Chameleon: semi auto fire
-						if (!down)
+						if (!down) //&& p->GetWeapon()->IsReadyToShoot())
 						{
 							world->GetListener()->SetShotsFired(0);
 						}

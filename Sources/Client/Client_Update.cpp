@@ -547,8 +547,8 @@ namespace spades {
 					//if (mouseX > 500-2.5f*world->GetLocalPlayer()->GetHealth() || mouseX*(-1) > 500-2.5f*world->GetLocalPlayer()->GetHealth())
 					//float inertiaX = mouseX / (250 * (2 - 0.01f*health));
 					//float inertiaY = mouseY / (250 * (2 - 0.01f*health));
-					float inertiaX = mouseX / (20 * (2 - health));
-					float inertiaY = mouseY / (20 * (2 - health));
+					float inertiaX = mouseX / (10 * (2 - health));
+					float inertiaY = mouseY / (10 * (2 - health));
 					{
 						if (inertiaX < 0)
 							inertiaX *= (-1);
@@ -565,7 +565,7 @@ namespace spades {
 					//inertia mouseX
 					if (mouseX != 0)
 					{
-						inertiaX = 20 * dt / (2 - health);
+						inertiaX = 25 * dt / (2 - health);
 						if (abs(mouseX) < inertiaX)
 							inertiaX = abs(mouseX);
 
@@ -574,7 +574,7 @@ namespace spades {
 					//inertia mouseY
 					if (mouseY != 0)
 					{
-						inertiaY = 20 * dt / (2 - health);
+						inertiaY = 25 * dt / (2 - health);
 						if (abs(mouseY) < inertiaY)
 							inertiaY = abs(mouseY);
 
@@ -667,10 +667,10 @@ namespace spades {
 				ShotsFired = 0;
 				weapInput.secondary = false;
 
-				if (player->GetWeaponType() == SMG_WEAPON)
+				/*if (player->GetWeaponType() == SMG_WEAPON)
 					MaxShots = -1;
 				else
-					MaxShots = 1;
+					MaxShots = 1;*/
 			}
 			
 			// is the selected tool no longer usable (ex. out of ammo)?
@@ -818,6 +818,11 @@ namespace spades {
 						followVel.z -= followVel.z*dt;
 					}
 				}
+				else
+				{
+					followVel.x -= followVel.x*dt/2;
+					followVel.y -= followVel.y*dt/2;
+				}
 
 				//center += followFront;
 				if (map->IsSolid(center.x-0.25f, followPos.y, followPos.z))
@@ -878,7 +883,7 @@ namespace spades {
 				}
 				if (map->IsSolid(followPos.x, followPos.y, center.z+0.25f))
 				{
-					followVel.z *= -0.25f;
+					followVel.z *= -0.3f;
 					followVel.x *= 0.5f;
 					followVel.y *= 0.5f;
 
@@ -886,7 +891,7 @@ namespace spades {
 						followVel.x = 0;
 					if (fabsf(followVel.y) < 0.25f)
 						followVel.y = 0;
-					if (fabsf(followVel.z) < 0.4f)
+					if (fabsf(followVel.z) < 0.35f)
 						followVel.z = 0;
 
 					center.z = followPos.z;
@@ -1901,11 +1906,11 @@ namespace spades {
 		{
 			if (world->GetLocalPlayer())
 			{
-				if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
-					return MaxShots;
-				else
-					return (MaxShots = 1);
+				if (world->GetLocalPlayer()->GetWeaponType() != SMG_WEAPON)
+					MaxShots = 1;
+				return MaxShots;
 			}
+			return MaxShots;
 		}
 		//Chameleon: firemodes
 		void Client::SetShotsFired(int value)

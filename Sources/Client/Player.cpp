@@ -345,7 +345,6 @@ namespace spades {
 					{
 						if (iL->GetShotsFired() >= iL->GetMaxShots())
 						{
-							//SPLog("UpdateLocalPlayer()");
 							weapon->SetShooting(false);
 							//SPLog("Fired MaxShots already, ceasing fire");
 						}
@@ -712,17 +711,16 @@ namespace spades {
 			{
 				if (weapon->GetWeaponType() != SHOTGUN_WEAPON)
 					spread += spread * spreadAdd;
-				else
-					spread *= 0.75f; //is more fun, mkay???
 			}
 
 			// pyspades takes destroying more than one block as a
 			// speed hack (shotgun does this)
 			bool blockDestroyed = false;
 			
-			Vector3 dir2 = GetFront();
+			//Vector3 dir2 = GetFront();
 			for(int i = 0; i < pellets; i++)
 			{
+				Vector3 dir2 = GetFront();
 				//Chameleon: sync visual weapon with hit location.
 				//synced when lim(weapXY -> 0)
 				if (IsLocalPlayer())
@@ -738,6 +736,9 @@ namespace spades {
 						dir2.x -= world->GetListener()->GetWeaponViewX()*GetRight().x*0.1f;
 						dir2.y -= world->GetListener()->GetWeaponViewX()*GetRight().y*0.1f;
 						dir2.z -= world->GetListener()->GetWeaponViewY()*0.1f;
+
+						dir2.x += (GetRandom() - GetRandom()) * spread;
+						dir2.y += (GetRandom() - GetRandom()) * spread;
 					}
 				}
 
@@ -1721,6 +1722,15 @@ namespace spades {
 			delete this->weapon;
 			this->weapon = Weapon::CreateWeapon(weap, this);
 			this->weaponType = weap;
+
+			/*if (IsLocalPlayer())
+			{
+				if (this->weaponType == SMG_WEAPON)
+					world->GetListener()->SetMaxShots(-1);
+				else
+					world->GetListener()->SetMaxShots(1);
+				SPLog("-------------- LOCAL PLAYER CHANGED WEAPON");
+			}*/
 		}
 		
 		void Player::SetTeam(int tId){
