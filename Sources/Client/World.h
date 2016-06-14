@@ -41,6 +41,18 @@ namespace spades {
 		class IGameMode;
 		class Client; // FIXME: for debug
 		class HitTestDebugger;
+		
+		// ADDED: Minimap bullet class
+		const float MMBULLET_VELOCITY = 300.0f;
+		class MMBullet {
+		public:
+			Vector2 start;
+			Vector2 direction;
+			float length;
+			float travelled;
+		};
+		// END OF ADDED
+		
 		class World {
 			friend class Client; // FIXME: for debug
 		public:
@@ -156,6 +168,10 @@ namespace spades {
 			IWorldListener *GetListener(){
 				return listener;
 			}
+			
+			// ADDED: List of minimap bullets
+			std::list<MMBullet*> mmBullets;
+			// END OF ADDED
 		};
 	}
 }

@@ -35,7 +35,10 @@ namespace spades{
 					return false;
 				}
 				clipboardData = txt;
-				free(txt);
+
+				//copypaste crash fix by http://aloha.pk/index.php?topic=7914.0
+				SDL_free(txt);
+
 				hasClipboardData = true;
 			}
 			return hasClipboardData;

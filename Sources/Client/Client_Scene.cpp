@@ -60,7 +60,7 @@ SPADES_SETTING(v_freeAim, "1");
 SPADES_SETTING(r_swUTMP, "0");
 
 //grenade binocs zoom
-SPADES_SETTING(v_binocsZoom, "2");
+SPADES_SETTING(v_binocsZoom, "");
 
 static float nextRandom() {
 	return (float)rand() / (float)RAND_MAX;
@@ -99,7 +99,7 @@ namespace spades {
 
 			if(world->GetLocalPlayer()->IsToolWeapon() == false &&
 			  (world->GetLocalPlayer()->GetTool() != Player::ToolGrenade ||
-			  (int)v_binocsZoom == -1))
+			  (int)v_binocsZoom < 1))
 				return 1.f;
 
 			float delta = GetAimDownZoomDelta();			
@@ -126,9 +126,6 @@ namespace spades {
 				break;
 			case SHOTGUN_WEAPON:
 				return 0.f; //delta = 0.4f;				
-				break;
-			default:
-				return 0.f;
 				break;
 			}
 		}
@@ -346,6 +343,20 @@ namespace spades {
 							//scale -= (nextRandom()-nextRandom()) * grenVib;
 							//def.radialBlur += grenVib * 0.5f;
 						}
+
+						//add tinnitus vibration
+						float factor = fmin(0.025f, fmax(0, 0.05f - soundDistance*0.005f)); //from 0 to 0.125 to 0.125 as SDST goes from 10 to 5 to 0
+						
+						if (world->GetLocalPlayer())
+							if (!world->GetLocalPlayer()->IsAlive())
+								factor = 0;
+
+						if (factor > 0.f)
+						{
+							vibPitch += sinf(world->GetTime()*10.f + nextRandom()) * factor;
+							vibYaw += sinf(world->GetTime()*15.f + nextRandom()) * factor;
+							roll += sinf(world->GetTime()*25.f + nextRandom()) * factor * 2.f;
+						}
 					}
 					
 					//old Chameleon: add stepVibration (no roll to sides, only up&down)
@@ -542,7 +553,7 @@ namespace spades {
 			
 			ModelRenderParam param;
 			Matrix4 mat = Matrix4::Scale(0.03f);
-			mat = Matrix4::Translate(g->GetPosition()) * mat;
+			mat = Matrix4::Translate(g->GetPosition()-Vector3(0,0,0.05f)) * mat;
 			param.matrix = mat;
 			
 			renderer->RenderModel(model, param);

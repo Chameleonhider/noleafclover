@@ -46,6 +46,8 @@ namespace spades {
 		void NullDevice::PlayLocal(client::IAudioChunk *, const client::AudioParam &) {}
 		
 		void NullDevice::Respatialize(const spades::Vector3 &, const spades::Vector3 &, const spades::Vector3 &) { }
-		
+
+		//Chameleon: pitch&volume adjustment
+		void NullDevice::SoundDistance(const float soundDist) {}
 	}
 }

@@ -16,6 +16,8 @@
 
 SPADES_SETTING(r_renderer, "");
 SPADES_SETTING(opt_tracers, "");
+SPADES_SETTING(opt_tracersDLight, "0");
+SPADES_SETTING(r_dlights, "");
 
 namespace spades {
 	namespace client {
@@ -49,22 +51,22 @@ namespace spades {
 			switch (x % 4)
 			{
 				case 0:
-					snd = bulletVel > 400 ?
+					snd = bulletVel > 350 ?
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP1.wav") :
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB1.wav");
 					break;
 				case 1:
-					snd = bulletVel > 400 ?
+					snd = bulletVel > 350 ?
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP2.wav") :
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB2.wav");
 					break;
 				case 2:
-					snd = bulletVel > 400 ?
+					snd = bulletVel > 350 ?
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP3.wav") :
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB3.wav");
 					break;
 				case 3:
-					snd = bulletVel > 400 ?
+					snd = bulletVel > 350 ?
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUP4.wav") :
 						client->GetAudioDevice()->RegisterSound("Sounds/Weapons/Objects/TracerSUB4.wav");
 					break;
@@ -90,12 +92,12 @@ namespace spades {
 			colour = Vector3(teamCol.x / 255.f, teamCol.y / 255.f, teamCol.z / 255.f);
 			colour = Vector3(colour.x / colour.GetLength(), colour.y / colour.GetLength(), colour.z / colour.GetLength());
 			colour = (colour + Vector3(1, 1, 1)) / 1.9f;
+
+			dlight = r_dlights && opt_tracersDLight;
 		}
 		
 		bool Tracer::Update(float dt) 
 		{
-			
-
 			if (length < 16)
 				return false;
 			if(!firstUpdate)
@@ -115,7 +117,7 @@ namespace spades {
 			}
 
 			//Chameleon: play sound if tracer after coming inbound starts going outbound.
-			//or: when distance to tracer starts increasing after having decreased.
+			//aka: when distance to tracer starts increasing after having decreased.
 			if (player)
 			{
 				Vector3 pos1 = startPos + dir * curDistance;
@@ -125,8 +127,9 @@ namespace spades {
 				{
 					IAudioDevice *audio = client->GetAudioDevice();
 					AudioParam param = AudioParam();
-					param.volume = 100.f / flyByDist;
-					param.referenceDistance = flyByDist/2;
+					param.volume = 150.f / flyByDist;
+					param.referenceDistance = (flyByDist+10)/5.f;
+					param.pitch = 0.8f + GetRandom()*0.4f;
 					audio->Play(snd, pos1, param);
 					flyByDist = -1;
 				}
@@ -156,18 +159,15 @@ namespace spades {
 			IRenderer *r = client->GetRenderer();
 			
 			Vector4 col = { colour.x, colour.y, colour.z, 0.f };
-			/*
-			if ((int)opt_tracers == 2)
-			{
-			if (teamId == 0)
-			col = { 0.2f, 1.f, 0.2f, 0.f };
-			else
-			col = { 1.f, 0.2f, 0.2f, 0.f };
-			}
-			*/
 
 			r->SetColorAlphaPremultiplied(col*0.25f);
 			
+			float sizeScale = 1.f;
+			if (player)
+			{
+				sizeScale = sizeScale*sqrt((pos1 - player->GetPosition()).GetLength());
+			}
+
 			if (EqualsIgnoringCase(r_renderer, "sw") && (int)opt_tracers == 1)
 			{
 				r->AddSprite(image, pos1, .025f, 0);
@@ -178,14 +178,24 @@ namespace spades {
 			}
 			else if ((int)opt_tracers == 1)
 			{
-				r->AddLongSprite(image, pos1, pos2, .05f);
+				r->AddLongSprite(image, pos1, pos2, 0.005f*sizeScale);
 			}
 			else if ((int)opt_tracers == 2)
 			{
 				ModelRenderParam param;
-				param.matrix = matrix * Matrix4::Scale(0.1f);
+				param.matrix = matrix * Matrix4::Scale(0.01f*sizeScale);
 				param.customColor = colour;
 				r->RenderModel(model, param);
+			}
+
+			if (dlight)
+			{
+				DynamicLightParam l;
+				l.origin = (pos1 + pos2)*0.5f;
+				l.radius = 3.f;
+				l.type = DynamicLightTypePoint;
+				l.color = colour;
+				client->flashDlights.push_back(l);
 			}
 		}
 		

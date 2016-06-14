@@ -119,8 +119,6 @@ namespace spades {
 							IAudioDevice *dev = client->GetAudioDevice();
 							AudioParam param;
 							param.referenceDistance = .6f;
-							param.pitch = .9f + GetRandom() * .2f;
-							
 							dev->Play(waterSound, lastMat.GetOrigin(),
 									  param);
 						}
@@ -238,6 +236,7 @@ namespace spades {
 		{
 			ModelRenderParam param;
 			param.matrix = matrix * Matrix4::Scale(.015f);
+			param.matrix = Matrix4::Translate(0,0,-0.02f) * param.matrix;
 			if (groundTime > float(opt_brassTime))
 			{
 				// sink

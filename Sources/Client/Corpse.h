@@ -67,8 +67,9 @@ namespace spades {
 			GameMap *map;
 			Vector3 color;
 			//Chameleon
-			int teamId;
+		public: int teamId;
 			
+		private:
 			Node nodes[NodeCount];
 			Edge edges[8];
 			

@@ -69,6 +69,8 @@ namespace spades {
 			virtual void Respatialize(const Vector3& eye,
 									  const Vector3& front,
 									  const Vector3& up);
+			//Chameleon: pitch&volume adjustment
+			virtual void SoundDistance(const float soundDist);
 		};
 	}
 }

@@ -120,10 +120,10 @@ namespace spades {
 				MainScreenServerList *resp = new MainScreenServerList();
 				try{
 					if( reader.parse( buffer, root, false ) ) {
-						for( Json::Value::iterator it = root.begin(); it != root.end(); ++it ) {
+						for (Json::Value::iterator it = root.begin(); it != root.end(); ++it) {
 							Json::Value &obj = *it;
-							Serveritem* srv = Serveritem::create( obj );
-							if( srv ) {
+							Serveritem* srv = Serveritem::create(obj);
+							if (srv) {
 								resp->list.push_back(new MainScreenServerItem(srv));
 								delete srv;
 							}

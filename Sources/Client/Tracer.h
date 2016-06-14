@@ -35,6 +35,7 @@ namespace spades {
 			float flyByDist;
 			Vector3 colour;
 			IntVector3 teamCol;
+			bool dlight;
 		public:
 			Tracer(Client *, Player *, IModel *, Vector3 p1, Vector3 p2,
 				   float bulletVel, IntVector3 team);

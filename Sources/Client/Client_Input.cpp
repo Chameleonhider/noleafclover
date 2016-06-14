@@ -97,7 +97,6 @@ SPADES_SETTING(cg_keyAutoFocus, "MiddleMouseButton");
 
 //Chameleon: absolute maximum sound distance. footstep&other sound limit is 0.75 times this
 SPADES_SETTING(snd_maxDistance, "150");
-
 //bincoulars zoom. used with nades
 SPADES_SETTING(v_binocsZoom, "2");
 
@@ -174,8 +173,9 @@ namespace spades {
 				{
 					float rollFac = 1;
 					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2 as HP goes from 100 to 0
-					rollFac *= fmax(0.5f, 2.f - soundDistance*0.0625f); //from 0.5 to 2 as SDST goes from 48 to 0
+					rollFac = (1 + rollFac) / 2.f;
 					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2 as SADD goes from 0 to 4
+					rollFac *= fmax(0.5f, 2.f - soundDistance*0.0625f); //from 0.5 to 2 as SDST goes from 48 to 0					
 
 					x /= GetAimDownZoomScale();
 					y /= GetAimDownZoomScale();
@@ -290,6 +290,7 @@ namespace spades {
 					rollFac *= 2.f - p->GetHealth()*0.015f; //from 1 to 2 as HP goes from 100 to 0
 					rollFac *= fmax(0.5f, 2.f - soundDistance*0.0625f); //from 0.5 to 2 as SDST goes from 48 to 0
 					rollFac *= 1.f + p->spreadAdd*0.25f; //from 1 to 2 as SADD goes from 0 to 4
+					rollFac = (1 + rollFac) / 2.f;
 
 					//Chameleon: weapon visual lag
 					{
@@ -600,21 +601,24 @@ namespace spades {
 						{
 							if (p->GetWeaponType() == SMG_WEAPON && p->IsToolWeapon())
 							{
-								Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Weapons/WeaponMode.wav");
-								audioDevice->PlayLocal(chunk, AudioParam());
-
+								AudioParam param;
 								if (MaxShots == -1)
 								{
 									MaxShots = 1;
+									param.pitch += 0.1f;
 								}
 								else if (MaxShots == 1 && (bool)weap_burstFire)
 								{
 									MaxShots = (int)weap_burstRounds;
+									param.pitch += 0.1f;
 								}
 								else
 								{
 									MaxShots = -1;
+									param.volume = 1.5f;
 								}
+								Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Weapons/WeaponMode.wav");
+								audioDevice->PlayLocal(chunk, param);
 							}
 							else if (p->IsToolWeapon())
 							{
@@ -630,6 +634,18 @@ namespace spades {
 							world->GetListener()->SetShotsFired(0);
 						}
 						weapInput.primary = down;
+
+						if (down)
+						{
+							if (!largeMapView->ToggleZoom())
+							{
+
+							}
+							else if (largeMapView->ToggleZoom())
+							{
+								largeMapView->ToggleZoom();
+							}
+						}						
 					}
 					else if(CheckKey(cg_keyAltAttack, name))
 					{
@@ -643,7 +659,7 @@ namespace spades {
 							}
 						}
 						//grenade binocs
-						else if (world->GetLocalPlayer()->GetTool() == Player::ToolGrenade)
+						else if (world->GetLocalPlayer()->GetTool() == Player::ToolGrenade && world->GetLocalPlayer()->IsReadyToUseTool())
 						{
 							if (down && !playerInput.sprint && (int)v_binocsZoom != -1)
 							{
@@ -665,7 +681,7 @@ namespace spades {
 							}
 							else
 							{
-								weapInput.secondary = down; //changed from "down" to "false"
+								weapInput.secondary = down;
 							}
 						}
 						if(world->GetLocalPlayer()->IsToolWeapon() && weapInput.secondary && !lastVal &&

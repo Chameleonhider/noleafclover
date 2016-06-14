@@ -38,6 +38,21 @@ SPADES_SETTING(s_maxPolyphonics, "64");
 SPADES_SETTING(s_eax, "0");
 SPADES_SETTING(s_alPreciseErrorCheck, "1");
 
+SPADES_SETTING(d_gain, "0.5");
+SPADES_SETTING(d_gainhf, "1");
+SPADES_SETTING(d_gainlf, "1");
+
+SPADES_SETTING(d_decayt, "1");
+SPADES_SETTING(d_decayhf, "1");
+SPADES_SETTING(d_decaylf, "1");
+
+SPADES_SETTING(d_lrgain, "0.01");
+SPADES_SETTING(d_lrdelay, "0.01");
+SPADES_SETTING(d_rdelay, "0.01");
+SPADES_SETTING(d_rgain, "0.01");
+
+
+
 //lm: seems to be missing for me..
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #define ALC_ALL_DEVICES_SPECIFIER      0x1013
@@ -140,6 +155,8 @@ namespace spades {
 		class ALDevice::Internal {
 		public:
 			bool useEAX;
+			bool canUseEAX;
+			float soundDistance;
 			ALCdevice *alDevice;
 			ALCcontext *alContext;
 			
@@ -209,7 +226,9 @@ namespace spades {
 					al::qalSourcef(handle, AL_REFERENCE_DISTANCE, param.referenceDistance);
 					
 					ALCheckError();
-					this->param = param;
+					this->param.pitch = param.pitch;
+					this->param.referenceDistance = param.referenceDistance;
+					this->param.volume = param.volume;
 				}
 				
 				// either Set3D or Set2D must be called
@@ -227,6 +246,11 @@ namespace spades {
 					al::qalSourcef(handle, AL_ROLLOFF_FACTOR, (local || stereo) ? 0.f : 1.f);
 					ALCheckErrorPrecise();
 					if(internal->useEAX){
+						al::qalSource3i(handle, AL_AUXILIARY_SEND_FILTER,
+										internal->reverbFXSlot, 0, AL_FILTER_NULL);
+						ALCheckErrorPrecise();
+					}
+					else if (internal->canUseEAX){
 						al::qalSource3i(handle, AL_AUXILIARY_SEND_FILTER,
 										internal->reverbFXSlot, 0, AL_FILTER_NULL);
 						ALCheckErrorPrecise();
@@ -255,6 +279,14 @@ namespace spades {
 						ALCheckErrorPrecise();
 						al::qalSourcei(handle, AL_DIRECT_FILTER,
 									   0);
+						ALCheckErrorPrecise();
+					}
+					else if (internal->canUseEAX){
+						al::qalSource3i(handle, AL_AUXILIARY_SEND_FILTER,
+							AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+						ALCheckErrorPrecise();
+						al::qalSourcei(handle, AL_DIRECT_FILTER,
+							0);
 						ALCheckErrorPrecise();
 					}
 					ALCheckError();
@@ -286,9 +318,10 @@ namespace spades {
 						ALCheckError();
 					}
 					
-					if(!internal->useEAX)
+					if(!internal->useEAX && !internal->canUseEAX)
 						return;
-					
+					//Chameleon: MIGHT CRASH HERE!
+
 					ALint value;
 					
 					al::qalGetSourcei(handle, AL_SOURCE_RELATIVE, &value);
@@ -300,7 +333,7 @@ namespace spades {
 					
 					// raytrace
 					client::GameMap *map = internal->map;
-					if(map && enableObstruction)
+					if(map && enableObstruction && internal->useEAX)
 					{
 						ALfloat v3[3];
 						al::qalGetListenerfv(AL_POSITION, v3);
@@ -331,8 +364,17 @@ namespace spades {
 					ALuint fx = AL_EFFECTSLOT_NULL;
 					ALuint flt = AL_FILTER_NULL;
 					
-					if(enableObstruction)
+					if (enableObstruction || (internal->canUseEAX && internal->soundDistance < 10))
+					{
+						float factor = fmin(1.f, fmax(0.f, internal->soundDistance*0.1f-0.5f)); //from 1 to 0 to 0 as SDST goes from 10 to 5 to 0	
+						if (enableObstruction)
+							factor = fmin(0.1f, factor);
+
+						al::qalFilterf(internal->obstructionFilter, AL_LOWPASS_GAINHF, factor); //min 0 max 1
+						ALCheckErrorPrecise();
+
 						flt = internal->obstructionFilter;
+					}
 					
 					if(eaxSource)
 						fx = internal->reverbFXSlot;
@@ -342,8 +384,7 @@ namespace spades {
 					ALCheckErrorPrecise();
 					al::qalSourcei(handle, AL_DIRECT_FILTER,
 								   flt);
-					ALCheckError();
-					
+					ALCheckError();					
 				}
 				
 				void PlayBufferOneShot(ALuint buffer) {
@@ -357,6 +398,12 @@ namespace spades {
 					ALCheckErrorPrecise();
 					al::qalSourcePlay(handle);
 					ALCheckError();
+				}
+
+				void SoundDistTinnitus(float sDst) {
+					SPADES_MARK_FUNCTION();
+
+					internal->soundDistance = sDst;
 				}
 			};
 		
@@ -418,7 +465,6 @@ namespace spades {
 				al::qalEffecti(reverbFX, AL_EAXREVERB_DECAY_HFLIMIT, reverb->iDecayHFLimit);
 				ALCheckErrorPrecise();
 			}
-
 			
 			Internal() {
 				SPADES_MARK_FUNCTION();
@@ -487,20 +533,31 @@ namespace spades {
 				map = NULL;
 				roomHistoryPos = 0;
 				
-				if(s_eax){
-					try{
-						al::InitEAX();
+				
+				try
+				{
+					al::InitEAX();
+
+					if (s_eax)
+					{
 						useEAX = true;
 						SPLog("EAX enabled");
-					}catch(const std::exception& ex){
-						useEAX = false;
-						s_eax = 0;
-						SPLog("Failed to initialize EAX: \n%s",
-								ex.what());
 					}
-				}else{
-					SPLog("EAX is disabled by configuration (s_eax)");
+					else
+					{
+						useEAX = false;
+						SPLog("EAX is disabled by configuration (/s_eax)");
+						SPLog("EAX kind-of-enabled by Chameleon");
+					}
+					canUseEAX = true;					
+				}
+				catch(const std::exception& ex)
+				{
 					useEAX = false;
+					canUseEAX = false;
+					s_eax = -1;
+					SPLog("Failed to initialize EAX: \n%s",
+							ex.what());
 				}
 				
 				// somehow Apple OpenAL reports an error whose source is unknown...
@@ -528,7 +585,7 @@ namespace spades {
 					al::qalEffecti(reverbFX, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
 					ALCheckError();
 					
-					EFXEAXREVERBPROPERTIES prop = EFX_REVERB_PRESET_MOUNTAINS;
+					EFXEAXREVERBPROPERTIES prop = EFX_REVERB_PRESET_PLAIN;
 					updateEFXReverb(&prop);
 					
 					al::qalAuxiliaryEffectSloti(reverbFXSlot, AL_EFFECTSLOT_EFFECT,
@@ -538,7 +595,7 @@ namespace spades {
 					al::qalGenFilters(1, &obstructionFilter);
 					ALCheckErrorPrecise();
 					al::qalFilteri(obstructionFilter, AL_FILTER_TYPE,
-								   AL_FILTER_LOWPASS);
+						AL_FILTER_LOWPASS);
 					ALCheckErrorPrecise();
 					al::qalFilterf(obstructionFilter, AL_LOWPASS_GAIN, 1.f);
 					ALCheckErrorPrecise();
@@ -549,6 +606,33 @@ namespace spades {
 						roomHistory.push_back(20000.f);
 						roomFeedbackHistory.push_back(0.f);
 					}
+				}
+				else if (canUseEAX)
+				{
+					al::qalGenAuxiliaryEffectSlots(1, &reverbFXSlot);
+					ALCheckError();
+					al::qalGenEffects(1, &reverbFX);
+					ALCheckError();
+
+					al::qalEffecti(reverbFX, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
+					ALCheckError();
+
+					EFXEAXREVERBPROPERTIES prop = EFX_REVERB_PRESET_GENERIC;
+					updateEFXReverb(&prop);
+
+					al::qalAuxiliaryEffectSloti(reverbFXSlot, AL_EFFECTSLOT_EFFECT,
+						reverbFX);
+					ALCheckError();
+
+					al::qalGenFilters(1, &obstructionFilter);
+					ALCheckErrorPrecise();
+					al::qalFilteri(obstructionFilter, AL_FILTER_TYPE,
+						AL_FILTER_LOWPASS);
+					ALCheckErrorPrecise();
+					al::qalFilterf(obstructionFilter, AL_LOWPASS_GAIN, 1.f);  //min 0 max 1
+					ALCheckErrorPrecise();
+					al::qalFilterf(obstructionFilter, AL_LOWPASS_GAINHF, 0.1f); //min 0 max 1
+					ALCheckErrorPrecise();
 				}
 			}
 			~Internal() {
@@ -581,6 +665,8 @@ namespace spades {
 				if(!src) return;
 				
 				src->stereo = chunk->GetFormat() == AL_FORMAT_STEREO16;
+				src->param.originalPitch = param.pitch;
+				src->param.originalVolume = param.volume;
 				src->SetParam(param);
 				src->Set3D(origin);
 				src->UpdateObstruction();
@@ -593,6 +679,8 @@ namespace spades {
 				if(!src) return;
 				
 				src->stereo = chunk->GetFormat() == AL_FORMAT_STEREO16;
+				src->param.originalPitch = param.pitch;
+				src->param.originalVolume = param.volume;
 				src->SetParam(param);
 				src->Set3D(origin, true);
 				src->UpdateObstruction();
@@ -605,6 +693,8 @@ namespace spades {
 				if(!src) return;
 				
 				src->stereo = chunk->GetFormat() == AL_FORMAT_STEREO16;
+				src->param.originalPitch = param.pitch;
+				src->param.originalVolume = param.volume;
 				src->SetParam(param);
 				src->Set2D();
 				src->UpdateObstruction();
@@ -613,7 +703,8 @@ namespace spades {
 			
 			void Respatialize(const Vector3& eye,
 							  const Vector3& front,
-							  const Vector3& up){
+							  const Vector3& up)
+			{
 				SPADES_MARK_FUNCTION();
 				
 				float pos[] = {eye.x, eye.y, eye.z};
@@ -738,14 +829,69 @@ namespace spades {
 												reverbFX);
 					ALCheckError();
 				}
-				
-				for(size_t i = 0; i < srcs.size(); i++){
+				else if (canUseEAX)
+				{
+					//printf("room size: %f, ref: %f, fb: %f\n", roomSize, reflections, feedbackness);
+
+					EFXEAXREVERBPROPERTIES prop = EFX_REVERB_PRESET_ROOM;
+					
+					prop.flGain = 0.5; //min 0 max 0.5
+					prop.flGainHF = 1.f; //1
+					prop.flGainLF = 0.f; //0
+
+					prop.flDecayTime = 1.f; //1
+					prop.flDecayHFRatio = 0.1f; //0.1
+					prop.flDecayLFRatio = 2.f; ///2
+
+					prop.flLateReverbDelay = 0.f; //0.f;
+					prop.flLateReverbGain = 0.f; //0.f;
+
+					if (soundDistance > 10.f)
+					{
+						prop.flReflectionsDelay = 0; //min 0 max 0.05 
+						prop.flReflectionsGain = 0; //min 0 max 1
+					}
+					else
+					{
+						prop.flReflectionsDelay = 0.05f;
+						prop.flReflectionsGain = fmin(1.f, fmax(0.f, 2.f - soundDistance*0.2f)); //from 0 to 1 to 1 as SDST goes from 10 to 5 to 0
+					}
+
+					updateEFXReverb(&prop);
+
+					al::qalAuxiliaryEffectSloti(reverbFXSlot, AL_EFFECTSLOT_EFFECT,
+						reverbFX);
+					ALCheckError();
+				}
+				int x = 1;
+				for(size_t i = 0; i < srcs.size(); i++){						
 					ALSrc *s = srcs[i];
-					if((rand() % 8 == 0) && s->IsPlaying())
+					if ((i == x) && s->IsPlaying())
+					{
 						s->UpdateObstruction();
+						x *= 2;
+					}
 				}
 			}
-			
+
+			void SoundDistance(const float soundDist)
+			{
+				SPADES_MARK_FUNCTION();
+
+				//float factor = fmin(0.25f, fmax(0, 0.5f-soundDist*0.05f)); //from 0 to 0.25 to 0.25 as SDST goes from 10 to 5 to 0	
+
+				for (size_t i = 0; i < srcs.size(); i++){
+					ALSrc *s = srcs[i];
+					if (s->IsPlaying())
+					{
+						//client::AudioParam& param = client::AudioParam();
+						//param.pitch = s->param.originalPitch - factor;
+						//param.volume = s->param.originalVolume*(1-factor);
+						//s->SetParam(param);
+						s->SoundDistTinnitus(soundDist);
+					}
+				}
+			}			
 		};
 		
 		ALDevice::ALDevice(){
@@ -847,6 +993,13 @@ namespace spades {
 			d->map = mp;
             if(mp) mp->AddRef();
             if(oldMap) oldMap->Release();
+		}
+
+		void ALDevice::SoundDistance(const float soundDist)
+		{
+			SPADES_MARK_FUNCTION();
+
+			d->SoundDistance(fmax(0, soundDist));
 		}
 	}
 }

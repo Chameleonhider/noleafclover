@@ -59,6 +59,7 @@ SPADES_SETTING(cg_chatBeep, "1");
 
 
 SPADES_SETTING(cg_serverAlert, "1");
+SPADES_SETTING(snd_maxDistance, "");
 
 
 
@@ -113,7 +114,7 @@ namespace spades {
 		mouseYaw(0.f),
 		walkProgress(0.f),//Chameleon: needed for walking view movement (up&down + roll)
 		bFootSide(false),//Chameleon: Toggles between left&right roll made by footsteps
-		soundDistance(0.f),//Chameleon: player gets deaf when firing weapon, so limit sound radius; expand it in silence
+		soundDistance(100.f),//Chameleon: player gets deaf when firing weapon, so limit sound radius; expand it in silence
 		//lastShellShockTime(0.f),
 		ShotsFired(0),
 		MaxShots(-1),
@@ -232,6 +233,8 @@ namespace spades {
 			worldSubFrame = 0.f;
 			worldSetTime = time;
 			inGameLimbo = false;
+
+			soundDistance = int(snd_maxDistance);
 		}
 		
 		Client::~Client() {
@@ -460,7 +463,7 @@ namespace spades {
 			if(world){
 				UpdateWorld(dt);
 			}else{
-				renderer->SetFogColor(MakeVector3(0.f, 0.f, 0.f));
+				renderer->SetFogColor(MakeVector3(0.1f, 0.1f, 0.1f));
 			}
 			
 			chatWindow->Update(dt);
@@ -473,9 +476,11 @@ namespace spades {
 			
 			// Update sounds
 			try{
+				audioDevice->SoundDistance(soundDistance);
 				audioDevice->Respatialize(sceneDef.viewOrigin,
 										  sceneDef.viewAxis[2],
 										  sceneDef.viewAxis[1]);
+				
 			}catch(const std::exception& ex){
 				SPLog("Audio subsystem returned error (ignored):\n%s",
 					  ex.what());

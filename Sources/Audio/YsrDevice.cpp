@@ -351,7 +351,6 @@ namespace spades {
 			std::shared_ptr<YsrBuffer> GetBuffer() {
 				return buffer;
 			}
-			
 		};
 		
 		struct SdlAudioDevice {
@@ -669,7 +668,11 @@ namespace spades {
 			driver->PlayLocal(chunk->GetBuffer(), TranslateParam(param));
 			
 		}
-		
+
+		void YsrDevice::SoundDistance(const float soundDist)
+		{
+			SPADES_MARK_FUNCTION();
+		}		
 	}
 }
 

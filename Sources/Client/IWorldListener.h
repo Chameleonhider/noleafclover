@@ -57,6 +57,8 @@ namespace spades {
 			virtual void SetShotsFired(int) = 0;
 			//Chameleon
 			virtual void SetMaxShots(int) = 0;
+			//Chameleon
+			virtual bool GetRifleScoped() = 0;
 			
 
 			virtual void PlayerObjectSet(int playerId) = 0;

@@ -56,6 +56,10 @@
 
 #endif
 
+// ADDED: Seems to fix some dank linker error
+//Chameleon: I use VS2013, not needed
+//extern "C" { FILE __iob_func[3] = { *stdin, *stdout, *stderr }; }
+// END OF ADDED
 
 static const unsigned char splashImage[] = {
 	#include "SplashImage.inc"
@@ -606,7 +610,7 @@ int main(int argc, char ** argv)
 				splashWindow.reset();
 
 				SPLog("Starting main screen...");
-				SPLog("To see startup window, press SPACEBAR during when loading or enable it from settings.");
+				SPLog("To see startup window, press SPACEBAR when loading or enable it from settings.");
 				spades::StartMainScreen();
 			}else{
 				splashWindow.reset();

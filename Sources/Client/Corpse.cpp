@@ -830,7 +830,7 @@ namespace spades {
 				ModelRenderParam paramTMP = param;
 				paramTMP.matrix *= Matrix4::Scale(scale);
 				//Chameleon
-
+				paramTMP.matrix *= Matrix4::Rotate(Vector3(0, 0, 1), 3.1415926535f);
 				renderer->RenderModel(model, paramTMP);
 			}
 			// draw Head

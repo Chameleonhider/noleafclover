@@ -308,7 +308,8 @@ namespace spades {
 			if ((int)hud_playerNames == 0)
 				return;
 
-			Player *p = GetWorld()->GetLocalPlayer();			
+			Player *p = GetWorld()->GetLocalPlayer();	
+			if (!p) return;
 			hitTag_t tag = hit_None;
 			Player *hottracked = HotTrackedPlayer( &tag );
 			if(hottracked)
@@ -425,6 +426,7 @@ namespace spades {
 			float scrHeight = renderer->ScreenHeight();
 			//float wTime = world->GetTime();
 			Player *p = GetWorld()->GetLocalPlayer();
+			if (!p) return;
 			IFont *font;
 			
 			// draw local weapon's 2d things
@@ -570,13 +572,13 @@ namespace spades {
 						case Player::ToolBlock:
 							if(p->GetNumBlocks() == 0)
 							{
-								msg = _Tr("Client", "Out of Block");
+								msg = _Tr("Client", "No blocks");
 							}
 							break;
 						case Player::ToolGrenade:
 							if(p->GetNumGrenades() == 0)
 							{
-								msg = _Tr("Client", "Out of Grenade");
+								msg = _Tr("Client", "No grenades");
 							}
 							break;
 						case Player::ToolWeapon:
@@ -590,7 +592,7 @@ namespace spades {
 							else if(weap->GetAmmo() == 0 &&
 									 weap->GetStock() == 0)
 							{
-								msg = _Tr("Client", "Out of Ammo");
+								msg = _Tr("Client", "No ammo");
 							}
 							else if(weap->GetStock() > 0 &&
 									 weap->GetAmmo() == 0)
@@ -602,11 +604,11 @@ namespace spades {
 							{
 								std::string msg1 = "";
 								if (MaxShots == -1)
-									msg1 = "auto";
+									msg1 = "Auto";
 								else if (MaxShots == 1)
-									msg1 = "semi-auto";
+									msg1 = "Semi-auto";
 								else
-									msg1 = "burst";
+									msg1 = "Burst";
 
 								font = textFont;
 								Vector2 size = font->Measure(msg1);
@@ -648,6 +650,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			Player *p = GetWorld()->GetLocalPlayer();
+			if (!p) return;
 			IFont *font;
 			float scrWidth = renderer->ScreenWidth();
 			float scrHeight = renderer->ScreenHeight();
@@ -787,6 +790,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			Player *p = GetWorld()->GetLocalPlayer();
+			if (!p) return;
 			IFont *font;
 			//float scrWidth = renderer->ScreenWidth();
 			float scrHeight = renderer->ScreenHeight();
@@ -957,7 +961,7 @@ namespace spades {
 				}
 			}*/
 			//Chameleon: velocity of mouse
-			if (world)
+			/*if (world)
 			{
 				if (false && world->GetLocalPlayer())
 				{
@@ -973,7 +977,7 @@ namespace spades {
 					sprintf(buf, " p.f: %.2f, %.2f, %.2f;", p->GetFront().x, p->GetFront().y, p->GetFront().z);
 					str += buf;
 				}
-			}
+			}*/
 
 			float scrWidth = renderer->ScreenWidth();
 			float scrHeight = renderer->ScreenHeight();

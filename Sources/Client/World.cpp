@@ -65,6 +65,11 @@ namespace spades {
 		World::~World() {
 			SPADES_MARK_FUNCTION();
 			
+			// ADDED: Free all remaining minimap bullets
+			for (std::list<MMBullet*>::iterator it = mmBullets.begin(); it != mmBullets.end(); it++) {
+				delete *it;
+			}
+			// END OF ADDED
 			for(std::list<Grenade *>::iterator it = grenades.begin();
 				it != grenades.end(); it++)
 				delete *it;
@@ -97,6 +102,27 @@ namespace spades {
 				if(players[i])
 					players[i]->Update(dt);
 			
+			// ADDED: Update all minimap bullets
+			std::vector<std::list<MMBullet*>::iterator> removedMMBullets;
+			// update the bullets
+			for (std::list<MMBullet*>::iterator it = mmBullets.begin(); it != mmBullets.end(); it++) {
+				// get the bullet
+				MMBullet *b = *it;
+				// add it to the list to be removed if it's reached the end of trajectory
+				if (b->travelled >= b->length) {
+					removedMMBullets.push_back(it);
+				}
+				// otherwise, update it
+				else {
+					b->travelled += dt * MMBULLET_VELOCITY;
+				}
+			}
+			// destroy any finished bullets
+			for (size_t i = 0; i < removedMMBullets.size(); i++) {
+				mmBullets.erase(removedMMBullets[i]);
+				delete *(removedMMBullets[i]);
+			}
+			// END OF ADDED
 			std::vector<std::list<Grenade *>::iterator> removedGrenades;
 			for(std::list<Grenade *>::iterator it = grenades.begin();
 				it != grenades.end(); it++){

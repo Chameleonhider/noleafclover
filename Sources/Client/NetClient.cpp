@@ -794,13 +794,17 @@ namespace spades {
 										p->SetOrientation(front);
 										
 										PosRecord& rec = playerPosRecords[idx];
-										if(rec.valid && front.z != 0 && front.y != 0) 
+										if (rec.valid && front.GetPoweredLength() != 0 && pos.GetPoweredLength() != 0)
 										{
 											float timespan = GetWorld()->GetTime() - rec.time;
-											timespan = std::max(0.12f, timespan);
+											timespan = std::max(0.16f, timespan);
 											Vector3 vel = (pos - rec.pos) / timespan;
 											vel *= 1.f / 32.f;
 											p->SetVelocity(vel);
+										}
+										else
+										{
+											p->SetVelocity(Vector3(0,0,0));
 										}
 										
 										rec.valid = true;

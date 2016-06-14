@@ -68,6 +68,8 @@ SPADES_SETTING(cg_fov, "90");
 SPADES_SETTING(weap_scope, "1");
 //weapon scope magnification (refresh only when dead/refill)
 SPADES_SETTING(weap_scopeZoom, "2");
+SPADES_SETTING(v_binocsZoom, "");
+SPADES_SETTING(opt_corpseNade, "1");
 
 namespace spades {
 	namespace client {
@@ -158,12 +160,20 @@ namespace spades {
 				if(scriptedUI->NeedsInput())
 				{
 					weapInput.primary = false;
-					if(player->GetTeamId() >= 2 || player->GetTool() != Player::ToolWeapon)
+					if(player->GetTeamId() >= 2 || player->GetTool() != Player::ToolWeapon || (player->GetTool() != Player::ToolGrenade && (int)v_binocsZoom > 0))
 					{
 						weapInput.secondary = false;
 					}
 					//Useful for later!
-					playerInput = PlayerInput();
+					{
+						playerInput.jump = false;
+						playerInput.moveBackward = false;
+						playerInput.moveForward = false;
+						playerInput.moveLeft = false;
+						playerInput.moveRight = false;
+						playerInput.sneak = false;
+						playerInput.sprint = false;
+					}
 				}
 				
 				if(player->GetTeamId() >= 2) 
@@ -255,7 +265,7 @@ namespace spades {
 					cg_fov = "175";
 
 				scopeOn = (bool)weap_scope;
-				scopeZoom = abs((int)weap_scopeZoom);
+				scopeZoom = fmax(1, (int)weap_scopeZoom);
 				FOV = (int)cg_fov;
 			}
 			else if (!player)
@@ -267,7 +277,7 @@ namespace spades {
 					cg_fov = "175";
 
 				scopeOn = (bool)weap_scope;
-				scopeZoom = abs((int)weap_scopeZoom);
+				scopeZoom = fmax(1, (int)weap_scopeZoom);
 				FOV = (int)cg_fov;
 			}
 
@@ -322,10 +332,13 @@ namespace spades {
 			//the less hearing you lost, the faster recovery
 			if (soundDistance < int(snd_maxDistance))
 			{
-				soundDistance += (1 + soundDistance*15.f/int(snd_maxDistance))*dt;
+				if (soundDistance < 0)
+					soundDistance = 0;
+
+				soundDistance += (1 + soundDistance*0.1f)*dt;
 
 				if (soundDistance > int(snd_maxDistance))
-					soundDistance = snd_maxDistance;
+					soundDistance = int(snd_maxDistance);
 			}
 
 			if(hitFeedbackIconState > 0.f) 
@@ -646,7 +659,12 @@ namespace spades {
 			WeaponInput winpTMP = winp;
 
 			//if (world->GetListener()->GetMaxShots() > 0 && world->GetListener()->GetShotsFired() >= world->GetListener()->GetMaxShots())
-			winpTMP.primary = player->GetWeapon()->IsShooting();
+			if (player->GetTool() == Player::ToolWeapon)
+			{
+				winpTMP.primary = player->GetWeapon()->IsShooting();
+				winpTMP.secondary = 
+					winp.secondary && (GetRifleScoped() || inp.crouch || inp.sneak || (!inp.moveBackward && !inp.moveForward && !inp.moveLeft && !inp.moveRight));
+			}
 
 			net->SendWeaponInput(winpTMP);
 			
@@ -758,6 +776,8 @@ namespace spades {
 				// ouch!
 				lastHealth = player->GetHealth();
 				lastHurtTime = world->GetTime();
+
+				soundDistance -= soundDistance*0.25f;
 				
 				Handle<IAudioChunk> c;
 				switch((rand() >> 3) & 3){
@@ -1055,25 +1075,26 @@ namespace spades {
 
 				switch (p->GetWeapon()->GetWeaponType())
 				{
-				case (RIFLE_WEAPON) :
+				case (RIFLE_WEAPON):
 					addGV = 0.08f;
 					break;
-				case (SMG_WEAPON) :
-					addGV = 0.03f;
+				case (SMG_WEAPON):
+					addGV = 0.04f;
 					break;
-				case (SHOTGUN_WEAPON) :
+				case (SHOTGUN_WEAPON):
 					addGV = 0.10f;
 					break;
 				default:
 					break;
 				}	
-				//not enough hearing loss...
-				soundDistance -= (2 + addGV*10) * soundDistance / 5.f;
+				//too much hearing loss
+				if (soundDistance > (int)snd_maxDistance*0.55f)
+					soundDistance -= (soundDistance-(int)snd_maxDistance*0.5f) * (soundDistance-(int)snd_maxDistance*0.5f) * (addGV*2.5f+0.25f) / (int)snd_maxDistance; //(x-64)*(x-64)/128
 
 				addGV *= (4.f-GetAimDownState())/4.f; //from 1 to 0.75
 
-				if (grenadeVibration < addGV*2)
-					grenadeVibration += addGV;		
+				if (grenadeVibration < addGV*1.5f)
+					grenadeVibration = fmin(addGV*1.5f, grenadeVibration+addGV);		
 
 				//add single and auto modes for SMG //added
 			}			
@@ -1133,7 +1154,7 @@ namespace spades {
 				{
 					//update weapon scope and scope magnification
 					scopeOn = (bool)weap_scope;
-					scopeZoom = abs((int)weap_scopeZoom);
+					scopeZoom = fmax(1, (int)weap_scopeZoom);
 
 					Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Restock.wav");
 					audioDevice->PlayLocal(c, MakeVector3(.4f, -.3f, .5f),
@@ -1524,8 +1545,7 @@ namespace spades {
 					param.volume = 2.f;
 					
 					Handle<IAudioChunk> c;
-					
-					param.pitch = .9f + GetRandom() * 0.2f;
+					param.pitch = 0.9f + GetRandom() * 0.2f;
 					switch((rand() >> 6) & 3){
 						case 0:
 							c = audioDevice->RegisterSound("Sounds/Weapons/Impacts/Water1.wav");
@@ -1567,7 +1587,7 @@ namespace spades {
 					}
 					audioDevice->Play(c, shiftedHitPos, param);*/
 					
-					param.pitch = .9f + GetRandom() * 0.2f;
+					param.pitch = 0.9f + GetRandom() * 0.2f;
 					param.volume = 2.f;
 					switch((rand() >> 6) & 3)
 					{
@@ -1601,17 +1621,21 @@ namespace spades {
 			switch(player->GetWeapon()->GetWeaponType()) 
 			{
 				case RIFLE_WEAPON:
-					vel = 600.f;
-					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
+					vel = 500.f;
+					model = renderer->RegisterModel("Models/Weapons/Objects/TracerRifle.kv6");
 					break;
 				case SMG_WEAPON:
 					vel = 300.f;
-					model = renderer->RegisterModel("Models/Weapons/Objects/Tracer.kv6");
+					model = renderer->RegisterModel("Models/Weapons/Objects/TracerSMG.kv6");
 					if (player->GetWeapon()->GetAmmo() % 2 == 0)
 						return;
 					break;
 				case SHOTGUN_WEAPON:
-					return;
+					vel = 200.f;
+					model = renderer->RegisterModel("Models/Weapons/Objects/TracerShotgun.kv6");
+					if (GetRandom() > 0.5f)
+						return;
+					break;
 			}
 			if (!world->GetLocalPlayer())
 				t = new Tracer(this, NULL, model, muzzlePos, hitPos, vel, player->GetColor());
@@ -1653,7 +1677,9 @@ namespace spades {
 				if (!IsMuted() && distance*4 < soundDistance)
 				{
 					Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Objects/GrenadeBounce.wav");
-					audioDevice->Play(c, g->GetPosition(), AudioParam());
+					AudioParam param;
+					param.pitch = 0.9f + GetRandom() * 0.2f;
+					audioDevice->Play(c, g->GetPosition(), param);
 				}
 			}
 		}
@@ -1671,9 +1697,33 @@ namespace spades {
 		
 		void Client::GrenadeExploded(spades::client::Grenade *g) {
 			SPADES_MARK_FUNCTION();
-			
+
+			if (opt_corpseNade)
+			{
+				decltype(corpses)::iterator it;
+				std::vector<decltype(it)> its;
+				int cnt = (int)corpses.size() - corpseSoftLimit;
+				for (it = corpses.begin(); it != corpses.end(); it++){
+					auto& c = *it;
+					if (c)
+					{
+						if (c->teamId != g->GetTeamId())
+						{
+							if ((c->GetHead() - g->GetPosition()).GetPoweredLength() < 64)
+							{
+								Vector3 normal = (c->GetHead() - g->GetPosition()).Normalize();
+								if (!map->CastRay2(c->GetHead() - Vector3(0, 0, 0.5f), normal, (c->GetHead() - g->GetPosition()).GetLength() - 1).hit)
+								{
+									c->AddBodyImpulse((normal * 32 + Vector3(0, 0, -16))*float(opt_corpseNade));
+								}
+							}
+						}
+					}
+				}
+			}
+
 			bool inWater = g->GetPosition().z > 63.f;
-			
+
 			if(inWater)
 			{
 				GrenadeExplosionUnderwater(g->GetPosition());
@@ -1686,6 +1736,7 @@ namespace spades {
 						Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Grenade/ExplodeWater0.wav");
 						AudioParam param;
 						param.volume = 5.f;
+						param.pitch = 0.9f + GetRandom()*0.2f;
 						audioDevice->Play(c, g->GetPosition(), param);
 					}
 					else if (distance < (int)snd_maxDistance)
@@ -1713,8 +1764,32 @@ namespace spades {
 					//				  param);
 				}
 			}
-			else
+			else 
 			{
+				if (opt_corpseNade)
+				{
+					for (size_t i = 0; i < world->GetNumPlayers(); i++)
+					{
+						if (world->GetPlayer(i))
+						{
+							Player *p = world->GetPlayer(i);
+							if (p == world->GetLocalPlayer()) continue;
+							if (p->GetTeamId() != g->GetTeamId())
+							{
+								if ((p->GetPosition() - g->GetPosition()).GetPoweredLength() < 64)
+								{
+									Vector3 normal = (p->GetPosition() - g->GetPosition()).Normalize();
+									if (!map->CastRay2(p->GetPosition() - Vector3(0, 0, 0.5f), normal, (p->GetPosition() - g->GetPosition()).GetLength() - 1).hit)
+									{
+										p->SetVelocity((p->GetVelocity() + normal*0.25f + Vector3(0, 0, -0.25f))*float(opt_corpseNade));
+									}
+								}
+							}
+						}
+					}
+				}
+				
+
 				GrenadeExplosion(g->GetPosition());
 				
 				if(!IsMuted())
@@ -1727,6 +1802,7 @@ namespace spades {
 						AudioParam param;
 						Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Objects/GrenadeDebris.wav");
 						param.volume = 5.f;
+						param.pitch = 0.9f + GetRandom()*0.2f;
 						param.referenceDistance = 3.f;
 						IntVector3 outPos;
 						Vector3 soundPos = g->GetPosition();
@@ -1742,6 +1818,7 @@ namespace spades {
 						Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Grenade/Explode0.wav");
 						AudioParam param;
 						param.volume = 5.f;
+						param.pitch = 0.9f + GetRandom()*0.2f;
 						//param.referenceDistance = distance;
 						audioDevice->Play(c, g->GetPosition(), param);						
 					}
@@ -1750,6 +1827,7 @@ namespace spades {
 						AudioParam param;
 						Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Grenade/Explode1.wav");
 						param.volume = 1.f;
+						param.pitch = 0.9f + GetRandom()*0.2f;
 						//param.referenceDistance = distance;
 						audioDevice->Play(c, g->GetPosition(), param);
 					}
@@ -1784,9 +1862,6 @@ namespace spades {
 			
 			if(!IsMuted())
 			{
-				/*Handle<IAudioChunk> c = (teamId == 0 ?
-					audioDevice->RegisterSound("Sounds/Weapons/GrenadeA/Fire.wav") :
-					audioDevice->RegisterSound("Sounds/Weapons/GrenadeB/Fire.wav")); */
 				Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Grenade/Fire.wav");
 				audioDevice->PlayLocal(c, MakeVector3(.4f, -.3f, .5f),
 									   AudioParam());
@@ -1908,7 +1983,6 @@ namespace spades {
 			{
 				if (world->GetLocalPlayer()->GetWeaponType() != SMG_WEAPON)
 					MaxShots = 1;
-				return MaxShots;
 			}
 			return MaxShots;
 		}
@@ -1921,6 +1995,14 @@ namespace spades {
 		void Client::SetMaxShots(int value)
 		{
 			MaxShots = value;
+		}
+
+		//Chameleon: aimed weapon slowdown if scoped in
+		bool Client::GetRifleScoped()
+		{
+			if (world->GetLocalPlayer()->GetTool() == Player::ToolWeapon && world->GetLocalPlayer()->GetWeaponType() == RIFLE_WEAPON && scopeOn && scopeView)
+				return true;
+			return false;
 		}
 	}
 }

@@ -32,11 +32,15 @@ namespace spades {
 			float volume;
 			float pitch;
 			float referenceDistance;
+			float originalPitch;
+			float originalVolume;
 			
 			AudioParam(){
 				volume = 1.f;
 				pitch = 1.f;
 				referenceDistance = 1.f;
+				originalPitch = 1.f;
+				originalVolume = 1.f;
 			}
 		};
 		
@@ -55,6 +59,8 @@ namespace spades {
 			virtual void Respatialize(const Vector3& eye,
 									  const Vector3& front,
 									  const Vector3& up) = 0;
+			//Chameleon: pitch&volume adjustment
+			virtual void SoundDistance(const float soundDist) = 0;
 		};
 	}
 }

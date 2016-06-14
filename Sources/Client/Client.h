@@ -250,9 +250,9 @@ namespace spades {
 			Player *HotTrackedPlayer( hitTag_t* hitFlag );
 			
 			// effects (local entity, etc)
-			std::vector<DynamicLightParam> flashDlights;
+			public: std::vector<DynamicLightParam> flashDlights;
 			std::vector<DynamicLightParam> flashDlightsOld;
-			void Leak(Vector3, Vector3);
+			private: void Leak(Vector3, Vector3);
 			void Bleed(Vector3, Vector3 = MakeVector3(0,0,0));
 			void EmitBlockFragments(Vector3, IntVector3 color, bool local);
 			void EmitBlockDestroyFragments(IntVector3, IntVector3 color);
@@ -422,6 +422,8 @@ namespace spades {
 			virtual void SetShotsFired(int);
 			//Chameleon
 			virtual void SetMaxShots(int);
+			//Chameleon
+			virtual bool GetRifleScoped();
 
 			virtual void PlayerObjectSet(int);
 			virtual void PlayerMadeFootstep(Player *);

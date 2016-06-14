@@ -63,13 +63,13 @@ SPADES_SETTING(v_drawArms, "0");
 SPADES_SETTING(v_drawLegs, "0");
 
 //grenade binocs zoom
-SPADES_SETTING(v_binocsZoom, "2");
+SPADES_SETTING(v_binocsZoom, "");
 
 //SPADES_SETTING(d_a, "0");
 //SPADES_SETTING(d_b, "0");
 //SPADES_SETTING(d_c, "0");
-SPADES_SETTING(d_x, "0");
-SPADES_SETTING(d_y, "0");
+//SPADES_SETTING(d_x, "0");
+//SPADES_SETTING(d_y, "0");
 
 namespace spades {
 	namespace client {
@@ -431,9 +431,9 @@ namespace spades {
 				if(aimDownState > 1.f)
 					aimDownState = 1.f;
 			}
-			else if (actualWeapInput.secondary && player->GetTool() == Player::ToolGrenade && (int)v_binocsZoom != -1 && player->IsAlive())
+			else if (actualWeapInput.secondary && player->GetTool() == Player::ToolGrenade && (int)v_binocsZoom > 0 && player->IsAlive())
 			{
-				aimDownState += dt * 20.f;
+				aimDownState += dt * 10.f;
 				if (aimDownState > 1.f)
 					aimDownState = 1.f;
 			}
@@ -765,10 +765,10 @@ namespace spades {
 				interface.SetSprintState(sprint);
 				interface.SetMuted(client->IsMuted());
 
-				if (client->GetWorld()->GetLocalPlayer())
+				if (client->GetWorld()->GetLocalPlayer() && client->GetWorld()->GetLocalPlayer()->GetTeamId() < 2)
 					interface.SetClientDistance((player->GetPosition() - client->GetWorld()->GetLocalPlayer()->GetPosition()).GetLength());
 				else
-					interface.SetClientDistance((player->GetPosition() - client->GetLastSceneDef().viewOrigin).GetLength());
+					interface.SetClientDistance((player->GetPosition() - client->followPos).GetLength());
 
 				interface.SetSoundDistance(client->soundDistance);
 				if (player->IsLocalPlayer())
@@ -1803,10 +1803,10 @@ namespace spades {
 			
 			{
 				ScriptIToolSkin interface(skin);
-				if (client->GetWorld()->GetLocalPlayer())
+				if (client->GetWorld()->GetLocalPlayer() && client->GetWorld()->GetLocalPlayer()->GetTeamId() < 2)
 					interface.SetClientDistance((player->GetPosition() - client->GetWorld()->GetLocalPlayer()->GetPosition()).GetLength());
 				else
-					interface.SetClientDistance((player->GetPosition() - client->GetLastSceneDef().viewOrigin).GetLength());
+					interface.SetClientDistance((player->GetPosition() - client->followPos).GetLength());
 				interface.SetSoundDistance(client->soundDistance);
 			}
 
@@ -1832,10 +1832,10 @@ namespace spades {
 			
 			{
 				ScriptIToolSkin interface(skin);
-				if (client->GetWorld()->GetLocalPlayer())
+				if (client->GetWorld()->GetLocalPlayer() && client->GetWorld()->GetLocalPlayer()->GetTeamId() < 2)
 					interface.SetClientDistance((player->GetPosition() - client->GetWorld()->GetLocalPlayer()->GetPosition()).GetLength());
 				else
-					interface.SetClientDistance((player->GetPosition() - client->GetLastSceneDef().viewOrigin).GetLength());
+					interface.SetClientDistance((player->GetPosition() - client->followPos).GetLength());
 				interface.SetSoundDistance(client->soundDistance);
 			}
 
@@ -1861,10 +1861,10 @@ namespace spades {
 
 			{
 				ScriptIToolSkin interface(skin);
-				if (client->GetWorld()->GetLocalPlayer())
+				if (client->GetWorld()->GetLocalPlayer() && client->GetWorld()->GetLocalPlayer()->GetTeamId() < 2)
 					interface.SetClientDistance((player->GetPosition() - client->GetWorld()->GetLocalPlayer()->GetPosition()).GetLength());
 				else
-					interface.SetClientDistance((player->GetPosition() - client->GetLastSceneDef().viewOrigin).GetLength());
+					interface.SetClientDistance((player->GetPosition() - client->followPos).GetLength());
 				interface.SetSoundDistance(client->soundDistance);
 			}
 

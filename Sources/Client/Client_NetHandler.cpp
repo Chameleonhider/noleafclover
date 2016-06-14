@@ -57,11 +57,18 @@ namespace spades {
 
 			toolRaiseState = .0f;
 
-			if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
-				MaxShots = -1;
-			else
-				MaxShots = 1;
-			//SPLog("Local player created");
+			if (world)
+			{
+				if (world->GetLocalPlayer())
+				{
+					soundDistance = (int)snd_maxDistance;
+					//SPLog("Local player created");
+					if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
+						MaxShots = -1;
+					else
+						MaxShots = 1;
+				}
+			}			
 		}
 		
 		void Client::JoinedGame() {

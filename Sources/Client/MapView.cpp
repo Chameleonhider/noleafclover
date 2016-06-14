@@ -457,25 +457,6 @@ namespace spades {
 					Vector4 teamColorF = ModifyColor(teamColor);
 					teamColorF *= alpha;
 
-					// draw local player's view
-					{
-						Player *p = player;
-						Handle<IImage> viewIcon = renderer->RegisterImage("Gfx/Map/View.png");
-						if (p->IsAlive()) {
-							Vector3 front = p->GetFront2D();
-							float ang = atan2(front.x, -front.y);
-							if (player->GetTeamId() >= 2){
-								ang = client->followYaw - static_cast<float>(M_PI)* .5f;
-							}
-
-							renderer->SetColorAlphaPremultiplied(teamColorF * 0.9f);
-
-							DrawIcon(player->GetTeamId() >= 2 ?
-								client->followPos :
-								p->GetPosition(), viewIcon, ang);
-						}
-					}
-
 					// draw player's icon
 					for (int i = 0; i < world->GetNumPlayerSlots(); i++){
 						Player * p = world->GetPlayer(i);
@@ -536,7 +517,22 @@ namespace spades {
 				}
 			
 			}
-			
+
+			{
+				// ADDED: Render the minimap bullets
+				Handle<IImage> bulletIcon = renderer->RegisterImage("Gfx/Map/Bullet.png");
+				for (std::list<MMBullet*>::iterator it = world->mmBullets.begin(); it != world->mmBullets.end(); it++) {
+					// get the bullet, compute the 2d position
+					MMBullet *b = *it;
+					Vector2 bPos = b->start + (b->direction * b->travelled);
+					// render the bullet
+					renderer->SetColorAlphaPremultiplied(Vector4(1, 1, 1, 1));
+					DrawIcon(Vector3(bPos.x, bPos.y, 100.0f), bulletIcon,
+						atan2(b->direction.x, -b->direction.y));
+				}
+				// END OF ADDED
+			}
+
 			IGameMode* mode = world->GetMode();
 			if( mode && IGameMode::m_CTF == mode->ModeType() ) 
 			{

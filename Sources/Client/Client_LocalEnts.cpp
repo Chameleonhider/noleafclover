@@ -281,12 +281,14 @@ namespace spades {
 			{
 				float temp = (8.f - distance) / 160.f;
 
-				if (temp > 0.03f)
-					grenadeVibration += 0.03f;
-				else if (temp > 0)
-					grenadeVibration += temp;
-
-				if (grenadeVibration > 0.25f)
+				if (grenadeVibration < 0.1f)
+				{
+					if (temp > 0.03f)
+						grenadeVibration += 0.03f;
+					else if (temp > 0)
+						grenadeVibration += temp;
+				}
+				else if (grenadeVibration > 0.25f)
 					grenadeVibration = 0.25f;
 			}
 

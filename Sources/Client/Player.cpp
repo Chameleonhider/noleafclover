@@ -36,6 +36,8 @@
 //#include "Client.h"
 
 SPADES_SETTING(opt_tracers, "2");
+SPADES_SETTING(v_binocsZoom, "");
+SPADES_SETTING(weap_scope, "");
 
 //SPADES_SETTING(d_a, "1");
 //SPADES_SETTING(d_b, "1");
@@ -358,6 +360,11 @@ namespace spades {
 					{
 						iL->SetShotsFired(0);
 						weapon->SetShooting(newInput.primary);
+					}
+
+					if (weapon->GetAmmo() <= 0)
+					{
+						weapon->SetShooting(false);
 					}
 				}
 				else
@@ -711,6 +718,8 @@ namespace spades {
 			{
 				if (weapon->GetWeaponType() != SHOTGUN_WEAPON)
 					spread += spread * spreadAdd;
+				else
+					spread += spread * (spreadAdd*0.5f + 0.5f);
 			}
 
 			// pyspades takes destroying more than one block as a
@@ -933,6 +942,40 @@ namespace spades {
 						}
 					}
 				}
+				// ADDED: Add a minimap bullet
+				if (i == 0 && world->GetLocalPlayer())
+				{
+					// compute the 2D information about the fired bullet (don't care about z-axis)
+					Vector2 muzzle2D = Vector2(muzzle.x, muzzle.y);
+					Vector2 finalPos2D = Vector2(finalHitPos.x, finalHitPos.y);
+					Vector2 plrPos2D = Vector2(world->GetLocalPlayer()->GetPosition().x, world->GetLocalPlayer()->GetPosition().y);
+					if (GetTeamId() == world->GetLocalPlayer()->GetTeamId() || (muzzle2D - plrPos2D).GetPoweredLength() < 16384.f || (finalPos2D - plrPos2D).GetPoweredLength() < 16384.f)
+					{
+						// create the bullet
+						MMBullet *b = new MMBullet();
+						b->direction = (finalPos2D - muzzle2D).Normalize();
+						b->length = (finalPos2D - muzzle2D).GetLength();
+						b->start = muzzle2D;
+						b->travelled = 10;	// start a bit ahead of the muzzle to avoid bullet-icon intersection
+						// add it to the list!
+						world->mmBullets.push_front(b);
+					}
+				}
+				else
+				{
+					// compute the 2D information about the fired bullet (don't care about z-axis)
+					Vector2 muzzle2D = Vector2(muzzle.x, muzzle.y);
+					Vector2 finalPos2D = Vector2(finalHitPos.x, finalHitPos.y);
+					// create the bullet
+					MMBullet *b = new MMBullet();
+					b->direction = (finalPos2D - muzzle2D).Normalize();
+					b->length = (finalPos2D - muzzle2D).GetLength();
+					b->start = muzzle2D;
+					b->travelled = 10;	// start a bit ahead of the muzzle to avoid bullet-icon intersection
+					// add it to the list!
+					world->mmBullets.push_front(b);
+				}
+				// END OF ADDED
 				
 				//if(world->GetListener() && this != world->GetLocalPlayer()) //old one
 				if (world->GetListener() && (int)opt_tracers != 0)
@@ -1375,8 +1418,9 @@ namespace spades {
 				f *= 0.1f;
 			else if(input.crouch)
 				f *= 0.3f;
-			else if((weapInput.secondary && IsToolWeapon()) ||
-					input.sneak)
+			else if(IsLocalPlayer() && (input.sneak || (weapInput.secondary && world->GetListener()->GetRifleScoped())))
+				f *= 0.5f;
+			else if(!IsLocalPlayer() && (input.sneak || (weapInput.secondary && tool == ToolWeapon)))
 				f *= 0.5f;
 			else if(input.sprint)
 				f *= 1.3f;
@@ -1761,9 +1805,13 @@ namespace spades {
 				case ToolBlock:
 					return blockStocks > 0;
 				case ToolWeapon:
-					return true;
+					if (IsLocalPlayer())
+						return true;
+					return weapon->GetAmmo() > 0 ||	weapon->GetStock() > 0;
 				case ToolGrenade:
-					return true;
+					if (IsLocalPlayer() && (int)v_binocsZoom != 0)
+						return true;
+					return grenades > 0;					
 				default:
 					SPAssert(false);
 			}
