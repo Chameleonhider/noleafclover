@@ -471,6 +471,15 @@ namespace spades {
 							ang = client->followYaw - static_cast<float>(M_PI)* .5f;
 						}
 
+						if (p == world->GetLocalPlayer())
+						{
+							renderer->SetColorAlphaPremultiplied(Vector4(0.f, 1.f, 1.f, 1.f));
+							DrawIcon(player->GetTeamId() >= 2 ?
+								client->followPos :
+								p->GetPosition(), playerIcon, ang);
+							continue;
+						}
+
 						//use a spec color for each player
 						//if (colormode == "1"){
 						//	IntVector3 Colorplayer = IntVector3::Make(palette[i][0], palette[i][1], palette[i][2]);
@@ -479,8 +488,9 @@ namespace spades {
 						//	renderer->SetColorAlphaPremultiplied(ColorplayerF);
 						//}
 						//else {
-							renderer->SetColorAlphaPremultiplied(teamColorF);
+						renderer->SetColorAlphaPremultiplied(teamColorF);
 						//}
+						
 
 						//use a different icon in minimap according to weapon of player
 						if (iconmode == "1")
