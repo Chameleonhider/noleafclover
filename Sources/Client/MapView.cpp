@@ -68,7 +68,7 @@ namespace spades {
 					SPAssert(false);
 			}
 			if(actualScale != scale){
-				float spd = fabsf(scale - lastScale) * 6.f;
+				float spd = fabsf(scale - lastScale) * 10.f;
 				spd = std::max(spd, 0.2f);
 				spd *= dt;
 				if(scale > actualScale){
@@ -83,10 +83,10 @@ namespace spades {
 			}
 			
 			if(zoomed){
-				zoomState += dt * 5.f;
+				zoomState += dt * 10.f;
 				if(zoomState > 1.f) zoomState = 1.f;
 			}else{
-				zoomState -= dt * 5.f;
+				zoomState -= dt * 10.f;
 				if(zoomState < 0.f) zoomState = 0.f;
 			}
 		}
@@ -217,8 +217,8 @@ namespace spades {
 				pos = client->followPos;
 			}
 			Vector2 center = {pos.x, pos.y};
-			float cfgMapSize = cg_minimapSize;
-			if (cfgMapSize < 32 && cfgMapSize != 0) cfgMapSize = 32;
+			float cfgMapSize = (int)cg_minimapSize;
+			if(cfgMapSize < 32 && cfgMapSize != 0) cfgMapSize = 32;
 			if(cfgMapSize > 256) cfgMapSize = 256;
 
 			Vector2 mapWndSize = { cfgMapSize, cfgMapSize };

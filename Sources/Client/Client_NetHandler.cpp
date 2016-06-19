@@ -39,6 +39,8 @@
 
 #include "NetClient.h"
 
+#include "HurtRingView.h"
+
 //Chameleon: absolute maximum sound distance. footstep&other sound limit is 0.75 times this
 SPADES_SETTING(snd_maxDistance, "");
 //Turns off/default/turns some off center messages
@@ -62,6 +64,7 @@ namespace spades {
 				if (world->GetLocalPlayer())
 				{
 					soundDistance = (int)snd_maxDistance;
+					hurtRingView->ClearAll();
 					//SPLog("Local player created");
 					if (world->GetLocalPlayer()->GetWeaponType() == SMG_WEAPON)
 						MaxShots = -1;

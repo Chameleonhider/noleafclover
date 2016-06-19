@@ -164,7 +164,6 @@ namespace spades {
 					{
 						weapInput.secondary = false;
 					}
-					//Useful for later!
 					{
 						playerInput.jump = false;
 						playerInput.moveBackward = false;
@@ -267,6 +266,8 @@ namespace spades {
 				scopeOn = (bool)weap_scope;
 				scopeZoom = fmax(1, (int)weap_scopeZoom);
 				FOV = (int)cg_fov;
+
+				renderer->UpdateFlatGameMap();
 			}
 			else if (!player)
 			{
@@ -279,6 +280,8 @@ namespace spades {
 				scopeOn = (bool)weap_scope;
 				scopeZoom = fmax(1, (int)weap_scopeZoom);
 				FOV = (int)cg_fov;
+
+				renderer->UpdateFlatGameMap();
 			}
 
 			//Chameleon: walk shake
@@ -339,6 +342,18 @@ namespace spades {
 
 				if (soundDistance > int(snd_maxDistance))
 					soundDistance = int(snd_maxDistance);
+
+				//doesn't work because of echo
+				/*if (soundDistance < 10 && (world->GetTime() - lastTinnitusTime) > -0.1f)
+				{
+					Handle<IAudioChunk> aud = audioDevice->RegisterSound("Sounds/Player/Tinnitus.wav");
+					AudioParam param;
+					param.pitch = 0.9f + GetRandom()*0.2f;
+					param.volume = fmax(0.f, 1.f - soundDistance*0.1f);
+					audioDevice->PlayLocal(aud, MakeVector3(0, 0, 0), param);
+
+					lastTinnitusTime = world->GetTime();
+				}*/
 			}
 
 			if(hitFeedbackIconState > 0.f) 
@@ -770,14 +785,14 @@ namespace spades {
 			
 			if(player->GetHealth() < lastHealth)
 			{
+				soundDistance -= soundDistance*(lastHealth - player->GetHealth())*0.01f;
+
 				//Chameleon: local blood
 				Bleed(player->GetEye());
 				Bleed(player->GetPosition());
 				// ouch!
 				lastHealth = player->GetHealth();
-				lastHurtTime = world->GetTime();
-
-				soundDistance -= soundDistance*0.25f;
+				lastHurtTime = world->GetTime();				
 				
 				Handle<IAudioChunk> c;
 				switch((rand() >> 3) & 3){
@@ -847,9 +862,9 @@ namespace spades {
 				//center += followFront;
 				if (map->IsSolid(center.x-0.25f, followPos.y, followPos.z))
 				{
-					followVel.x *= -0.25f;
+					followVel.x *= -0.5f;
 					followVel.y *= 0.8f;
-					followVel.z *= 0.8f;
+					//followVel.z *= 0.8f;
 
 					if (fabsf(followVel.x) < 0.25f)
 						followVel.x = 0;
@@ -861,9 +876,9 @@ namespace spades {
 				}
 				if (map->IsSolid(followPos.x, center.y-0.25f, followPos.z))
 				{
-					followVel.y *= -0.25f;
+					followVel.y *= -0.5f;
 					followVel.x *= 0.8f;
-					followVel.z *= 0.8f;
+					//followVel.z *= 0.8f;
 
 					if (fabsf(followVel.y) < 0.25f)
 						followVel.y = 0;
@@ -875,9 +890,9 @@ namespace spades {
 				}
 				if (map->IsSolid(center.x+0.25f, followPos.y, followPos.z))
 				{
-					followVel.x *= -0.25f;
+					followVel.x *= -0.5f;
 					followVel.y *= 0.8f;
-					followVel.z *= 0.8f;
+					//followVel.z *= 0.8f;
 
 					if (fabsf(followVel.x) < 0.25f)
 						followVel.x = 0;
@@ -889,9 +904,9 @@ namespace spades {
 				}
 				if (map->IsSolid(followPos.x, center.y+0.25f, followPos.z))
 				{
-					followVel.y *= -0.25f;
+					followVel.y *= -0.5f;
 					followVel.x *= 0.8f;
-					followVel.z *= 0.8f;
+					//followVel.z *= 0.8f;
 
 					if (fabsf(followVel.y) < 0.25f)
 						followVel.y = 0;
@@ -1088,10 +1103,10 @@ namespace spades {
 					break;
 				}	
 				//too much hearing loss
-				if (soundDistance > (int)snd_maxDistance*0.55f)
-					soundDistance -= (soundDistance-(int)snd_maxDistance*0.5f) * (soundDistance-(int)snd_maxDistance*0.5f) * (addGV*2.5f+0.25f) / (int)snd_maxDistance; //(x-64)*(x-64)/128
+				if (soundDistance > (int)snd_maxDistance*0.5f)
+					soundDistance -= (soundDistance-(int)snd_maxDistance*0.4f) * (soundDistance-(int)snd_maxDistance*0.4f) * (addGV*5.f+0.5f) / (int)snd_maxDistance; //(x-64)*(x-64)/128
 
-				addGV *= (4.f-GetAimDownState())/4.f; //from 1 to 0.75
+				addGV *= (3.f-GetAimDownState())/3.f; //from 1 to 0.66
 
 				if (grenadeVibration < addGV*1.5f)
 					grenadeVibration = fmin(addGV*1.5f, grenadeVibration+addGV);		
@@ -1155,6 +1170,8 @@ namespace spades {
 					//update weapon scope and scope magnification
 					scopeOn = (bool)weap_scope;
 					scopeZoom = fmax(1, (int)weap_scopeZoom);
+
+					renderer->UpdateFlatGameMap();
 
 					Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Weapons/Restock.wav");
 					audioDevice->PlayLocal(c, MakeVector3(.4f, -.3f, .5f),
@@ -1750,6 +1767,8 @@ namespace spades {
 
 					if (distance < soundDistance)
 						soundDistance = distance;
+					if (distance < 16.f)
+						soundDistance *= 0.25f + soundDistance*0.046875f; //0.25 + x * 0.0234375
 
 					/*if (distance < 16.f)
 					{
@@ -1842,6 +1861,9 @@ namespace spades {
 
 					if (distance < soundDistance)
 						soundDistance = distance;
+					if (distance < 16.f)
+						soundDistance *= 0.25f + soundDistance*0.046875f; //0.25 + x * 0.0234375
+
 					/*if (distance < 16.f)
 						lastShellShockTime = distance / 16.f;*/
 

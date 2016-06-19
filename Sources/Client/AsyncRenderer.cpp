@@ -214,6 +214,13 @@ namespace spades {
 					if(img) img->Release(); img = NULL;
 				}
 			};
+			class UpdateFlatGameMap: public Command {
+			public:
+				virtual void Execute(IRenderer *r){
+					SPADES_MARK_FUNCTION();
+					r->UpdateFlatGameMap();
+				}
+			};
 			class DrawFlatGameMap: public Command {
 			public:
 				AABB2 outRect, inRect;
@@ -662,6 +669,10 @@ namespace spades {
 			cmd->inRect = inRect;
 		}
 		
+		void AsyncRenderer::UpdateFlatGameMap() {
+			SPADES_MARK_FUNCTION();
+			rcmds::UpdateFlatGameMap *cmd = generator->AllocCommand<rcmds::UpdateFlatGameMap>();
+		}
 		void AsyncRenderer::DrawFlatGameMap(const spades::AABB2 &outRect,
 											const spades::AABB2 &inRect) {
 			SPADES_MARK_FUNCTION();

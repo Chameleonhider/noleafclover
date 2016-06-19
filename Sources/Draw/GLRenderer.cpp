@@ -1175,6 +1175,11 @@ namespace spades {
 			
 		}
 		
+		void GLRenderer::UpdateFlatGameMap(){
+			void EnsureSceneNotStarted();
+			if (flatMapRenderer)
+				flatMapRenderer->RefreshBitmap();
+		}
 		void GLRenderer::DrawFlatGameMap(const spades::AABB2 &outRect,
 										 const spades::AABB2 &inRect){
 			void EnsureSceneNotStarted();

@@ -123,6 +123,7 @@ namespace spades {
 			virtual void DrawImage(IImage *, const AABB2& outRect, const AABB2& inRect) = 0;
 			virtual void DrawImage(IImage *, const Vector2& outTopLeft, const Vector2& outTopRight, const Vector2& outBottomLeft, const AABB2& inRect) = 0;
 			
+			virtual void UpdateFlatGameMap() = 0;
 			virtual void DrawFlatGameMap(const AABB2& outRect, const AABB2& inRect) = 0;
 			
 			/** Finalizes a frame. */

@@ -45,6 +45,7 @@ namespace spades {
 			firstUpdate = true;
 			
 			image = client->GetRenderer()->RegisterImage("Gfx/WhitePixel.tga");
+			//image2 = client->GetRenderer()->RegisterImage("Gfx/WhiteDisk.tga");
 
 			//Chameleon: .wav sounds for tracers
 			int x = GetRandom()*4;
@@ -74,10 +75,15 @@ namespace spades {
 					break;
 			}
 
-			if (player && (p1 - player->GetPosition()).GetLength() < 8)
-				flyByDist = -1;
+			if (player)
+			{
+				if (player->IsLocalPlayer() || (p1 - player->GetPosition()).GetPoweredLength() < 64)
+					flyByDist = -1;
+			}
 			else
+			{
 				flyByDist = 0;
+			}
 			//soundPlayed = false;
 
 			//Chameleon: .kv6 tracers
@@ -158,9 +164,9 @@ namespace spades {
 			Vector3 pos2 = startPos + dir * endDist;
 			IRenderer *r = client->GetRenderer();
 			
-			Vector4 col = { colour.x, colour.y, colour.z, 0.f };
+			Vector4 col = { colour.x, colour.y, colour.z, 0.01f };
 
-			r->SetColorAlphaPremultiplied(col*0.25f);
+			r->SetColorAlphaPremultiplied(col*0.5f);
 			
 			float sizeScale = 1.f;
 			if (player)
@@ -188,11 +194,13 @@ namespace spades {
 				r->RenderModel(model, param);
 			}
 
+			//r->AddSprite(image2, pos2, .2f, 0);
+
 			if (dlight)
 			{
 				DynamicLightParam l;
 				l.origin = (pos1 + pos2)*0.5f;
-				l.radius = 3.f;
+				l.radius = 2.f;
 				l.type = DynamicLightTypePoint;
 				l.color = colour;
 				client->flashDlights.push_back(l);

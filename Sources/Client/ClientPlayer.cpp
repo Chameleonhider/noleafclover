@@ -43,6 +43,8 @@
 #include "GunCasing.h"
 #include "IAudioChunk.h"
 
+#include "GameMap.h"
+
 SPADES_SETTING(cg_ragdoll, "");
 SPADES_SETTING(cg_ejectBrass, "");
 
@@ -64,6 +66,10 @@ SPADES_SETTING(v_drawLegs, "0");
 
 //grenade binocs zoom
 SPADES_SETTING(v_binocsZoom, "");
+//laser.... fuck this
+SPADES_SETTING(v_laser, "");
+//laser colour, lowercase r/g/b
+SPADES_SETTING(v_laserColour, "r");
 
 //SPADES_SETTING(d_a, "0");
 //SPADES_SETTING(d_b, "0");
@@ -224,6 +230,8 @@ namespace spades {
 					OnProhibitedAction();
 			}
 			
+			void UpdateFlatGameMap()
+			{ OnProhibitedAction(); }
 			void DrawFlatGameMap(const AABB2& outRect, const AABB2& inRect)
 			{ OnProhibitedAction(); }
 			
@@ -783,20 +791,12 @@ namespace spades {
 			World *world = client->GetWorld();
 			Matrix4 eyeMatrix = GetEyeMatrix();
 			
-			sandboxedRenderer->SetClipBox(AABB3(eyeMatrix.GetOrigin() - Vector3(20.f, 20.f, 20.f),
-												eyeMatrix.GetOrigin() + Vector3(20.f, 20.f, 20.f)));
-			sandboxedRenderer->SetAllowDepthHack(true);
-			
-			if(client->flashlightOn && r_dlights)
-			{
-				float brightness;
-				brightness = client->time - client->flashlightOnTime;
-				brightness = 1.f - expf(-brightness * 3.f);
-				
+			if(client->flashlightState == 1 && r_dlights)
+			{				
 				// add flash light
 				DynamicLightParam light;
-				light.origin = (eyeMatrix * MakeVector3(0, -0.1f, -0.5f)).GetXYZ();
-				light.color = MakeVector3(1, .8f, .5f) * 1.5f * brightness;
+				light.origin = (eyeMatrix * MakeVector3(0.f, 0.f, -0.4f)).GetXYZ();
+				light.color = MakeVector3(1, .8f, .6f) * 1.5f;
 				light.radius = 50.f;
 				light.type = DynamicLightTypeSpotlight;
 				light.spotAngle = 30.f * M_PI / 180.f;
@@ -816,7 +816,133 @@ namespace spades {
 				//renderer->SetColorAlphaPremultiplied(MakeVector4(1, .7f, .5f, 0) * brightness * .3f);
 				//renderer->AddSprite(renderer->RegisterImage("Gfx/Glare.tga"), (eyeMatrix * MakeVector3(0, 0.3f, -0.3f)).GetXYZ(), .8f, 0.f);
 			}
+			else if (client->flashlightState == 2)
+			{
+				Vector3 muzzle = p->GetEye();
+				muzzle += p->GetFront() * 0.02f;
+
+				GameMap *map = world->GetMap();
+
+				Vector3 dir = p->GetFront();
+				//Chameleon: sync visual weapon with hit location.
+				//synced when lim(weapXY -> 0)
+				if (p->IsLocalPlayer())
+				{
+					if (p->GetWeaponInput().secondary)
+					{
+						dir.x -= p->GetRight().x*viewWeaponOffset.x;
+						dir.y -= p->GetRight().y*viewWeaponOffset.x;
+						dir.z -= viewWeaponOffset.z*(abs(p->GetFront().z) + 1);
+					}
+					else
+					{
+						dir.x -= viewWeaponOffset.x*p->GetRight().x*0.1f;
+						dir.y -= viewWeaponOffset.x*p->GetRight().y*0.1f;
+						dir.z -= viewWeaponOffset.z*0.1f;
+					}
+				}
+				dir = dir.Normalize();
+
+				GameMap::RayCastResult mapResult;
+				mapResult = world->GetMap()->CastRay2(p->GetEye(),
+					dir,
+					500);
+
+				Player *hitPlayer = NULL;
+				float hitPlayerDistance = 0.f;
+
+				for (int i = 0; i < world->GetNumPlayerSlots(); i++){
+					Player *other = world->GetPlayer(i);
+					if (other == p || other == NULL)
+						continue;
+					if (other == p || !other->IsAlive() ||
+						other->GetTeamId() >= 2)
+						continue;
+					// quickly reject players unlikely to be hit
+					if (!other->RayCastApprox(muzzle, dir))
+						continue;
+
+					Player::HitBoxes hb = other->GetHitBoxes();
+					Vector3 hitPos;
+
+					if (hb.head.RayCast(muzzle, dir, &hitPos)) {
+						float dist = (hitPos - muzzle).GetLength();
+						if (hitPlayer == NULL ||
+							dist < hitPlayerDistance){
+							hitPlayer = other;
+							hitPlayerDistance = dist;
+						}
+					}
+					if (hb.torso.RayCast(muzzle, dir, &hitPos)) {
+						float dist = (hitPos - muzzle).GetLength();
+						if (hitPlayer == NULL ||
+							dist < hitPlayerDistance){
+							hitPlayer = other;
+							hitPlayerDistance = dist;
+						}
+					}
+				}
+
+				Vector3 finalHitPos;
+				finalHitPos = muzzle + dir * 134.f;
+
+				if (hitPlayer == nullptr && !mapResult.hit) {
+					// might hit water surface.
+				}
+
+				if (mapResult.hit && (mapResult.hitPos - muzzle).GetLength() < 134.f &&
+					(hitPlayer == NULL || (mapResult.hitPos - muzzle).GetLength() < hitPlayerDistance))
+				{
+					finalHitPos = mapResult.hitPos;
+				}
+				else if (hitPlayer != NULL)
+				{
+					if (hitPlayerDistance < 134.f)
+					{
+						finalHitPos = muzzle + dir * hitPlayerDistance;
+					}
+				}
+				
+				finalHitPos = finalHitPos - dir*0.1f;
+
+				Vector3 colour;
+				IImage *image;
+				if ((std::string)v_laserColour == "g")
+				{
+					colour = MakeVector3(0, 4, 0);
+					image = client->GetRenderer()->RegisterImage("Gfx/Weapons/LaserG.tga");
+				}
+				else if ((std::string)v_laserColour == "b")
+				{
+					colour = MakeVector3(0, 0, 4);
+					image = client->GetRenderer()->RegisterImage("Gfx/Weapons/LaserB.tga");
+				}	
+				else
+				{
+					colour = MakeVector3(4, 0, 0);
+					image = client->GetRenderer()->RegisterImage("Gfx/Weapons/LaserR.tga");
+				}
+
+				float factor = ((muzzle - finalHitPos).GetLength()/128.f + 1.f)/2.f;				
+
+				renderer->SetColorAlphaPremultiplied(Vector4(colour.x/4, colour.y/4, colour.z/4, 0));
+				renderer->AddSprite(image, finalHitPos, factor*0.5f, 0);
+
+				if (r_dlights && (int)v_laser == 2)
+				{
+					DynamicLightParam light;
+					light.origin = finalHitPos-dir*0.1f;
+					light.color = colour*factor;
+					light.radius = factor;
+					light.type = DynamicLightTypePoint;
+					renderer->AddLight(light);
+				}
+			}
 			
+			sandboxedRenderer->SetClipBox(AABB3(eyeMatrix.GetOrigin() - Vector3(20.f, 20.f, 20.f),
+				eyeMatrix.GetOrigin() + Vector3(20.f, 20.f, 20.f)));
+			sandboxedRenderer->SetAllowDepthHack(true);
+
 			Vector3 leftHand, rightHand;
 			leftHand = MakeVector3(0, 0, 0);
 			rightHand = MakeVector3(0, 0, 0);

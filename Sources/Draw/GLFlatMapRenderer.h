@@ -54,6 +54,8 @@ namespace spades {
 					  const AABB2& src);
 			
 			void GameMapChanged(int x, int y, int z, client::GameMap *);
+
+			void RefreshBitmap();
 		};
 	}
 }

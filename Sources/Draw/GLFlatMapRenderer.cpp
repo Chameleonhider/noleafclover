@@ -106,24 +106,45 @@ namespace spades {
 									 const AABB2& src) {
 			SPADES_MARK_FUNCTION();
 			
+			//// update chunks
+			//for(size_t i = 0; i < chunkInvalid.size(); i++){
+			//	if(!chunkInvalid[i]) continue;
+			//	int chunkX = ((int)i) % chunkCols;
+			//	int chunkY = ((int)i) / chunkCols;
+			//	
+			//	Handle<Bitmap> bmp(GenerateBitmap(chunkX * ChunkSize,
+			//								 chunkY * ChunkSize,
+			//								 ChunkSize, ChunkSize), false);
+			//	try{
+			//		image->SubImage(bmp, chunkX * ChunkSize, chunkY * ChunkSize);
+			//	}catch(...){
+			//		throw;
+			//	}
+			//	chunkInvalid[i] = false;
+			//}
+			
+			renderer->DrawImage(image, dest, src);
+		}
+
+		void GLFlatMapRenderer::RefreshBitmap()
+		{
+			SPADES_MARK_FUNCTION();
+
 			// update chunks
-			for(size_t i = 0; i < chunkInvalid.size(); i++){
-				if(!chunkInvalid[i]) continue;
+			for (size_t i = 0; i < chunkInvalid.size(); i++){
+				if (!chunkInvalid[i]) continue;
 				int chunkX = ((int)i) % chunkCols;
 				int chunkY = ((int)i) / chunkCols;
-				
-				Handle<Bitmap> bmp(GenerateBitmap(chunkX * ChunkSize,
-											 chunkY * ChunkSize,
-											 ChunkSize, ChunkSize), false);
+
+				Handle<Bitmap> bmp(GenerateBitmap(chunkX * ChunkSize, chunkY * ChunkSize, ChunkSize, ChunkSize), false);
 				try{
 					image->SubImage(bmp, chunkX * ChunkSize, chunkY * ChunkSize);
-				}catch(...){
+				}
+				catch (...){
 					throw;
 				}
 				chunkInvalid[i] = false;
 			}
-			
-			renderer->DrawImage(image, dest, src);
 		}
 	}
 }

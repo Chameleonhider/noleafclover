@@ -356,6 +356,7 @@ namespace spades {
 							vibPitch += sinf(world->GetTime()*10.f + nextRandom()) * factor;
 							vibYaw += sinf(world->GetTime()*15.f + nextRandom()) * factor;
 							roll += sinf(world->GetTime()*25.f + nextRandom()) * factor * 2.f;
+							//def.saturation = 1 - factor * 2;
 						}
 					}
 					

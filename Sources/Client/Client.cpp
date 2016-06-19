@@ -78,7 +78,7 @@ namespace spades {
 		
 		readyToClose(false),
 		scoreboardVisible(false),
-		flashlightOn(false),
+		flashlightState(0),
 		inGameLimbo(false),
 		
 		frameToRendererInit(5),
@@ -178,7 +178,7 @@ namespace spades {
 			lastHurtTime = -100.f;
 			hurtRingView->ClearAll();
 			scoreboardVisible = false;
-			flashlightOn = false;
+			flashlightState = 0;
 			
 			for(size_t i = 0; i < clientPlayers.size(); i++) {
 				if(clientPlayers[i]) {

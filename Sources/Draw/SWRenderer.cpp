@@ -1111,6 +1111,9 @@ namespace spades {
 			
 		}
 
+		void SWRenderer::UpdateFlatGameMap() {
+			SPADES_MARK_FUNCTION();
+		}
 		void SWRenderer::DrawFlatGameMap(const spades::AABB2 &outRect, const spades::AABB2 &inRect) {
 			SPADES_MARK_FUNCTION();
 			EnsureValid();
@@ -1244,8 +1247,7 @@ namespace spades {
 			}
 			
 			flatMapRenderer->SetNeedsUpdate(x, y);
-		}
-	
+		}	
 	}
 }
 

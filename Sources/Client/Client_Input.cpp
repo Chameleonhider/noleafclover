@@ -99,6 +99,8 @@ SPADES_SETTING(cg_keyAutoFocus, "MiddleMouseButton");
 SPADES_SETTING(snd_maxDistance, "150");
 //bincoulars zoom. used with nades
 SPADES_SETTING(v_binocsZoom, "2");
+//laser.... fuck this
+SPADES_SETTING(v_laser, "0");
 
 namespace spades {
 	namespace client {
@@ -874,13 +876,27 @@ namespace spades {
 					}
 					else if(CheckKey(cg_keyFlashlight, name) && down)
 					{
-						flashlightOn = !flashlightOn;
-						flashlightOnTime = time;
+						AudioParam param;
+						if (flashlightState == 0)
+						{
+							flashlightState = 1;
+							param.pitch = 1.f;
+						}
+						else if (v_laser && flashlightState == 1)
+						{
+							flashlightState = 2;
+							param.pitch = 1.05f;
+						}
+						else
+						{
+							flashlightState = 0;
+							param.pitch = 0.9f;
+						}
 						//Chameleon: limits the distance of this sound HIGH
 						if (soundDistance > int(snd_maxDistance) / 2.f)
 						{
 							Handle<IAudioChunk> chunk = audioDevice->RegisterSound("Sounds/Player/Flashlight.wav");
-							audioDevice->PlayLocal(chunk, AudioParam());
+							audioDevice->PlayLocal(chunk, param);
 						}
 					}
 					else if(CheckKey(cg_keyAutoFocus, name) && down &&

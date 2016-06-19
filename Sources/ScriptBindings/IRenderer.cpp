@@ -511,6 +511,11 @@ namespace spades {
 													  asCALL_THISCALL);
 						manager->CheckError(r);
 						r = eng->RegisterObjectMethod("Renderer",
+													  "void UpdateFlatGameMap()",
+													  asMETHOD(IRenderer,UpdateFlatGameMap),
+													  asCALL_THISCALL);
+						manager->CheckError(r);
+						r = eng->RegisterObjectMethod("Renderer",
 													  "void DrawFlatGameMap(const AABB2&in, const AABB2& in)",
 													  asMETHOD(IRenderer,DrawFlatGameMap),
 													  asCALL_THISCALL);

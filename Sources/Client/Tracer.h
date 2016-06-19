@@ -22,6 +22,7 @@ namespace spades {
 			Client *client;
 			Player *player;
 			IImage *image;
+			//IImage *image2;
 			IAudioChunk *snd;
 			IModel *model;
 			Vector3 startPos, dir;

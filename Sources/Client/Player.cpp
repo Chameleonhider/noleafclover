@@ -699,7 +699,7 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 			
 			Vector3 muzzle = GetEye();
-			muzzle += GetFront() * 0.01f;
+			muzzle += GetFront() * 0.02f;
 			
 			// for hit-test debugging
 			std::map<int, HitTestDebugger::PlayerHit> playerHits;

@@ -203,15 +203,10 @@ namespace spades {
 			//Chameleon: semi-auto fire mode
 			int MaxShots;
 			//Chameleon: tinnitus effect; this variable shows how long ago a tinnitus sound was played
-			//when 0, means that sound just started playing
-			//when 1, means that sound stopped playing
-			//additional tinnitus sound can be played only when above 0.75
-			//public: float lastShellShockTime;
+			float lastTinnitusTime;
 
-			private:
 			bool scoreboardVisible;
-			bool flashlightOn;
-			float flashlightOnTime;
+			int flashlightState;
 			
 			float hitFeedbackIconState;
 			bool hitFeedbackFriendly;
@@ -227,6 +222,7 @@ namespace spades {
 			Vector3 speedOfPRY;
 			/** speed of death camera Pitch Roll Yaw mutliplied by dt*/
 			Vector3 speedOfPRYdt;
+
 			/** only for when spectating */
 			Vector3 followFront;
 			/** Following player ID, which may be local player itself */

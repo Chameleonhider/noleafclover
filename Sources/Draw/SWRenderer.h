@@ -196,6 +196,7 @@ namespace spades {
 			virtual void DrawImage(client::IImage *, const AABB2& outRect, const AABB2& inRect);
 			virtual void DrawImage(client::IImage *, const Vector2& outTopLeft, const Vector2& outTopRight, const Vector2& outBottomLeft, const AABB2& inRect);
 			
+			virtual void UpdateFlatGameMap();
 			virtual void DrawFlatGameMap(const AABB2& outRect, const AABB2& inRect);
 			
 			virtual void FrameDone();
@@ -205,11 +206,9 @@ namespace spades {
 			virtual float ScreenWidth();
 			virtual float ScreenHeight();
 			
-			
 			const Matrix4& GetProjectionMatrix() const { return projectionMatrix; }
 			const Matrix4& GetProjectionViewMatrix() const { return projectionViewMatrix; }
 			const Matrix4& GetViewMatrix() const { return viewMatrix; }
-			
 			
 			virtual void GameMapChanged(int x, int y, int z, client::GameMap *);
 			
